@@ -40,4 +40,5 @@
 @media(max-width:900px){.student-coach-home{grid-template-columns:1fr}.readiness-card{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 18px}.readiness-card .meter,.readiness-card ul,.readiness-card .coach-help{grid-column:1/-1}.readiness-card>strong{margin:0}}
 @media(max-width:560px){.student-coach-home{margin-bottom:25px}.coach-welcome{padding:25px 21px}.coach-welcome h2{font-size:36px}.coach-actions{align-items:stretch;flex-direction:column}.coach-actions .button{width:100%;text-align:center}.readiness-card{padding:21px}.coach-trigger{font-size:0}.coach-trigger:after{content:'המאמן';font-size:12px}}
 .media-source-note{display:block;margin:-20px 2px 30px;color:var(--muted);font-size:10px}.visual-poster img{background:#dcebe4}
+.teacher-only-link[hidden]{display:none!important}.protected-teacher-page{display:none}.teacher-authorized .protected-teacher-page{display:block}
 
