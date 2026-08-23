@@ -10,18 +10,18 @@ function setMenu(open) {
   menuButton.setAttribute('aria-expanded', String(open));
 }
 
-menuButton.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
-overlay.addEventListener('click', () => setMenu(false));
+if (menuButton && sidebar) menuButton.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
+if (overlay) overlay.addEventListener('click', () => setMenu(false));
 
 document.querySelectorAll('[data-login-feature]').forEach((trigger) => {
   trigger.addEventListener('click', (event) => {
     event.preventDefault();
     const feature = trigger.dataset.loginFeature;
     dialogText.textContent = `כדי לפתוח את ${feature}, לשמור התקדמות ולקבל חוויה אישית — מתחברים דרך כיתה פלוס.`;
-    loginDialog.showModal();
+    if (loginDialog) loginDialog.showModal();
   });
 });
 
-document.getElementById('dialogClose').addEventListener('click', () => loginDialog.close());
-document.getElementById('continueGuest').addEventListener('click', () => loginDialog.close());
+document.getElementById('dialogClose')?.addEventListener('click', () => loginDialog.close());
+document.getElementById('continueGuest')?.addEventListener('click', () => loginDialog.close());
 
