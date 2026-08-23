@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d37">
+  <title>תיירות לבגרות — כיתה פלוס</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="ניווט ראשי">
+      <a class="brand" href="#top" aria-label="תיירות לבגרות — דף הבית">
+        <span class="brand-mark">ת</span>
+        <span><strong>תיירות לבגרות</strong><small>חלק מכיתה פלוס</small></span>
+      </a>
+
+      <nav class="main-nav">
+        <a class="nav-link active" href="#top"><span>⌂</span>סקירה</a>
+        <a class="nav-link" href="#units"><span>▦</span>יחידות לימוד</a>
+        <a class="nav-link locked" href="#" data-login-feature="ההתקדמות שלי"><span>◔</span>ההתקדמות שלי<em>נעול</em></a>
+        <a class="nav-link locked" href="#" data-login-feature="תרגול אישי"><span>◇</span>תרגול אישי<em>נעול</em></a>
+        <a class="nav-link" href="#images"><span>▧</span>זיהוי אתרים</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="guest-note">
+          <span class="guest-icon">○</span>
+          <div><strong>מצב אורח</strong><small>התחברו למעקב ולבוט האישי</small></div>
+        </div>
+        <button class="button button-light" data-login-feature="המערכת המלאה">כניסה דרך כיתה פלוס</button>
+      </div>
+    </aside>
+
+    <div class="page">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="פתיחת תפריט" aria-expanded="false">☰</button>
+        <div class="breadcrumbs"><span>תיירות לבגרות</span><b>/</b><strong>סקירה</strong></div>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="חיפוש">⌕</button>
+          <button class="button button-primary" data-login-feature="המערכת המלאה">כניסה</button>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">מרכז הלמידה שלך לבגרות</span>
+            <h1>לומדים את הארץ.<br><span>מבינים את התיירות.</span></h1>
+            <p>כל חומרי הלימוד, המצגות, האתרים והתרגולים במקום אחד — מסודרים לפי יחידות ובהתאם לחומר המאושר.</p>
+            <div class="hero-actions">
+              <button class="button button-primary button-large" data-login-feature="חזרה לנקודה האחרונה">חזרה לנקודה האחרונה <span>←</span></button>
+              <a class="button button-outline button-large" href="#units">לכל יחידות הלימוד</a>
+            </div>
+            <p class="login-hint">במצב אורח אפשר לעיין בחומר. מעקב אישי, בוט ותרגול מותאם זמינים לאחר התחברות.</p>
+          </div>
+          <div class="hero-visual" aria-label="מפת התקדמות לדוגמה">
+            <div class="map-lines" aria-hidden="true"></div>
+            <div class="progress-orbit">
+              <div class="progress-center"><strong>32%</strong><span>התקדמות כללית</span></div>
+              <i class="pin pin-one"></i><i class="pin pin-two"></i><i class="pin pin-three"></i>
+            </div>
+            <div class="floating-card card-one"><small>השלב הבא</small><strong>מישור החוף</strong><span>מצגת מלווה · 12 דקות</span></div>
+            <div class="floating-card card-two"><small>רצף למידה</small><strong>4 ימים</strong><span>כל הכבוד, ממשיכים</span></div>
+          </div>
+        </section>
+
+        <section class="section progress-section" aria-labelledby="journey-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">המסלול שלך</span><h2 id="journey-title">ממשיכים בדיוק מהמקום שבו עצרת</h2></div>
+            <button class="text-button" data-login-feature="פירוט ההתקדמות">לכל ההתקדמות ←</button>
+          </div>
+          <div class="journey-card">
+            <div class="journey-title"><span class="unit-symbol coast">02</span><div><small>יחידה בתהליך</small><h3>מישור החוף</h3><p>המצגת המלווה · שקופית 8 מתוך 24</p></div></div>
+            <div class="journey-meter"><div class="meter-label"><span>התקדמות ביחידה</span><strong>38%</strong></div><div class="meter"><i style="width:38%"></i></div><div class="milestones"><span class="done">תוכן</span><span class="current">מצגת</span><span>תמונות</span><span>תרגול</span><span>בוחן</span></div></div>
+            <button class="round-action" data-login-feature="המשך הלמידה" aria-label="המשך הלמידה">←</button>
+          </div>
+        </section>
+
+        <section class="section" id="units" aria-labelledby="units-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">חבלי הארץ</span><h2 id="units-title">יחידות הלימוד</h2><p>כל יחידה כוללת חומר מלא, מצגת, אתרים, תרגול ובוחן מסכם.</p></div>
+            <div class="view-switch" aria-label="סינון יחידות"><button class="selected">הכול</button><button>בתהליך</button><button>הושלם</button></div>
+          </div>
+          <div class="unit-grid">
+            <article class="unit-card featured">
+              <div class="unit-cover cover-coast"><span>מישור החוף</span><b>02</b></div>
+              <div class="unit-body"><div class="unit-meta"><span>6 פרקים</span><span>24 אתרים</span><span>בוחן</span></div><h3>מישור החוף</h3><p>מראש הנקרה ועד מישור החוף הדרומי — נוף, ערים, מורשת ואתרי תיירות.</p><div class="mini-progress"><span><i style="width:38%"></i></span><b>38%</b></div><button class="card-link" data-login-feature="יחידת מישור החוף">המשך ביחידה ←</button></div>
+            </article>
+            <article class="unit-card">
+              <div class="unit-cover cover-deadsea"><span>ים המלח ומדבר יהודה</span><b>01</b></div>
+              <div class="unit-body"><div class="unit-meta"><span>5 פרקים</span><span>18 אתרים</span></div><h3>ים המלח ומדבר יהודה</h3><p>גיאולוגיה, היסטוריה, תיירות מרפא ואתרי מפתח בנקודה הנמוכה בעולם.</p><div class="mini-progress"><span><i style="width:100%"></i></span><b>הושלם</b></div><a class="card-link" href="#">פתיחת היחידה ←</a></div>
+            </article>
+            <article class="unit-card">
+              <div class="unit-cover cover-valleys"><span>העמקים</span><b>03</b></div>
+              <div class="unit-body"><div class="unit-meta"><span>5 פרקים</span><span>20 אתרים</span></div><h3>העמקים</h3><p>עמק יזרעאל, חרוד ובית שאן — התיישבות, ארכיאולוגיה, מים וטבע.</p><div class="mini-progress"><span><i style="width:12%"></i></span><b>12%</b></div><button class="card-link" data-login-feature="יחידת העמקים">התחלת היחידה ←</button></div>
+            </article>
+            <article class="unit-card">
+              <div class="unit-cover cover-jerusalem"><span>ירושלים</span><b>04</b></div>
+              <div class="unit-body"><div class="unit-meta"><span>7 פרקים</span><span>32 אתרים</span></div><h3>ירושלים</h3><p>העיר העתיקה, המקומות הקדושים, שכונות, מוזיאונים ואתרי מורשת.</p><div class="mini-progress"><span><i style="width:0%"></i></span><b>טרם התחלת</b></div><a class="card-link" href="#">פתיחת היחידה ←</a></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section image-feature" id="images">
+          <div class="image-feature-copy"><span class="eyebrow">לזהות. לזכור. לחבר למקום.</span><h2>אתרי ישראל דרך התמונות</h2><p>תרגול התמונות משולב בכל יחידה, ובנוסף מחכה לכם אתגר ארצי מכל חבלי הארץ.</p><ul><li>תרגול ממוקד לפי חבל</li><li>הסבר מלא אחרי כל תשובה</li><li>התאמה אישית לנושאים קשים</li></ul><button class="button button-primary" data-login-feature="אתגר התמונות הארצי">התחלת אתגר התמונות</button></div>
+          <div class="image-stack" aria-label="כרטיסי אתרים לדוגמה"><div class="photo-card photo-one"><span>עכו העתיקה</span></div><div class="photo-card photo-two"><span>מצדה</span></div><div class="photo-card photo-three"><span>הגנים הבהאיים</span></div></div>
+        </section>
+      </main>
+
+      <footer><span>תיירות לבגרות</span><small>חלק מכיתה פלוס · גרסת פיתוח ראשונית</small></footer>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <dialog class="login-dialog" id="loginDialog" aria-labelledby="dialogTitle">
+    <button class="dialog-close" id="dialogClose" aria-label="סגירה">×</button>
+    <span class="dialog-mark">כ+</span>
+    <h2 id="dialogTitle">היכולת הזו זמינה לאחר התחברות</h2>
+    <p id="dialogText">התחברו דרך כיתה פלוס כדי לשמור התקדמות ולקבל חוויה אישית.</p>
+    <button class="button button-primary button-large">כניסה דרך כיתה פלוס</button>
+    <button class="text-button" id="continueGuest">המשך גלישה כאורח</button>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
+
