@@ -18,33 +18,33 @@ telaviv:['תרבות, בילוי ומוזיאונים בתל אביב',['נמל 
 south:['מה מזהים ומה מסבירים בבגרות',['השער הכנעני באשקלון','שער מקושת בן כ־3,500 שנה, מן הקדומים מסוגו בעולם.'],['ייחוד תל אשקלון','שילוב ארכאולוגיה, חוף ים וטיילת צוק.'],['מערות הפעמון','חללים גדולים שנחצבו בידי אדם בסלע הקירטון.'],['קולומבריום ומקוואות','מתקנים לגידול יונים ובריכות טבילה קדומות בבית גוברין.']]
 };
 const imageMap={
-'מוזיאון אסירי המחתרות':'https://nisan1234-afk.github.io/jerusalem-tour/images/image91.png',
+'מוזיאון אסירי המחתרות':'../assets/coastal/acre-knights-halls.webp',
 'בית לוחמי הגטאות':'https://nisan1234-afk.github.io/jerusalem-tour/images/image88.png',
 'גן לאומי אכזיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image102.png',
 'מבצר מונפורט':'https://nisan1234-afk.github.io/jerusalem-tour/images/image89.png',
 'מבצר יחיעם':'https://nisan1234-afk.github.io/jerusalem-tour/images/image90.png',
-'התיאטרון הרומי':'https://nisan1234-afk.github.io/jerusalem-tour/images/image60.png',
-'האקוודוקט':'https://nisan1234-afk.github.io/jerusalem-tour/images/image58.png',
-'בית אהרנסון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image92.png',
+'התיאטרון הרומי':'../assets/coastal/caesarea-theater.webp',
+'האקוודוקט':'../assets/coastal/caesarea-aqueduct.webp',
+'בית אהרנסון':'../assets/coastal/aaronsohn-house.webp',
 'רמת הנדיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image94.png',
-'נמל תל אביב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image75.png',
+'נמל תל אביב':'../assets/coastal/tel-aviv-port.webp',
 'שרונה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png',
 'שוק הכרמל ונחלת בנימין':'https://nisan1234-afk.github.io/jerusalem-tour/images/image66.png',
 'פארק הירקון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image73.png',
 'מוזיאון אנו':'https://nisan1234-afk.github.io/jerusalem-tour/images/image84.png',
 'מוזיאוני הפלמ״ח וההגנה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image68.png',
-'ייחוד תל אשקלון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image104.png',
-'מערות הפעמון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image105.png'
+'ייחוד תל אשקלון':'../assets/coastal/ashkelon-canaanite-gate.webp',
+'מערות הפעמון':'../assets/coastal/beit-guvrin-caves.webp'
 };
 Object.entries(enrichment).forEach(([id,g])=>{const s=document.getElementById(id),btn=s?.querySelector('.complete-button');if(!s||!btn)return;const w=document.createElement('div');w.className='expanded-material';w.innerHTML=`<h3>${g[0]}</h3><div class="detail-grid">${g.slice(1).map(c=>`<article>${imageMap[c[0]]?`<img src="${imageMap[c[0]]}" alt="${c[0]}" loading="lazy">`:''}<div><span>חומר חובה</span><h4>${c[0]}</h4><p>${c[1]}</p></div></article>`).join('')}</div>`;s.insertBefore(w,btn)});
 
 const visualStories={
-north:[['ראש הנקרה','תופעת טבע בקצה הצפוני','image100.jpg'],['עכו העתיקה','עיר נמל ושכבות היסטוריות','image91.png'],['הגנים הבהאיים','דת, אדריכלות ונוף בחיפה','image98.jpg']],
-carmel:[['קיסריה','עירו של הורדוס על הים','image57.png'],['האקוודוקט','מערכת המים הרומית','image58.png'],['רמת הנדיב','מורשת הברון וגני זיכרון','image94.png']],
-telaviv:[['יפו העתיקה','נמל, דת ומורשת','image62.png'],['נמל יפו','עבר ימי ומרחב בילוי','image64.png'],['נווה צדק','השכונה שקדמה לתל אביב','image80.png']],
-south:[['תל אשקלון','ארכאולוגיה לצד חוף','image104.png'],['בית גוברין','ארץ אלף המערות','image105.png'],['מערת הנטיפים','נוף קרסטי בשפלת יהודה','image106.png']]
+north:[['ראש הנקרה','תופעת טבע בקצה הצפוני','../assets/coastal/rosh-hanikra.webp'],['אולמות האבירים','עכו הצלבנית שמתחת לפני הרחוב','../assets/coastal/acre-knights-halls.webp'],['הגנים הבהאיים','דת, אדריכלות ונוף בחיפה','../assets/coastal/bahai-gardens.webp']],
+carmel:[['התיאטרון בקיסריה','עירו של הורדוס על הים','../assets/coastal/caesarea-theater.webp'],['האקוודוקט','מערכת המים הרומית','../assets/coastal/caesarea-aqueduct.webp'],['בית אהרנסון','סיפורה של מחתרת ניל״י','../assets/coastal/aaronsohn-house.webp']],
+telaviv:[['יפו העתיקה','נמל, דת ומורשת','../assets/coastal/old-jaffa.webp'],['נמל תל אביב','מנמל היסטורי למרחב בילוי','../assets/coastal/tel-aviv-port.webp'],['נווה צדק','השכונה שקדמה לתל אביב','https://nisan1234-afk.github.io/jerusalem-tour/images/image80.png']],
+south:[['השער הכנעני באשקלון','מן השערים המקושתים הקדומים בעולם','../assets/coastal/ashkelon-canaanite-gate.webp'],['בית גוברין','ארץ אלף המערות','../assets/coastal/beit-guvrin-caves.webp'],['מערת הנטיפים','נוף קרסטי בשפלת יהודה','https://nisan1234-afk.github.io/jerusalem-tour/images/image106.png']]
 };
-Object.entries(visualStories).forEach(([id,items])=>{const section=document.getElementById(id),heading=section?.querySelector('.block-heading');if(!section||!heading)return;const strip=document.createElement('div');strip.className='visual-story-strip';strip.innerHTML=items.map((x,i)=>`<figure class="visual-poster ${i===0?'poster-main':''}"><img src="https://nisan1234-afk.github.io/jerusalem-tour/images/${x[2]}" alt="${x[0]}" loading="lazy"><figcaption><b>${x[0]}</b><span>${x[1]}</span></figcaption></figure>`).join('');heading.insertAdjacentElement('afterend',strip)});
+Object.entries(visualStories).forEach(([id,items])=>{const section=document.getElementById(id),heading=section?.querySelector('.block-heading');if(!section||!heading)return;const strip=document.createElement('div');strip.className='visual-story-strip';strip.innerHTML=items.map((x,i)=>`<figure class="visual-poster ${i===0?'poster-main':''}"><img src="${x[2]}" alt="${x[0]}" loading="lazy"><figcaption><b>${x[0]}</b><span>${x[1]}</span></figcaption></figure>`).join('');heading.insertAdjacentElement('afterend',strip);strip.insertAdjacentHTML('afterend','<small class="media-source-note">מתוך חומרי הגלם והמצגות של אתר תיירות אלוני הבשן</small>')});
 
 const imageChallenge=[
 ['ראש הנקרה','https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg'],
