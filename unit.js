@@ -1,4 +1,4 @@
-const steps=['overview','north','carmel','telaviv','south','presentation','practice'];
+const steps=['overview','north','carmel','telaviv','south','images','presentation','practice'];
 const completed=new Set(JSON.parse(localStorage.getItem('coastal-demo-progress')||'[]'));
 function renderProgress(){const value=Math.round(completed.size/steps.length*100);document.getElementById('unitMeter').style.width=`${value}%`;document.getElementById('unitPercent').textContent=`${value}%`;document.querySelectorAll('.lesson-nav a').forEach(a=>a.classList.toggle('completed',completed.has(a.dataset.step)));document.querySelectorAll('[data-complete]').forEach(b=>{const done=completed.has(b.dataset.complete);b.classList.toggle('is-complete',done);b.textContent=done?'החלק הושלם ✓':'סיימתי את החלק הזה'});}
 function completeStep(step){completed.add(step);localStorage.setItem('coastal-demo-progress',JSON.stringify([...completed]));renderProgress();}
@@ -10,7 +10,53 @@ carmel:['מוקדי הביקור בקיסריה ובכרמל',['התיאטרון
 telaviv:['תרבות, בילוי ומוזיאונים בתל אביב',['נמל תל אביב','נמל ששוקם והפך למתחם פנאי ותרבות.'],['שרונה','מושבה טמפלרית משנת 1871 ובה עשרות מבנים ששומרו.'],['שוק הכרמל ונחלת בנימין','שוק מזון מרכזי ולצדו מדרחוב ויריד אמנים.'],['פארק הירקון','הריאה הירוקה העירונית ובה אגם ומתקני פנאי.'],['מוזיאון אנו','מוזיאון אינטראקטיבי לסיפור העם היהודי והתפוצות.'],['מוזיאוני הפלמ״ח וההגנה','אתרי מורשת על המאבק להקמת המדינה.']],
 south:['מה מזהים ומה מסבירים בבגרות',['השער הכנעני באשקלון','שער מקושת בן כ־3,500 שנה, מן הקדומים מסוגו בעולם.'],['ייחוד תל אשקלון','שילוב ארכאולוגיה, חוף ים וטיילת צוק.'],['מערות הפעמון','חללים גדולים שנחצבו בידי אדם בסלע הקירטון.'],['קולומבריום ומקוואות','מתקנים לגידול יונים ובריכות טבילה קדומות בבית גוברין.']]
 };
-Object.entries(enrichment).forEach(([id,g])=>{const s=document.getElementById(id),btn=s?.querySelector('.complete-button');if(!s||!btn)return;const w=document.createElement('div');w.className='expanded-material';w.innerHTML=`<h3>${g[0]}</h3><div class="detail-grid">${g.slice(1).map(c=>`<article><span>חומר חובה</span><h4>${c[0]}</h4><p>${c[1]}</p></article>`).join('')}</div>`;s.insertBefore(w,btn)});
+const imageMap={
+'מוזיאון אסירי המחתרות':'https://nisan1234-afk.github.io/jerusalem-tour/images/image91.png',
+'בית לוחמי הגטאות':'https://nisan1234-afk.github.io/jerusalem-tour/images/image88.png',
+'גן לאומי אכזיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image102.png',
+'מבצר מונפורט':'https://nisan1234-afk.github.io/jerusalem-tour/images/image89.png',
+'מבצר יחיעם':'https://nisan1234-afk.github.io/jerusalem-tour/images/image90.png',
+'התיאטרון הרומי':'https://nisan1234-afk.github.io/jerusalem-tour/images/image60.png',
+'האקוודוקט':'https://nisan1234-afk.github.io/jerusalem-tour/images/image58.png',
+'בית אהרנסון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image92.png',
+'רמת הנדיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image94.png',
+'נמל תל אביב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image75.png',
+'שרונה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png',
+'שוק הכרמל ונחלת בנימין':'https://nisan1234-afk.github.io/jerusalem-tour/images/image66.png',
+'פארק הירקון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image73.png',
+'מוזיאון אנו':'https://nisan1234-afk.github.io/jerusalem-tour/images/image84.png',
+'מוזיאוני הפלמ״ח וההגנה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image68.png',
+'ייחוד תל אשקלון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image104.png',
+'מערות הפעמון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image105.png'
+};
+Object.entries(enrichment).forEach(([id,g])=>{const s=document.getElementById(id),btn=s?.querySelector('.complete-button');if(!s||!btn)return;const w=document.createElement('div');w.className='expanded-material';w.innerHTML=`<h3>${g[0]}</h3><div class="detail-grid">${g.slice(1).map(c=>`<article>${imageMap[c[0]]?`<img src="${imageMap[c[0]]}" alt="${c[0]}" loading="lazy">`:''}<div><span>חומר חובה</span><h4>${c[0]}</h4><p>${c[1]}</p></div></article>`).join('')}</div>`;s.insertBefore(w,btn)});
+
+const imageChallenge=[
+['ראש הנקרה','https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg'],
+['הגנים הבהאיים בחיפה','https://nisan1234-afk.github.io/jerusalem-tour/images/image98.jpg'],
+['אולמות האבירים בעכו','https://nisan1234-afk.github.io/jerusalem-tour/images/image87.png'],
+['האקוודוקט בקיסריה','https://nisan1234-afk.github.io/jerusalem-tour/images/image58.png'],
+['נמל יפו','https://nisan1234-afk.github.io/jerusalem-tour/images/image64.png'],
+['שרונה','https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png'],
+['גן לאומי אשקלון','https://nisan1234-afk.github.io/jerusalem-tour/images/image104.png'],
+['מערות בית גוברין','https://nisan1234-afk.github.io/jerusalem-tour/images/image105.png']
+];
+const presentationSection=document.getElementById('presentation');
+const imageSection=document.createElement('section');
+imageSection.className='learning-block tinted image-practice';
+imageSection.id='images';
+imageSection.dataset.trackStep='images';
+imageSection.innerHTML=`<div class="block-heading"><span class="number">06</span><div><span class="eyebrow">זיהוי אתרים מתמונה</span><h2>רואים, מזהים ומסבירים</h2></div></div><p class="practice-intro">בחרו את שם האתר המופיע בתמונה. לאחר הזיהוי תקבלו גם את פרט המפתח שכדאי לזכור לבגרות.</p><div class="recognition-card"><img id="recognitionImage" alt=""><div><span class="quiz-kicker" id="recognitionCount"></span><h3>איזה אתר מופיע בתמונה?</h3><div class="answer-list" id="recognitionAnswers"></div><p class="quiz-feedback" id="recognitionFeedback"></p><button class="button button-primary" id="nextRecognition" disabled>לתמונה הבאה</button></div></div>`;
+presentationSection.parentNode.insertBefore(imageSection,presentationSection);
+const presentationNav=document.querySelector('[data-step="presentation"]');
+const imageNav=document.createElement('a');
+imageNav.href='#images';imageNav.dataset.step='images';
+imageNav.innerHTML='<i>6</i><span>זיהוי מתמונה<small>אתגר חזותי</small></span><b>✓</b>';
+presentationNav.parentNode.insertBefore(imageNav,presentationNav);
+document.querySelectorAll('[data-step="presentation"] i,[data-step="practice"] i').forEach((n,i)=>n.textContent=String(i+7));
+let recognitionIndex=0,recognitionCorrect=0;
+function renderRecognition(){const item=imageChallenge[recognitionIndex];document.getElementById('recognitionImage').src=item[1];document.getElementById('recognitionImage').alt='אתר לזיהוי';document.getElementById('recognitionCount').textContent=`תמונה ${recognitionIndex+1} מתוך ${imageChallenge.length}`;const wrong=imageChallenge.filter(x=>x[0]!==item[0]).sort(()=>.5-Math.random()).slice(0,2).map(x=>x[0]);const choices=[item[0],...wrong].sort(()=>.5-Math.random());const box=document.getElementById('recognitionAnswers');box.innerHTML='';choices.forEach(name=>{const b=document.createElement('button');b.textContent=name;b.addEventListener('click',()=>{box.querySelectorAll('button').forEach(x=>{x.disabled=true;if(x.textContent===item[0])x.classList.add('correct')});if(name===item[0])recognitionCorrect++;else b.classList.add('wrong');document.getElementById('recognitionFeedback').textContent=name===item[0]?'נכון — זהו '+item[0]+'.':'כמעט. התשובה הנכונה היא '+item[0]+'.';document.getElementById('nextRecognition').disabled=false});box.appendChild(b)});document.getElementById('recognitionFeedback').textContent='';document.getElementById('nextRecognition').disabled=true;}
+document.getElementById('nextRecognition').addEventListener('click',()=>{if(recognitionIndex<imageChallenge.length-1){recognitionIndex++;renderRecognition();return}completeStep('images');document.querySelector('.recognition-card>div').innerHTML=`<span class="eyebrow">האתגר הושלם</span><h3>זיהית ${recognitionCorrect} מתוך ${imageChallenge.length} אתרים</h3><p>אפשר לחזור ליחידה בכל עת ולתרגל שוב.</p>`});renderRecognition();
 
 const slides=[
 ['מישור החוף','חזרה לבגרות','מסע מראש הנקרה ועד הדרום: גיאוגרפיה, ארכאולוגיה, תרבות וטבע.','מתחילים מצפון'],
