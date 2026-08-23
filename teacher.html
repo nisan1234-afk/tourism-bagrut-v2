@@ -4,12 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>תובנות למורה — תיירות לבגרות</title>
+  <script>
+    (function () {
+      const hub = 'https://nisan1234-afk.github.io/';
+      try {
+        const user = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+        const roles = user ? (user.roles || [user.role]) : [];
+        const allowed = roles.some(role => ['admin', 'school_admin', 'teacher', 'homeroom'].includes(role));
+        if (!allowed) { location.replace(hub); return; }
+        document.documentElement.classList.add('teacher-authorized');
+      } catch (_) { location.replace(hub); }
+    }());
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=10">
 </head>
-<body class="teacher-page">
+<body class="teacher-page protected-teacher-page">
   <header class="teacher-topbar"><a class="brand compact" href="index.html"><span class="brand-mark">ת</span><span><strong>תיירות לבגרות</strong><small>תצוגת מורה · אב־טיפוס</small></span></a><a class="button button-outline" href="units/coastal-plain.html#open-practice">חזרה ליחידה</a></header>
   <main class="teacher-dashboard">
     <section class="teacher-heading"><div><span class="eyebrow">מישור החוף</span><h1>איפה כדאי להתערב?</h1><p>תמונת מצב המבוססת כרגע על הניסיונות שנשמרו במכשיר הזה בלבד. לאחר החיבור לכיתה פלוס יוצגו כאן נתוני התלמידים והכיתה.</p></div><span class="demo-chip">נתוני הדגמה מקומיים</span></section>
