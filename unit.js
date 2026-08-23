@@ -179,5 +179,39 @@ practiceSection.parentNode.insertBefore(openSection,practiceSection.nextSibling)
 const openDrafts=JSON.parse(localStorage.getItem('coastal-open-drafts')||'{}');function updateBankProgress(){const answers=[...document.querySelectorAll('[data-open-answer]')];let done=0;answers.forEach(t=>{const i=t.dataset.openAnswer,words=t.value.trim()?t.value.trim().split(/\s+/).length:0,isDone=words>=25;document.querySelector(`[data-word-count="${i}"]`).textContent=`${words} מילים`;document.querySelector(`[data-answer-state="${i}"]`).textContent=isDone?'מוכן לבדיקה ✓':'טרם הושלם';document.querySelector(`[data-open-card="${i}"]`).classList.toggle('answer-complete',isDone);if(isDone)done++});document.getElementById('bankCompleted').textContent=`${done} מתוך ${openPracticeData.length} הושלמו`;document.getElementById('bankMeter').style.width=`${Math.round(done/openPracticeData.length*100)}%`;return done}
 document.querySelectorAll('[data-open-answer]').forEach(t=>{t.value=openDrafts[t.dataset.openAnswer]||'';t.addEventListener('input',updateBankProgress)});updateBankProgress();
 document.getElementById('saveOpenPractice').addEventListener('click',()=>{const values=[...document.querySelectorAll('[data-open-answer]')].map(t=>t.value.trim()),saved={};values.forEach((v,i)=>saved[i]=v);localStorage.setItem('coastal-open-drafts',JSON.stringify(saved));const done=updateBankProgress(),ready=done===openPracticeData.length;document.getElementById('openPracticeFeedback').textContent=ready?'כל תשע הטיוטות נשמרו והשלב הושלם.':'הטיוטות נשמרו. השלמתם '+done+' מתוך '+openPracticeData.length+' שאלות.';if(ready)completeStep('open-practice')});
+
+// Page-by-page lesson navigation: only one learning page is visible at a time.
+const lessonPages=steps.map(id=>document.getElementById(id)).filter(Boolean);
+const pageLabels={overview:'קוראים את המרחב',north:'טבע, מורשת ודת בצפון',carmel:'קיסריה והכרמל',telaviv:'תל אביב–יפו: עבר והווה',south:'אשקלון ושפלת יהודה',games:'סיכום התרגולים',images:'זיהוי אתרים בתמונות',presentation:'המצגת המלווה',practice:'תרגול מסכם', 'open-practice':'מאגר שאלות בגרות'};
+const pageNavigator=document.createElement('nav');
+pageNavigator.className='lesson-page-controls';
+pageNavigator.setAttribute('aria-label','מעבר בין דפי הלימוד');
+pageNavigator.innerHTML='<a class="page-prev" href="#"><span>הדף הקודם</span><b></b></a><div><small id="lessonPageCount"></small><strong id="lessonPageTitle"></strong></div><a class="page-next" href="#"><span>הדף הבא</span><b></b></a>';
+document.querySelector('.lesson-content').appendChild(pageNavigator);
+
+function showLessonPage(id,updateHash=true){
+  const safeId=lessonPages.some(page=>page.id===id)?id:'overview';
+  const index=lessonPages.findIndex(page=>page.id===safeId);
+  document.body.classList.add('paged-lesson');
+  document.querySelector('.lesson-hero')?.setAttribute('aria-hidden','true');
+  lessonPages.forEach(page=>{const active=page.id===safeId;page.classList.toggle('active-lesson-page',active);page.hidden=!active});
+  document.querySelectorAll('.lesson-nav a').forEach(link=>{const active=link.dataset.step===safeId;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')});
+  const previous=lessonPages[index-1],next=lessonPages[index+1];
+  const prevLink=pageNavigator.querySelector('.page-prev'),nextLink=pageNavigator.querySelector('.page-next');
+  prevLink.hidden=!previous;nextLink.hidden=!next;
+  if(previous){prevLink.href=`#${previous.id}`;prevLink.querySelector('b').textContent=pageLabels[previous.id]||previous.id}
+  if(next){nextLink.href=`#${next.id}`;nextLink.querySelector('b').textContent=pageLabels[next.id]||next.id}
+  document.getElementById('lessonPageCount').textContent=`דף ${index+1} מתוך ${lessonPages.length}`;
+  document.getElementById('lessonPageTitle').textContent=pageLabels[safeId]||safeId;
+  if(updateHash&&location.hash!==`#${safeId}`)history.pushState(null,'',`#${safeId}`);
+  localStorage.setItem('coastal-last-page',safeId);
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('lessonRail')?.classList.remove('open');
+}
+
+document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(!link)return;const id=link.getAttribute('href').slice(1);if(!lessonPages.some(page=>page.id===id))return;event.preventDefault();showLessonPage(id)});
+window.addEventListener('popstate',()=>showLessonPage(location.hash.slice(1)||'overview',false));
+const requestedPage=location.hash.slice(1);
+showLessonPage(lessonPages.some(page=>page.id===requestedPage)?requestedPage:(localStorage.getItem('coastal-last-page')||'overview'),false);
 const rail=document.getElementById('lessonRail');document.getElementById('railButton').addEventListener('click',()=>rail.classList.toggle('open'));renderProgress();renderSlide();renderQuestion();
 
