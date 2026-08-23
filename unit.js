@@ -209,9 +209,10 @@ function showLessonPage(id,updateHash=true){
   document.getElementById('lessonRail')?.classList.remove('open');
 }
 
-document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(!link)return;const id=link.getAttribute('href').slice(1);if(!lessonPages.some(page=>page.id===id))return;event.preventDefault();showLessonPage(id)});
+function pageForAnchor(id){const target=document.getElementById(id);return lessonPages.find(page=>page.id===id||page.contains(target))}
+document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(!link)return;const id=link.getAttribute('href').slice(1),page=pageForAnchor(id);if(!page)return;event.preventDefault();showLessonPage(page.id);if(id!==page.id)requestAnimationFrame(()=>document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}))});
 window.addEventListener('popstate',()=>showLessonPage(location.hash.slice(1)||'overview',false));
 const requestedPage=location.hash.slice(1);
-showLessonPage(lessonPages.some(page=>page.id===requestedPage)?requestedPage:(localStorage.getItem('coastal-last-page')||'overview'),false);
+showLessonPage(pageForAnchor(requestedPage)?.id||(localStorage.getItem('coastal-last-page')||'overview'),false);
 const rail=document.getElementById('lessonRail');document.getElementById('railButton').addEventListener('click',()=>rail.classList.toggle('open'));renderProgress();renderSlide();renderQuestion();
 
