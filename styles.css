@@ -47,4 +47,5 @@
 @media(max-width:600px){.student-toolbar{flex-direction:column}.student-toolbar .button{width:100%}.student-bulk-form>div{align-items:stretch;flex-direction:column}.row-actions{flex-direction:column}}
 .class-pulse{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.class-pulse article{padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:13px}.class-pulse span,.class-pulse b{display:block}.class-pulse span{font-size:11px;color:var(--muted)}.class-pulse b{margin-top:4px;font:700 31px 'Frank Ruhl Libre';color:var(--forest)}
 @media(max-width:700px){.class-pulse{grid-template-columns:1fr 1fr}}
+.server-feedback{display:block;margin-top:10px;padding-top:9px;border-top:1px solid currentColor;font-weight:700}
 
