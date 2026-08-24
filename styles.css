@@ -48,4 +48,5 @@
 .class-pulse{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.class-pulse article{padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:13px}.class-pulse span,.class-pulse b{display:block}.class-pulse span{font-size:11px;color:var(--muted)}.class-pulse b{margin-top:4px;font:700 31px 'Frank Ruhl Libre';color:var(--forest)}
 @media(max-width:700px){.class-pulse{grid-template-columns:1fr 1fr}}
 .server-feedback{display:block;margin-top:10px;padding-top:9px;border-top:1px solid currentColor;font-weight:700}
+.jerusalem-recognition .visual-poster{border:0;cursor:pointer;text-align:right}.jerusalem-recognition .visual-poster span{filter:blur(7px);opacity:.45;transition:.2s}.jerusalem-recognition .visual-poster.revealed{outline:3px solid #79aa8f}.jerusalem-recognition .visual-poster.revealed span{filter:none;opacity:1}.jerusalem-recognition .visual-poster b{background:#fff;color:var(--forest);border-radius:8px;padding:4px 8px;font-size:11px}
 
