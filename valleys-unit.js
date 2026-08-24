@@ -68,12 +68,13 @@
   async function submit(textarea, feedback){
     const answer=textarea.value.trim(); if(answer.length<12){feedback.textContent='כדאי לכתוב תשובה מלאה ומנומקת יותר.';feedback.className='answer-feedback needs-work';return;}
     feedback.textContent='בודק את התשובה…'; feedback.className='answer-feedback loading';
-    const session=JSON.parse(sessionStorage.getItem('kitaPlusUser')||'null');
-    if(!session){feedback.textContent='התשובה נשמרה במכשיר. התחברו כדי לקבל בדיקת בוט ולשמור למורה.';feedback.className='answer-feedback local';localStorage.setItem('valley-answer-'+(textarea.dataset.exam||textarea.dataset.openQuestion),answer);return;}
+    const session=JSON.parse(sessionStorage.getItem('kitahUser')||'null');
+    if(!session?.token){feedback.textContent='התשובה נשמרה במכשיר. התחברו כדי לקבל בדיקת בוט ולשמור למורה.';feedback.className='answer-feedback local';localStorage.setItem('valley-answer-'+(textarea.dataset.exam||textarea.dataset.openQuestion),answer);return;}
     try{
-      const params=new URLSearchParams({action:'submitOpenAnswer',unit_id:'haamakim',question:textarea.dataset.question||textarea.dataset.openQuestion,answer});
-      const res=await fetch(API+'?'+params); const data=await res.json();
-      feedback.textContent=data.feedback||data.message||'התשובה נשלחה ונשמרה לבדיקה.'; feedback.className='answer-feedback success';
+      const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'submitOpenAnswer',token:session.token,unit_id:'haamakim',question:textarea.dataset.question||textarea.dataset.openQuestion,answer})});
+      const data=await res.json();
+      if(!data.ok) throw new Error(data.error||'שגיאה');
+      feedback.textContent=data.data?.feedback||'התשובה נשלחה ונשמרה לבדיקה.'; feedback.className='answer-feedback success';
     }catch(e){feedback.textContent='התשובה נשמרה במכשיר ותישלח בחיבור הבא.';feedback.className='answer-feedback local';localStorage.setItem('valley-answer-'+(textarea.dataset.exam||textarea.dataset.openQuestion),answer);}
   }
   document.querySelectorAll('.check-open,.check-exam').forEach(b=>b.onclick=()=>{const box=b.parentElement;submit(box.querySelector('textarea'),box.querySelector('.answer-feedback'));});
