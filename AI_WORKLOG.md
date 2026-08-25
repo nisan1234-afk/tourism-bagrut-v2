@@ -18,6 +18,49 @@
 
 ## יומן
 
+### 2026-08-25 — Claude Code (הכנת פרומפט) + B (ביצוע בדפדפן) — בקאנד: בדיקת מורה לתשובות פתוחות, הגנת prompt injection, רישום יחידת הגליל
+
+- **בקשה:** לבצע את מסמך "שלב 9" מתיקיית התיאום המשותפת ב-Drive — הפעם היחיד
+  שהיה כתוב ומוכן לביצוע מבין 05/06/08/09 שהמתינו ל-B.
+- **בוצע ב-`bagrut.gs`** (add-only, לא נגעו בטאב `open_answers` הקיים):
+  - שני helpers חדשים: `ensureBagrutOpenAnswerReviewsSheet_` (טאב גיליון חדש
+    `open_answer_reviews`) ו-`bagrutSanitizeForPrompt_` (נרמול שורות + הסרת
+    רצפי גרשיים/backtick חוזרים לפני הזנה לפרומפט).
+  - `submitOpenAnswer` הוחלפה במלואה: מוסיפה בקשת "מידת ביטחון: גבוהה/נמוכה"
+    בסוף תשובת הבוט, מפרקת אותה ל-`confidence`, וכותבת שורה מקבילה ל-
+    `open_answer_reviews` עם `status: 'auto'` (ביטחון גבוה) או
+    `'pending_review'` (ביטחון נמוך). כוללת גם הגנת prompt injection מפורשת
+    בפרומפט עצמו (תשובת תלמיד/ה מטופלת תמיד כטקסט-לבדיקה-בלבד, גם אם מנוסחת
+    כהוראה) ומזינה עד 3 הערות מורה קודמות דומות באותה יחידה כהקשר.
+  - 4 פונקציות חדשות: `reviewOpenAnswer` (מורה מאשר/דוחה/מחזיר לתיקון עם
+    הערה), `getBagrutPendingReviewsForTeacher` (תור בדיקה למורה), 
+    `getMyReviewNotices`/`ackReviewNotice` (הודעת תלמיד/ה כשמורה בדק/ה תשובה,
+    עם אישור קריאה).
+  - `getBagrutStudentOpenAnswers` הוחלפה להעשיר כל תשובה בסטטוס/ביטחון/הערת
+    מורה מהטאב החדש (לפי מפתח `email|timestamp`).
+  - `BAGRUT_UNITS`: נוספה `{ unit_id: 'galil', name: 'הגליל', total_questions: 6 }`
+    — סוגר את הפער שתועד ב-24.08 (יחידת הגליל שלחה `unit_id:'galil'` שלא היה
+    רשום בבקאנד, אז לא נספרה כהתקדמות/ציון בדשבורד המורה).
+- **בוצע ב-`code.gs`** (add-only): 4 השמות החדשים נוספו ל-`protectedActions`;
+  4 handlers מתאימים נוספו ל-`doPost` מיד אחרי `submitOpenAnswer`.
+- **Deploy:** גרסה חדשה (**Version 64**) לאותו deployment ID הקיים
+  (`AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h`)
+  — לא נוצר deployment חדש.
+- **בוצע ע"י:** B (סשן עם גישת דפדפן אמיתית ל-Apps Script editor, "Claude in
+  Chrome"), לפי פרומפט מוכן שהכין Claude Code בסשן `nisan1234-afk.github.io`.
+- **פתוח:**
+  - בדיקת קצה-לקצה עם login אמיתי (סעיף 9ח במסמך המקורי) — עדיין לא בוצעה
+    על ידי אף אחד: תשובה רגילה→`auto`, תשובה עמומה→`pending_review`, קריאה
+    ל-`getBagrutPendingReviewsForTeacher`/`reviewOpenAnswer`/
+    `getMyReviewNotices`/`ackReviewNotice`, ואימות שיחידת "הגליל" מופיעה
+    בטבלת ההתקדמות בדשבורד המורה.
+  - הפרונטאנד (`teacher.html`/`teacher.js` וכל דפי היחידות כאן) עדיין לא
+    קורא לארבע הפעולות החדשות — אין עדיין UI לתור-בדיקה/אישור-מורה/הודעת-
+    תלמיד. הבקאנד מוכן, השכבה הזו טרם נבנתה.
+  - `submitOpenAnswer` המעודכנת משותפת ל-`tourism11` ול-`tourism-bagrut-v2`
+    (אותו `bagrut.gs`) — כדאי לוודא ש-`tourism11` (הפרונטאנד הישן) לא נשבר
+    משינוי הפורמט של תשובת הבוט (הוספת שורת "מידת ביטחון" בסוף).
+
 ### 2026-08-23 — Codex — חיבור ראשוני לכיתה פלוס כמקצוע נפרד
 
 - בדשבורד המורה של כיתה פלוס שונה שם המקצוע הקיים ל־"תיירות בגרות — ישן" והקישור ל־tourism11 נשמר.
