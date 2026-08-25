@@ -8,9 +8,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=25">
+<script>
+  (function () {
+    var hub = 'https://nisan1234-afk.github.io/';
+    try {
+      var user = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+      if (!user || !user.token) { location.replace(hub); return; }
+      document.documentElement.classList.add('page-authorized');
+    } catch (_) { location.replace(hub); }
+  }());
+</script>
+
 </head>
-<body>
+<body class="protected-page"><section class="access-gate"><span class="dialog-mark">כ+</span><h1>האתר דורש כניסה</h1><p>תיירות לבגרות זמין רק למשתמשים מחוברים דרך כיתה פלוס.</p><a class="button button-primary button-large" href="https://nisan1234-afk.github.io/">כניסה דרך כיתה פלוס</a></section>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="ניווט ראשי">
       <a class="brand" href="#top" aria-label="תיירות לבגרות — דף הבית">

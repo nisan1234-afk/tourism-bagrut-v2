@@ -115,3 +115,12 @@
 .coach-widget-form input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font:inherit}
 .coach-widget-form button{border:0;border-radius:9px;padding:9px 16px;background:var(--forest);color:#fff;font-weight:700;cursor:pointer}
 @media(max-width:560px){.coach-toggle{left:10px;bottom:74px;padding:9px 14px;font-size:12px}.coach-widget{left:10px;right:10px;bottom:126px;width:auto}}
+
+/* Site-wide login gate (guest mode removed 25.08.2026 — login required everywhere) */
+.protected-page>*{display:none}
+.protected-page>.access-gate{display:grid;place-items:center;align-content:center;gap:13px;min-height:100vh;padding:30px;text-align:center}
+.access-gate .dialog-mark{font:700 32px 'Frank Ruhl Libre';color:var(--forest)}
+.access-gate h1{font:700 34px 'Frank Ruhl Libre';margin:6px 0}
+.access-gate p{max-width:480px;margin:0 0 8px;color:var(--muted);line-height:1.6}
+.page-authorized .protected-page>*{display:revert}
+.page-authorized .protected-page>.access-gate{display:none}
