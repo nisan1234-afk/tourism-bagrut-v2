@@ -82,3 +82,10 @@
 .review-notice-card h3{margin:6px 0;font:700 22px 'Frank Ruhl Libre'}
 .review-notice-card blockquote{margin:10px 0;padding:10px 14px;background:var(--sand);border-radius:10px;font-size:14px}
 .review-notice-card button{margin-top:10px}
+
+/* Teacher-editable content (light content-override editor) */
+.edit-content-hint{color:var(--muted);font-size:13px;line-height:1.6;margin:-6px 0 16px}
+.edit-content-list{display:grid;gap:14px}
+.edit-content-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.edit-content-card h3{margin:0 0 10px;font:700 17px 'Frank Ruhl Libre'}
+.edit-content-status{color:var(--muted);margin-inline-start:6px}
