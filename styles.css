@@ -61,3 +61,24 @@
 @media(max-width:850px){.unit-topbar{height:64px;padding:0 14px}.unit-topbar>.brand{font-size:19px}.unit-progress-head{min-width:0;margin-right:auto}.unit-progress-head span{display:none}.unit-progress-head .meter{width:90px}.menu-toggle{display:block}.unit-rail{top:64px;width:min(84vw,310px);transform:translateX(105%);transition:transform .25s;box-shadow:-14px 0 35px #0003}.unit-rail.open{transform:none}.unit-main{height:auto;min-height:100vh;margin-right:0;padding:92px 18px 72px;overflow:visible}.lesson-footer{right:10px;left:10px;bottom:8px;width:auto;max-width:none;min-height:42px;flex-direction:row;justify-content:space-between;gap:5px;padding:4px 6px;border-radius:11px}.lesson-footer button{min-height:34px;padding:6px 10px;font-size:11px;white-space:nowrap}.lesson-footer span{font-size:10px;white-space:nowrap}.site-stack article{grid-template-columns:1fr}.site-stack img{height:220px}.site-stack article>div{padding:18px}.hero-media img{height:250px}}
 @media(max-width:560px){.lesson-page>h2{font-size:39px}.lesson-lead{font-size:15px}.fact-grid,.timeline-list,.visual-grid{grid-template-columns:1fr}.fact-grid article,.check-card,.timeline-list article,.exam-question{padding:18px}.visual-grid .visual-poster{height:235px;min-width:0}.slide-deck{padding:10px}.slide-controls{gap:6px}.slide-controls button{padding:8px 10px;font-size:11px}.exam-part{padding:13px}.exam-part textarea{min-height:145px}.unit-progress-head .meter{width:62px}.unit-topbar>.brand{font-size:17px}}
 
+
+/* Teacher review queue + student review-notice banner (submitOpenAnswer teacher-review flow) */
+.review-queue{display:grid;gap:14px;margin-top:6px}
+.review-queue-card,.student-answer-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.review-queue-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.review-queue-card h3{margin:4px 0 10px;font:700 20px 'Frank Ruhl Libre'}
+.review-badge{display:inline-block;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.review-badge.warn{background:#fbe7d0;color:#8a5a1e}
+.review-badge.ok{background:var(--mint);color:var(--forest)}
+.review-badge.bad{background:#fbdede;color:#9c2b2b}
+.review-note{display:block;width:100%;min-height:64px;margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;resize:vertical;font:inherit}
+.review-actions{display:flex;flex-wrap:wrap;gap:8px}
+.review-actions .button{width:auto;margin-top:0}
+.button-outline.danger{border-color:#c23b3b;color:#c23b3b}
+.student-answer-card blockquote{margin:10px 0 0;padding:10px 14px;background:var(--sand);border-radius:10px;font-size:14px}
+.review-notice-banner{position:fixed;inset-inline:0;bottom:0;z-index:90;display:flex;justify-content:center;padding:16px}
+.review-notice-card{width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px;text-align:right}
+.review-notice-card>span{color:var(--muted);font-size:12px;font-weight:700}
+.review-notice-card h3{margin:6px 0;font:700 22px 'Frank Ruhl Libre'}
+.review-notice-card blockquote{margin:10px 0;padding:10px 14px;background:var(--sand);border-radius:10px;font-size:14px}
+.review-notice-card button{margin-top:10px}
