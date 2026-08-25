@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=17">
+  <link rel="stylesheet" href="../styles.css?v=18">
 </head>
 <body class="unit-page" data-content-unit="mishor_hachof">
   <aside class="lesson-rail" id="lessonRail">
@@ -29,7 +29,7 @@
     <header class="topbar lesson-topbar">
       <button class="menu-button" id="railButton" aria-label="פתיחת תוכן היחידה">☰</button>
       <div class="breadcrumbs"><a href="../index.html">יחידות לימוד</a><b>/</b><strong>מישור החוף</strong></div>
-      <div class="top-actions"><span class="source-chip">רק מהחומר המאושר</span><a class="button button-outline teacher-preview-link teacher-only-link" href="../teacher.html" hidden>למורה</a><button class="button button-primary coach-trigger" data-login-feature="המאמן שלי לבגרות">נתקעת? המאמן כאן</button></div>
+      <div class="top-actions"><span class="source-chip">רק מהחומר המאושר</span><a class="button button-outline teacher-preview-link teacher-only-link" href="../teacher.html" hidden>למורה</a><button class="button button-primary coach-trigger" onclick="toggleCoachWidget(true)">נתקעת? המאמן כאן</button></div>
     </header>
 
     <main class="lesson-content">
@@ -92,9 +92,21 @@
   </div>
 
   <dialog class="login-dialog" id="loginDialog"><button class="dialog-close" id="dialogClose">×</button><span class="dialog-mark">כ+</span><h2>היכולת הזו זמינה לאחר התחברות</h2><p id="dialogText"></p><button class="button button-primary button-large">כניסה דרך כיתה פלוס</button></dialog>
+
+  <button class="coach-toggle" id="coachToggle" onclick="toggleCoachWidget(true)">💬 המאמן שלי לבגרות</button>
+  <div class="coach-widget" id="coachWidget">
+    <div class="coach-widget-head"><strong>🎓 המאמן שלי — מישור החוף</strong><button class="coach-widget-close" onclick="toggleCoachWidget(false)">✕</button></div>
+    <div class="coach-widget-sub">עונה רק על סמך חומר הלימוד האמיתי — לא ממציא ולא ניגש למקורות חיצוניים</div>
+    <div class="coach-log" id="coachLog"></div>
+    <form class="coach-widget-form" onsubmit="sendCoachQuestion(event)">
+      <input type="text" id="coachInput" placeholder="נתקעת? שאל/י כל דבר על החומר…" autocomplete="off">
+      <button type="submit">שלח</button>
+    </form>
+  </div>
+
   <script src="../app.js?v=6"></script>
   <script src="../content-overrides.js?v=1"></script>
-  <script src="../unit.js?v=25"></script>
+  <script src="../unit.js?v=26"></script>
 </body>
 </html>
 
