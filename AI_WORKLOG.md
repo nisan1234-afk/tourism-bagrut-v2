@@ -18,6 +18,27 @@
 
 ## יומן
 
+### 2026-08-25 — Claude Code (הכנת פרומפט) + B (ביצוע בדפדפן) — בקאנד: עריכת תוכן קלה (content_overrides)
+
+- **בקשה:** בקאנד לתמיכה בעריכת טקסטים נבחרים דרך הדשבורד (ר' רשומת
+  הפרונטאנד למטה, "עריכת תוכן קלה למורה") — עד עכשיו רק הפרונטאנד היה פרוס
+  ו-`getAllContentOverrides`/`saveContentOverride`/`getContentOverrides`
+  עדיין לא היו קיימות בקוד.
+- **בוצע ב-`bagrut.gs`:** טאב גיליון חדש `content_overrides` (unit_id,
+  field_key, text, updated_by, updated_at) דרך
+  `ensureBagrutContentOverridesSheet_`. שלוש פונקציות: `getContentOverrides`
+  (**פתוחה, בלי login** — גם אורח/ת רואה טקסט ערוך), `getAllContentOverrides`
+  ו-`saveContentOverride` (שתיהן מוגנות, דורשות תפקיד teacher/homeroom/
+  admin/school_admin; upsert לפי `unit_id`+`field_key`).
+- **בוצע ב-`code.gs`:** `getAllContentOverrides`/`saveContentOverride` נוספו
+  ל-`protectedActions`; שלושתן נוספו ל-handlers ב-`doPost`.
+- **Deploy:** גרסה חדשה לאותו deployment ID הקיים (בוצע ע"י B, לפי פרומפט
+  שהכין Claude Code).
+- **פתוח:** בדיקה אמיתית — כניסה לטאב "עריכת תוכן" בדשבורד המורה, שמירת
+  טקסט לאחד משלושת השדות, ואימות שהוא מופיע בפועל בדף היחידה הציבורי
+  (`units/valleys.html`/`dead-sea.html`/`galilee.html`) גם למשתמש/ת שלא
+  מחובר/ת (guest).
+
 ### 2026-08-25 — Claude Code — פרונטאנד לבדיקת מורה על תשובות פתוחות (משתמש בבקאנד של Version 64)
 
 - **בקשה:** לחבר UI לארבע הפעולות שנפרסו ב-Version 64 (ר' רשומה למטה) — עד
