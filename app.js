@@ -1,9 +1,6 @@
 const sidebar = document.getElementById('sidebar');
 const menuButton = document.getElementById('menuButton');
 const overlay = document.getElementById('overlay');
-const loginDialog = document.getElementById('loginDialog');
-const dialogText = document.getElementById('dialogText');
-const KITA_PLUS_URL = 'https://nisan1234-afk.github.io/';
 
 function getKitahUser() {
   try { return JSON.parse(sessionStorage.getItem('kitahUser') || 'null'); }
@@ -28,32 +25,6 @@ function setMenu(open) {
 
 if (menuButton && sidebar) menuButton.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
 if (overlay) overlay.addEventListener('click', () => setMenu(false));
-
-document.addEventListener('click', (event) => {
-  const trigger = event.target.closest('[data-login-feature]');
-  if (!trigger) return;
-  event.preventDefault();
-  const feature = trigger.dataset.loginFeature;
-  const heading = document.querySelector('.login-dialog h2');
-  const ctaButton = document.querySelector('.login-dialog .button-primary');
-  if (getKitahUser()?.token) {
-    // כבר מחובר/ת — לא נכון להציע התחברות. היכולת עצמה עוד לא חוברה (בבנייה).
-    if (heading) heading.textContent = 'בקרוב';
-    dialogText.textContent = `${feature} עדיין בבנייה ותהיה זמינה בקרוב.`;
-    if (ctaButton) ctaButton.hidden = true;
-  } else {
-    if (heading) heading.textContent = 'היכולת הזו זמינה לאחר התחברות';
-    dialogText.textContent = `כדי לפתוח את ${feature}, לשמור התקדמות ולקבל חוויה אישית — מתחברים דרך כיתה פלוס.`;
-    if (ctaButton) ctaButton.hidden = false;
-  }
-  if (loginDialog) loginDialog.showModal();
-});
-
-document.getElementById('dialogClose')?.addEventListener('click', () => loginDialog.close());
-document.getElementById('continueGuest')?.addEventListener('click', () => loginDialog.close());
-document.querySelector('.login-dialog .button-primary')?.addEventListener('click', () => {
-  window.location.href = KITA_PLUS_URL;
-});
 
 const REVIEW_API = 'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
 
