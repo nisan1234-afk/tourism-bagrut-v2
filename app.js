@@ -34,7 +34,18 @@ document.addEventListener('click', (event) => {
   if (!trigger) return;
   event.preventDefault();
   const feature = trigger.dataset.loginFeature;
-  dialogText.textContent = `כדי לפתוח את ${feature}, לשמור התקדמות ולקבל חוויה אישית — מתחברים דרך כיתה פלוס.`;
+  const heading = document.querySelector('.login-dialog h2');
+  const ctaButton = document.querySelector('.login-dialog .button-primary');
+  if (getKitahUser()?.token) {
+    // כבר מחובר/ת — לא נכון להציע התחברות. היכולת עצמה עוד לא חוברה (בבנייה).
+    if (heading) heading.textContent = 'בקרוב';
+    dialogText.textContent = `${feature} עדיין בבנייה ותהיה זמינה בקרוב.`;
+    if (ctaButton) ctaButton.hidden = true;
+  } else {
+    if (heading) heading.textContent = 'היכולת הזו זמינה לאחר התחברות';
+    dialogText.textContent = `כדי לפתוח את ${feature}, לשמור התקדמות ולקבל חוויה אישית — מתחברים דרך כיתה פלוס.`;
+    if (ctaButton) ctaButton.hidden = false;
+  }
   if (loginDialog) loginDialog.showModal();
 });
 

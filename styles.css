@@ -89,3 +89,13 @@
 .edit-content-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
 .edit-content-card h3{margin:0 0 10px;font:700 17px 'Frank Ruhl Libre'}
 .edit-content-status{color:var(--muted);margin-inline-start:6px}
+
+/* Dynamic content-editor discovery UI (grouped by unit/page, searchable) */
+.search-input{display:block;width:100%;padding:11px 14px;margin-bottom:16px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.edit-unit-group{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;background:#fff}
+.edit-unit-group summary{cursor:pointer;padding:16px 18px;font:700 17px 'Frank Ruhl Libre';background:var(--sand)}
+.edit-unit-group summary small{color:var(--muted);font:400 12px 'Assistant'}
+.edit-page-group{padding:14px 18px}
+.edit-page-group h4{margin:14px 0 8px;font-size:12px;color:var(--muted);font-weight:700}
+.edit-page-group:first-child h4{margin-top:0}
+.edit-field-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--muted);background:var(--mint);border-radius:6px;padding:2px 8px;margin-bottom:6px}
