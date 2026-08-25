@@ -81,3 +81,13 @@
   renderProgress(); show(current);
 })();
 
+
+/* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
+async function callBagrutBot(question,mode,bagrutQuestion){
+  const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
+  if(!data.ok)throw new Error(data.error||'שגיאה');
+  return data.data.reply;
+}
+function toggleCoachWidget(open){document.getElementById('coachWidget')?.classList.toggle('open',open)}
+function appendCoachMsg(role,text){const log=document.getElementById('coachLog');if(!log)return null;const div=document.createElement('div');div.className='coach-msg coach-msg-'+role;div.textContent=text;log.appendChild(div);log.scrollTop=log.scrollHeight;return div}
+async function sendCoachQuestion(e){if(e)e.preventDefault();const input=document.getElementById('coachInput'),q=input.value.trim();if(!q)return;input.value='';appendCoachMsg('user',q);const pending=appendCoachMsg('bot','...חושב, רגע');try{pending.textContent=await callBagrutBot(q,'qa','')}catch(err){pending.textContent='שגיאה: '+err.message}}

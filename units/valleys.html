@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>העמקים | תיירות לבגרות</title>
-  <link rel="stylesheet" href="../styles.css?v=22">
+  <link rel="stylesheet" href="../styles.css?v=23">
 </head>
 <body class="unit-page valleys-unit" data-content-unit="haamakim">
   <header class="unit-topbar">
@@ -104,8 +104,18 @@
 
     <footer class="lesson-footer"><button id="prevPage">← הקודם</button><span id="pageCounter"></span><button id="nextPage">הבא ←</button></footer>
   </main>
+  <button class="coach-toggle" id="coachToggle" onclick="toggleCoachWidget(true)">💬 המאמן שלי לבגרות</button>
+  <div class="coach-widget" id="coachWidget">
+    <div class="coach-widget-head"><strong>🎓 המאמן שלי — העמקים</strong><button class="coach-widget-close" onclick="toggleCoachWidget(false)">✕</button></div>
+    <div class="coach-widget-sub">עונה רק על סמך חומר הלימוד האמיתי — לא ממציא ולא ניגש למקורות חיצוניים</div>
+    <div class="coach-log" id="coachLog"></div>
+    <form class="coach-widget-form" onsubmit="sendCoachQuestion(event)">
+      <input type="text" id="coachInput" placeholder="נתקעת? שאל/י כל דבר על החומר…" autocomplete="off">
+      <button type="submit">שלח</button>
+    </form>
+  </div>
   <script src="../content-overrides.js?v=1"></script>
-  <script src="../valleys-unit.js?v=1"></script>
+  <script src="../valleys-unit.js?v=2"></script>
 </body>
 </html>
 

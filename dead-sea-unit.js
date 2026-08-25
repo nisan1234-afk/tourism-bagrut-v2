@@ -8,3 +8,13 @@ const practice=['הסבירו את הקשר בין הבקע הסורי־אפרי
 async function submit(textarea,feedback){const answer=textarea.value.trim();if(answer.split(/\s+/).length<10){feedback.textContent='כדאי לכתוב תשובה מלאה ומנומקת יותר.';feedback.className='answer-feedback needs-work';return}const session=JSON.parse(sessionStorage.getItem('kitahUser')||'null');if(!session?.token){localStorage.setItem('dead-sea-'+(textarea.dataset.key||textarea.dataset.openQuestion),answer);feedback.textContent='נשמר במכשיר. לאחר התחברות התשובה תוכל להישמר גם למורה.';feedback.className='answer-feedback local';return}feedback.textContent='בודק את התשובה…';try{const r=await fetch(API,{method:'POST',body:JSON.stringify({action:'submitOpenAnswer',token:session.token,unit_id:'yam_hamelach',question:textarea.dataset.question||textarea.dataset.openQuestion,answer})}),d=await r.json();if(!d.ok)throw new Error(d.error||'שגיאה');feedback.textContent=d.data?.feedback||'התשובה נשלחה ונשמרה.';feedback.className='answer-feedback success'}catch(e){feedback.textContent='הבדיקה אינה זמינה כרגע; התשובה נשמרה במכשיר.';feedback.className='answer-feedback local';localStorage.setItem('dead-sea-'+(textarea.dataset.key||textarea.dataset.openQuestion),answer)}}
 document.querySelectorAll('.check-open,.check-exam').forEach(b=>b.onclick=()=>{const box=b.parentElement;submit(box.querySelector('textarea'),box.querySelector('.answer-feedback'))});progress();show(current)})();
 
+
+/* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
+async function callBagrutBot(question,mode,bagrutQuestion){
+  const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
+  if(!data.ok)throw new Error(data.error||'שגיאה');
+  return data.data.reply;
+}
+function toggleCoachWidget(open){document.getElementById('coachWidget')?.classList.toggle('open',open)}
+function appendCoachMsg(role,text){const log=document.getElementById('coachLog');if(!log)return null;const div=document.createElement('div');div.className='coach-msg coach-msg-'+role;div.textContent=text;log.appendChild(div);log.scrollTop=log.scrollHeight;return div}
+async function sendCoachQuestion(e){if(e)e.preventDefault();const input=document.getElementById('coachInput'),q=input.value.trim();if(!q)return;input.value='';appendCoachMsg('user',q);const pending=appendCoachMsg('bot','...חושב, רגע');try{pending.textContent=await callBagrutBot(q,'qa','')}catch(err){pending.textContent='שגיאה: '+err.message}}

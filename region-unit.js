@@ -23,3 +23,13 @@ const examBank=document.getElementById('jerusalemExamBank');examBank.innerHTML=j
 document.querySelectorAll('[data-check-exam]').forEach(button=>button.onclick=async()=>{const key=button.dataset.checkExam,[qi,pi]=key.split('-').map(Number),item=jerusalemExamData[qi].parts[pi],answer=document.querySelector(`[data-exam-answer="${key}"]`).value.trim(),normalized=answer.replace(/[״׳]/g,'').toLowerCase(),checks=item.c.map(([label,terms])=>({label,met:terms.some(t=>normalized.includes(t.replace(/[״׳]/g,'').toLowerCase()))})),passed=answer.split(/\s+/).length>=14&&checks.every(x=>x.met),box=document.querySelector(`[data-exam-feedback="${key}"]`);box.className='smart-feedback '+(passed?'passed':'needs-work');box.innerHTML=`<b>${passed?'הסעיף עבר ✓':'כדאי להשלים'}</b><ul>${checks.map(x=>`<li class="${x.met?'met':'missing'}">${x.met?'נמצא':'חסר'}: ${x.label}</li>`).join('')}</ul>`;if(passed)document.querySelector(`[data-exam-checkmark="${key}"]`).textContent='✓';if(regionUser?.token){const note=document.createElement('small');note.textContent='שומר בכיתה פלוס…';box.appendChild(note);try{const d=await regionAPI('submitOpenAnswer',{unit_id:regionUnitId,question:item.q,answer});note.textContent=d?.feedback?'משוב הבוט: '+d.feedback:'נשמר ✓'}catch(e){note.textContent='השמירה נכשלה: '+e.message}}});
 renderRegionProgress();renderRegionQuestion();showRegionPage(location.hash.slice(1)||'overview');
 
+
+/* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
+async function callBagrutBot(question,mode,bagrutQuestion){
+  const res=await fetch(regionApiUrl,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
+  if(!data.ok)throw new Error(data.error||'שגיאה');
+  return data.data.reply;
+}
+function toggleCoachWidget(open){document.getElementById('coachWidget')?.classList.toggle('open',open)}
+function appendCoachMsg(role,text){const log=document.getElementById('coachLog');if(!log)return null;const div=document.createElement('div');div.className='coach-msg coach-msg-'+role;div.textContent=text;log.appendChild(div);log.scrollTop=log.scrollHeight;return div}
+async function sendCoachQuestion(e){if(e)e.preventDefault();const input=document.getElementById('coachInput'),q=input.value.trim();if(!q)return;input.value='';appendCoachMsg('user',q);const pending=appendCoachMsg('bot','...חושב, רגע');try{pending.textContent=await callBagrutBot(q,'qa','')}catch(err){pending.textContent='שגיאה: '+err.message}}
