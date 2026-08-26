@@ -1,5 +1,5 @@
 (() => {
-  const API = 'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
+  const API = 'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';window.API=API;
   const pages = ['overview','heritage','water','settlement','images','presentation','practice'];
   const state = JSON.parse(localStorage.getItem('valleys-progress') || '{"done":[]}');
   const $ = id => document.getElementById(id);
@@ -71,7 +71,7 @@
     const session=JSON.parse(sessionStorage.getItem('kitahUser')||'null');
     if(!session?.token){feedback.textContent='התשובה נשמרה במכשיר. התחברו כדי לקבל בדיקת בוט ולשמור למורה.';feedback.className='answer-feedback local';localStorage.setItem('valley-answer-'+(textarea.dataset.exam||textarea.dataset.openQuestion),answer);return;}
     try{
-      const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'submitOpenAnswer',token:session.token,unit_id:'haamakim',question:textarea.dataset.question||textarea.dataset.openQuestion,answer})});
+      const res=await fetch(window.API,{method:'POST',body:JSON.stringify({action:'submitOpenAnswer',token:session.token,unit_id:'haamakim',question:textarea.dataset.question||textarea.dataset.openQuestion,answer})});
       const data=await res.json();
       if(!data.ok) throw new Error(data.error||'שגיאה');
       feedback.textContent=data.data?.feedback||'התשובה נשלחה ונשמרה לבדיקה.'; feedback.className='answer-feedback success';
@@ -84,7 +84,7 @@
 
 /* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
 async function callBagrutBot(question,mode,bagrutQuestion){
-  const res=await fetch(API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
+  const res=await fetch(window.API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
   if(!data.ok)throw new Error(data.error||'שגיאה');
   return data.data.reply;
 }
