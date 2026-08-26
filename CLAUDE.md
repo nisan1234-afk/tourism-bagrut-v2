@@ -96,16 +96,12 @@
 `saveBagrutQuizResult`, `reviewOpenAnswer`, `getBagrutPendingReviewsForTeacher`,
 `getMyReviewNotices`, `ackReviewNotice`, `getContentOverrides` (פתוח),
 `getAllContentOverrides`, `saveContentOverride`, `getBagrutUnits_` (פנימי,
-לא action), `addBagrutUnit` (מוגן).
-
-### כתובות בקוד — עדיין לא פרוסות (מסמכים 05/06/07/08 כתובים במלואם ב-Drive,
-### ממתינים לביצוע B)
-`addBagrutStudentsBulk` (05), `updateBagrutMistakes`/`getBagrutMistakes`/
-`getBagrutMistakesSummary` (06), `getMySiteRecognition`/`saveSiteKnown`/
-`resetMySiteRecognition`/`getBagrutSiteRecognitionSummary` (07),
-`submitPageFeedback`/`logClientError` (08). **הפרונטאנד כבר קורא לפעולות
-האלה** — כלומר הכפתורים המתאימים (ייבוא רשימה, "מה שכחתי", זיהוי אתרים,
-משוב עמוד) נכשלים בפועל עד שיבוצעו.
+לא action), `addBagrutUnit` (מוגן), `addBagrutStudentsBulk` (05),
+`updateBagrutMistakes`/`getBagrutMistakes`/`getBagrutMistakesSummary` (06),
+`getMySiteRecognition`/`saveSiteKnown`/`resetMySiteRecognition`/
+`getBagrutSiteRecognitionSummary` (07), `submitPageFeedback`/`logClientError`
+(08, פתוחות בכוונה — לא ב-protectedActions). כל 05-08 פרוסות מ-26.08.2026,
+גרסה 66.
 
 ### `BAGRUT_UNITS` — הפך לדינמי (25.08.2026)
 `getBagrutUnits_()` קורא כעת מטאב גיליון `bagrut_units`; אם הטאב ריק נופל
