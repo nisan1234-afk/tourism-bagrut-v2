@@ -11,7 +11,7 @@ document.querySelectorAll('.check-open,.check-exam').forEach(b=>b.onclick=()=>{c
 
 /* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
 async function callBagrutBot(question,mode,bagrutQuestion){
-  const res=await fetch(window.API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})}),data=await res.json();
+  let res,data;try{res=await fetch(window.API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})});data=await res.json();}catch(netErr){throw new Error('אין חיבור לשרת כרגע, נסו שוב בעוד רגע');}
   if(!data.ok)throw new Error(data.error||'שגיאה');
   return data.data.reply;
 }
