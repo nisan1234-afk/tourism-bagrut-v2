@@ -148,7 +148,10 @@ CAPABILITIES.md`):** לא להוסיף עד שהמדיניות הזו (קודק�
 כל שינוי שם משפיע על שני האתרים.
 
 ### פעולות פרוסות וחיות
-`askBagrutBot` (פתוח, בלי login), `submitOpenAnswer` (עם בדיקת מורה +
+`askBagrutBot` (פתוח, בלי login; מ-01.09.2026 עם retry יחיד + הודעת
+נפילה בעברית אם `callGemini` נכשל — **לא** מדליף שגיאת API גולמית
+לתלמיד. `submitOpenAnswer` קוראת ל-`callGemini` גם היא, בלי אותה הגנה —
+מועמד לתיקון דומה), `submitOpenAnswer` (עם בדיקת מורה +
 `pending_review`/הגנת prompt-injection, מ-25.08), `getBagrutStudentOpenAnswers`,
 `getBagrutTeacherDashboard`, `addBagrutStudent`, `removeBagrutStudent`,
 `saveBagrutQuizResult`, `reviewOpenAnswer`, `getBagrutPendingReviewsForTeacher`,
