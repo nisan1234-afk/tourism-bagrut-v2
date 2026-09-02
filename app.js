@@ -72,3 +72,32 @@ async function checkReviewNotices() {
 
 checkReviewNotices();
 
+function renderLastVisit() {
+  let last = null;
+  try { last = JSON.parse(localStorage.getItem('tourismLastVisit') || 'null'); } catch (_) { /* ignore */ }
+  const resumeButton = document.getElementById('resumeButton');
+  const journeySection = document.getElementById('journeySection');
+  if (!last || !last.file) return;
+  const href = 'units/' + last.file + (last.hash ? '#' + last.hash : '');
+  if (resumeButton) {
+    resumeButton.textContent = '';
+    resumeButton.append('המשך ב' + last.label + ' ');
+    const arrow = document.createElement('span');
+    arrow.textContent = '←';
+    resumeButton.appendChild(arrow);
+    resumeButton.addEventListener('click', () => { location.href = href; });
+  }
+  if (journeySection) {
+    const pct = last.pageTotal ? Math.round(((last.pageIndex + 1) / last.pageTotal) * 100) : 0;
+    journeySection.hidden = false;
+    journeySection.querySelector('#journeyUnitName').textContent = last.label;
+    journeySection.querySelector('#journeyPageInfo').textContent = (last.pageLabel || '') + ' · דף ' + (last.pageIndex + 1) + ' מתוך ' + last.pageTotal;
+    journeySection.querySelector('#journeyPercent').textContent = pct + '%';
+    journeySection.querySelector('#journeyMeterBar').style.width = pct + '%';
+    const resumeBtn = journeySection.querySelector('#journeyResumeBtn');
+    if (resumeBtn) resumeBtn.addEventListener('click', () => { location.href = href; });
+  }
+}
+
+renderLastVisit();
+

@@ -244,6 +244,7 @@ function showLessonPage(id,updateHash=true){
   document.getElementById('lessonPageTitle').textContent=pageLabels[safeId]||safeId;
   if(updateHash&&location.hash!==`#${safeId}`)history.pushState(null,'',`#${safeId}`);
   localStorage.setItem('coastal-last-page',safeId);
+  try{localStorage.setItem('tourismLastVisit',JSON.stringify({unitId:BAGRUT_UNIT_ID,label:'מישור החוף',file:'coastal-plain.html',hash:safeId,pageIndex:index,pageTotal:lessonPages.length,pageLabel:pageLabels[safeId]||safeId,ts:Date.now()}))}catch(_){}
   window.scrollTo({top:0,behavior:'smooth'});
   document.getElementById('lessonRail')?.classList.remove('open');
 }
