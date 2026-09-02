@@ -124,3 +124,5 @@
 .access-gate p{max-width:480px;margin:0 0 8px;color:var(--muted);line-height:1.6}
 .page-authorized .protected-page>*{display:revert}
 .page-authorized .protected-page>.access-gate{display:none}
+.topbar-search-input{border:1px solid var(--line);border-radius:8px;padding:6px 12px;font:inherit;width:170px;background:#fff}
+#unitFilterEmpty{text-align:center;padding:18px 0}

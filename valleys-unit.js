@@ -19,7 +19,7 @@
     $('pageCounter').textContent = `דף ${current + 1} מתוך ${pages.length}`;
     $('prevPage').disabled = current === 0; $('nextPage').disabled = current === pages.length - 1;
     history.replaceState(null, '', '#' + id);
-    try{localStorage.setItem('tourismLastVisit',JSON.stringify({unitId:'haamakim',label:'העמקים',file:'valleys.html',hash:id,pageIndex:current,pageTotal:pages.length,pageLabel:(document.querySelector('[data-page="'+id+'"]')?.textContent||id).trim().replace(/^\d+\.\s*/,''),ts:Date.now()}))}catch(_){}
+    try{localStorage.setItem('tourismLastVisit',JSON.stringify({unitId:'haamakim',label:'העמקים',file:'valleys.html',hash:id,pageIndex:current,pageTotal:pages.length,pageLabel:(document.querySelector('[data-page="'+id+'"]')?.textContent||id).trim().replace(/^\d+\.\s*/,''),ts:Date.now()}));const tuMap=JSON.parse(localStorage.getItem('tourismUnitProgress')||'{}');tuMap['haamakim']={pageIndex:current,pageTotal:pages.length,ts:Date.now()};localStorage.setItem('tourismUnitProgress',JSON.stringify(tuMap))}catch(_){}
     document.querySelector('.unit-main').scrollTo({top:0,behavior:'smooth'});
   }
   document.querySelectorAll('[data-page]').forEach(b => b.onclick = () => show(pages.indexOf(b.dataset.page)));

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
 <script>
   (function () {
     var hub = 'https://nisan1234-afk.github.io/';
@@ -44,7 +44,7 @@
         <button class="menu-button" id="menuButton" aria-label="פתיחת תפריט" aria-expanded="false">☰</button>
         <div class="breadcrumbs"><span>תיירות לבגרות</span><b>/</b><strong>סקירה</strong></div>
         <div class="top-actions">
-          <button class="icon-button" aria-label="חיפוש">⌕</button>
+          <button class="icon-button" id="searchToggle" aria-label="חיפוש יחידה">⌕</button>
         </div>
       </header>
 
@@ -84,34 +84,35 @@
         <section class="section" id="units" aria-labelledby="units-title">
           <div class="section-heading">
             <div><span class="eyebrow">חבלי הארץ</span><h2 id="units-title">יחידות הלימוד</h2><p>כל יחידה כוללת חומר מלא, מצגת, אתרים, תרגול ובוחן מסכם.</p></div>
-            <div class="view-switch" aria-label="סינון יחידות"><button class="selected">הכול</button><button>בתהליך</button><button>הושלם</button></div>
+            <div class="view-switch" aria-label="סינון יחידות"><button class="selected" data-filter="all">הכול</button><button data-filter="progress">בתהליך</button><button data-filter="done">הושלם</button></div>
           </div>
           <div class="unit-grid">
-            <article class="unit-card featured">
+            <article class="unit-card featured" data-unit-id="mishor_hachof">
               <div class="unit-cover cover-coast"><span>מישור החוף</span><b>02</b></div>
-              <div class="unit-body"><div class="unit-meta"><span>6 פרקים</span><span>24 אתרים</span><span>בוחן</span></div><h3>מישור החוף</h3><p>מראש הנקרה ועד מישור החוף הדרומי — נוף, ערים, מורשת ואתרי תיירות.</p><div class="mini-progress"><span><i style="width:38%"></i></span><b>38%</b></div><a class="card-link" href="units/coastal-plain.html">פתיחת יחידת הפיילוט ←</a></div>
+              <div class="unit-body"><div class="unit-meta"><span>6 פרקים</span><span>24 אתרים</span><span>בוחן</span></div><h3>מישור החוף</h3><p>מראש הנקרה ועד מישור החוף הדרומי — נוף, ערים, מורשת ואתרי תיירות.</p><div class="mini-progress"><span><i style="width:0%" data-mini-bar></i></span><b data-mini-label>יחידה חדשה</b></div><a class="card-link" href="units/coastal-plain.html">פתיחת יחידת הפיילוט ←</a></div>
             </article>
-            <article class="unit-card">
+            <article class="unit-card" data-unit-id="yam_hamelach">
               <div class="unit-cover cover-deadsea"><span>ים המלח ומדבר יהודה</span><b>01</b></div>
-              <div class="unit-body"><div class="unit-meta"><span>7 דפי לימוד</span><span>תרגול פתוח</span></div><h3>ים המלח ומדבר יהודה</h3><p>גיאולוגיה, היסטוריה, תיירות מרפא ואתרי מפתח בנקודה הנמוכה בעולם.</p><div class="mini-progress"><span><i style="width:0%"></i></span><b>יחידה חדשה</b></div><a class="card-link" href="units/dead-sea.html#overview">פתיחת היחידה ←</a></div>
+              <div class="unit-body"><div class="unit-meta"><span>7 דפי לימוד</span><span>תרגול פתוח</span></div><h3>ים המלח ומדבר יהודה</h3><p>גיאולוגיה, היסטוריה, תיירות מרפא ואתרי מפתח בנקודה הנמוכה בעולם.</p><div class="mini-progress"><span><i style="width:0%" data-mini-bar></i></span><b data-mini-label>יחידה חדשה</b></div><a class="card-link" href="units/dead-sea.html#overview">פתיחת היחידה ←</a></div>
             </article>
-            <article class="unit-card">
+            <article class="unit-card" data-unit-id="haamakim">
               <div class="unit-cover cover-valleys"><span>העמקים</span><b>03</b></div>
-              <div class="unit-body"><div class="unit-meta"><span>7 דפי לימוד</span><span>תרגול בגרות</span></div><h3>העמקים</h3><p>עמק יזרעאל, חרוד ובית שאן — התיישבות, ארכיאולוגיה, מים וטבע.</p><div class="mini-progress"><span><i style="width:0%"></i></span><b>יחידה חדשה</b></div><a class="card-link" href="units/valleys.html#overview">התחלת היחידה ←</a></div>
+              <div class="unit-body"><div class="unit-meta"><span>7 דפי לימוד</span><span>תרגול בגרות</span></div><h3>העמקים</h3><p>עמק יזרעאל, חרוד ובית שאן — התיישבות, ארכיאולוגיה, מים וטבע.</p><div class="mini-progress"><span><i style="width:0%" data-mini-bar></i></span><b data-mini-label>יחידה חדשה</b></div><a class="card-link" href="units/valleys.html#overview">התחלת היחידה ←</a></div>
             </article>
-            <article class="unit-card">
+            <article class="unit-card" data-unit-id="yerushalayim">
               <div class="unit-cover cover-jerusalem"><span>ירושלים</span><b>04</b></div>
-              <div class="unit-body"><div class="unit-meta"><span>8 דפי לימוד</span><span>מצגת, מפה ותרגול</span></div><h3>ירושלים</h3><p>העיר העתיקה, המקומות הקדושים, שכונות, מוזיאונים ואתרי מורשת.</p><div class="mini-progress"><span><i style="width:0%"></i></span><b>מוכנה ללמידה</b></div><a class="card-link" href="units/jerusalem.html">פתיחת היחידה ←</a></div>
+              <div class="unit-body"><div class="unit-meta"><span>8 דפי לימוד</span><span>מצגת, מפה ותרגול</span></div><h3>ירושלים</h3><p>העיר העתיקה, המקומות הקדושים, שכונות, מוזיאונים ואתרי מורשת.</p><div class="mini-progress"><span><i style="width:0%" data-mini-bar></i></span><b data-mini-label>יחידה חדשה</b></div><a class="card-link" href="units/jerusalem.html">פתיחת היחידה ←</a></div>
             </article>
-            <article class="unit-card">
+            <article class="unit-card" data-unit-id="galil">
               <div class="unit-cover cover-galilee"><span>הגליל</span><b>05</b></div>
-              <div class="unit-body"><div class="unit-meta"><span>8 דפי לימוד</span><span>3 תת־אזורים</span></div><h3>הגליל</h3><p>הגליל העליון, התחתון והמערבי — טבע, דת, מורשת, קהילות ועכו.</p><div class="mini-progress"><span><i style="width:0%"></i></span><b>יחידה חדשה</b></div><a class="card-link" href="units/galilee.html#overview">פתיחת היחידה ←</a></div>
+              <div class="unit-body"><div class="unit-meta"><span>8 דפי לימוד</span><span>3 תת־אזורים</span></div><h3>הגליל</h3><p>הגליל העליון, התחתון והמערבי — טבע, דת, מורשת, קהילות ועכו.</p><div class="mini-progress"><span><i style="width:0%" data-mini-bar></i></span><b data-mini-label>יחידה חדשה</b></div><a class="card-link" href="units/galilee.html#overview">פתיחת היחידה ←</a></div>
             </article>
           </div>
+          <p class="empty-state" id="unitFilterEmpty" hidden>אין יחידות בקטגוריה הזו כרגע.</p>
         </section>
 
         <section class="section image-feature" id="images">
-          <div class="image-feature-copy"><span class="eyebrow">לזהות. לזכור. לחבר למקום.</span><h2>אתרי ישראל דרך התמונות</h2><p>תרגול התמונות משולב בכל יחידה, ובנוסף מחכה לכם אתגר ארצי מכל חבלי הארץ.</p><ul><li>תרגול ממוקד לפי חבל</li><li>הסבר מלא אחרי כל תשובה</li><li>התאמה אישית לנושאים קשים</li></ul><button class="button button-primary">התחלת אתגר התמונות</button></div>
+          <div class="image-feature-copy"><span class="eyebrow">לזהות. לזכור. לחבר למקום.</span><h2>אתרי ישראל דרך התמונות</h2><p>תרגול זיהוי האתרים משולב בתוך כל יחידה בנפרד — כל חבל עם אתגר התמונות שלו.</p><ul><li>תרגול ממוקד לפי חבל</li><li>הסבר מלא אחרי כל תשובה</li><li>התאמה אישית לנושאים קשים</li></ul><a class="button button-primary" href="#units">לבחירת יחידה ותרגול זיהוי</a></div>
           <div class="image-stack" aria-label="כרטיסי אתרים לדוגמה"><div class="photo-card photo-one"><span>עכו העתיקה</span></div><div class="photo-card photo-two"><span>מצדה</span></div><div class="photo-card photo-three"><span>הגנים הבהאיים</span></div></div>
         </section>
       </main>
@@ -121,7 +122,7 @@
   </div>
 
   <div class="overlay" id="overlay"></div>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
 
