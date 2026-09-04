@@ -15,6 +15,7 @@ const ROOT = resolve(new URL('..', import.meta.url).pathname);
 const PAGES = [
   '/index.html',
   '/teacher.html',
+  '/progress.html',
   '/units/coastal-plain.html',
   '/units/jerusalem.html',
   '/units/valleys.html',

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d37">
+  <title>ההתקדמות שלי — תיירות לבגרות</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=32">
+<script>
+  (function () {
+    var hub = 'https://nisan1234-afk.github.io/';
+    try {
+      var user = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+      if (!user || !user.token) { location.replace(hub); return; }
+      document.documentElement.classList.add('page-authorized');
+    } catch (_) { location.replace(hub); }
+  }());
+</script>
+<script src="session-guard.js?v=1"></script>
+</head>
+<body class="protected-page progress-page"><section class="access-gate"><span class="dialog-mark">כ+</span><h1>האתר דורש כניסה</h1><p>תיירות לבגרות זמין רק למשתמשים מחוברים דרך כיתה פלוס.</p><a class="button button-primary button-large" href="https://nisan1234-afk.github.io/">כניסה דרך כיתה פלוס</a></section>
+  <header class="unit-topbar">
+    <a class="brand" href="index.html">תיירות לבגרות</a>
+    <div class="unit-progress-head"><span>התקדמות כללית</span><div class="meter"><i id="overallMeter"></i></div><b id="overallPercent">0%</b></div>
+    <a class="button button-outline" href="index.html#units">ליחידות</a>
+  </header>
+
+  <main class="progress-main">
+    <section class="section-heading">
+      <div><span class="eyebrow">ההתקדמות שלי</span><h1 id="progressTitle">איפה אני עומד/ת</h1><p id="progressLead">הנתונים מגיעים מכיתה פלוס: מה שסיימת, מה שעברת, ומה שכדאי לחזור אליו.</p></div>
+    </section>
+
+    <section class="progress-summary" id="progressSummary" aria-live="polite">
+      <article><span>יחידות שהתחלתי</span><b id="sumStarted">—</b></article>
+      <article><span>בחנים שעברתי</span><b id="sumPassed">—</b></article>
+      <article><span>ציון בוחן מיטבי</span><b id="sumBest">—</b></article>
+      <article><span>שאלות לחזור עליהן</span><b id="sumMistakes">—</b></article>
+    </section>
+
+    <section class="progress-units" id="progressUnits">
+      <p class="empty-state">טוען את ההתקדמות שלך…</p>
+    </section>
+
+    <section class="progress-forgot" id="progressForgot" hidden>
+      <div><span class="eyebrow">מה שכחתי</span><h2>שאלות שטעית בהן ועדיין לא תיקנת</h2><p id="forgotText"></p></div>
+      <a class="button button-primary" id="forgotLink" href="index.html#units">לתרגול ←</a>
+    </section>
+  </main>
+
+  <script src="app.js?v=11"></script>
+  <script src="progress.js?v=1"></script>
+</body>
+</html>
