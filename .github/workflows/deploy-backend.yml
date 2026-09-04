@@ -1,0 +1,88 @@
+name: Deploy backend (Apps Script)
+
+# מפרסם גרסה חדשה של הבקאנד על ה-deployment הקיים בכל שינוי בתיקיית backend/.
+# לעולם לא יוצר deployment חדש, ולכן כתובת ה-API לא משתנה.
+#
+# דורש secret אחד בריפו: CLASPRC = תוכן הקובץ ~/.clasprc.json שנוצר אחרי `clasp login`.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.clasp.json'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+env:
+  DEPLOYMENT_ID: AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h
+  API_URL: https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clasp
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: Authenticate clasp
+        env:
+          CLASPRC: ${{ secrets.CLASPRC }}
+        run: |
+          if [ -z "$CLASPRC" ]; then
+            echo "::error::חסר ה-secret CLASPRC (תוכן ~/.clasprc.json אחרי clasp login)"
+            exit 1
+          fi
+          printf '%s' "$CLASPRC" > ~/.clasprc.json
+
+      - name: Syntax check (.gs as JavaScript)
+        run: |
+          for f in backend/*.gs; do
+            cp "$f" /tmp/check.js
+            node --check /tmp/check.js || { echo "::error file=$f::syntax error"; exit 1; }
+          done
+
+      # רשת ביטחון: לפני שדורסים את הקוד בעורך, שומרים עותק של מה שהיה שם.
+      # אם מישהו ערך בעורך ישירות (בניגוד לכלל), השינוי לא הולך לאיבוד, הוא באמנות של הריצה.
+      - name: Snapshot remote source before push
+        run: |
+          mkdir -p /tmp/remote && cp .clasp.json /tmp/remote/
+          sed -i 's#"rootDir": "backend"#"rootDir": "src"#' /tmp/remote/.clasp.json
+          (cd /tmp/remote && clasp pull)
+          if ! diff -rq /tmp/remote/src backend > /tmp/remote-diff.txt; then
+            echo "::warning::המקור בעורך שונה ממה שב-git (ר' remote-snapshot באמנות הריצה)"
+            cat /tmp/remote-diff.txt
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: remote-snapshot-${{ github.sha }}
+          path: /tmp/remote/src
+          retention-days: 90
+
+      - name: Push source to Apps Script
+        run: clasp push -f
+
+      - name: Create new version on the existing deployment
+        run: |
+          DESC="git ${GITHUB_SHA::7} · ${GITHUB_REF_NAME}"
+          clasp deploy -i "$DEPLOYMENT_ID" -d "$DESC"
+
+      # אימות חי: פעולה פתוחה (בלי טוקן) חייבת לענות ok:true אחרי הפריסה.
+      - name: Verify live API responds
+        run: |
+          sleep 5
+          BODY=$(curl -sS -L -X POST "$API_URL" -H 'Content-Type: text/plain' \
+            --data '{"action":"getContentOverrides","unit_id":"galil"}')
+          echo "$BODY" | head -c 400; echo
+          echo "$BODY" | grep -q '"ok":true' || { echo "::error::ה-API לא ענה ok:true אחרי הפריסה"; exit 1; }
