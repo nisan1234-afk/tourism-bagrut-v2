@@ -59,7 +59,9 @@ jobs:
           mkdir -p /tmp/remote && cp .clasp.json /tmp/remote/
           sed -i 's#"rootDir": "backend"#"rootDir": "src"#' /tmp/remote/.clasp.json
           (cd /tmp/remote && clasp pull)
-          if ! diff -rq /tmp/remote/src backend > /tmp/remote-diff.txt; then
+          # clasp 3 מושך קבצי סקריפט כ-.js; משווים תוכן, לא סיומות
+          for f in /tmp/remote/src/*.js; do mv "$f" "${f%.js}.gs"; done
+          if ! diff -rq -x README.md /tmp/remote/src backend > /tmp/remote-diff.txt; then
             echo "::warning::המקור בעורך שונה ממה שב-git (ר' remote-snapshot באמנות הריצה)"
             cat /tmp/remote-diff.txt
           fi
