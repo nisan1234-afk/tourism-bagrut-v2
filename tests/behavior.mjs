@@ -1,0 +1,146 @@
+// בדיקת התנהגות של המנוע המשותף (unit-runtime.js) בדפדפן אמיתי, בלי שרת:
+// כללי ההשלמה, ניווט, זיהוי תמונות, מפה אילמת, מצגת ובוחן — באותה צורה בכל יחידה.
+// הרצה: npm run behavior
+import { chromium } from 'playwright';
+import { createServer } from 'node:http';
+import { readFile, stat, readdir } from 'node:fs/promises';
+import { join, extname, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+
+const ROOT = resolve(new URL('..', import.meta.url).pathname);
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
+const now = Math.floor(Date.now() / 1000);
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const USER = { name: 'תלמיד בדיקה', email: 'smoke.student@example.com', roles: ['student'], role: 'student', token: `${b64({ alg: 'none' })}.${b64({ email: 'smoke.student@example.com', exp: now + 3600 })}.sig` };
+const LONG_ANSWER = 'זו תשובה ארוכה מספיק לבדיקה שכוללת לפחות שתים עשרה מילים כדי לעבור את סף האורך המינימלי של המנוע.';
+
+async function serve() {
+  const server = createServer(async (req, res) => {
+    let file = join(ROOT, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    try {
+      if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
+      res.writeHead(200, { 'Content-Type': MIME[extname(file)] || 'application/octet-stream' });
+      res.end(await readFile(file));
+    } catch {
+      res.writeHead(404); res.end();
+    }
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  return { server, origin: `http://127.0.0.1:${server.address().port}` };
+}
+async function launch() {
+  try { return await chromium.launch(); }
+  catch { return chromium.launch({ executablePath: ['/opt/pw-browsers/chromium', '/usr/bin/chromium'].find((p) => existsSync(p)) }); }
+}
+
+const { server, origin } = await serve();
+const browser = await launch();
+const unitFiles = (await readdir(join(ROOT, 'units'))).filter((f) => f.endsWith('.html'));
+let failures = 0;
+
+for (const file of unitFiles) {
+  const html = await readFile(join(ROOT, 'units', file), 'utf8');
+  if (!html.includes('unit-runtime.js')) { console.log(`skip ${file} (מנוע ישן)`); continue; }
+  const data = JSON.parse(html.match(/<script type="application\/json" id="unitData">([\s\S]*?)<\/script>/)[1].replace(/<\\\//g, '</'));
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.addInitScript((u) => sessionStorage.setItem('kitahUser', JSON.stringify(u)), USER);
+  // השרת חסום: כל קריאת API נכשלת. המנוע חייב להישאר שמיש ולא לשקר על שמירה.
+  await context.route('**/*', (route) => (route.request().url().startsWith(origin) ? route.continue() : route.abort()));
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const problems = [];
+  const expect = (cond, msg) => { if (!cond) problems.push(msg); };
+
+  await page.goto(`${origin}/units/${file}`, { waitUntil: 'load' });
+  await page.waitForTimeout(300);
+  const pages = await page.$$eval('[data-page-panel]', (els) => els.map((e) => e.dataset.pagePanel));
+  expect((await page.textContent('#pageCounter')).includes(`מתוך ${pages.length}`), 'מונה הדפים לא תואם למספר הדפים');
+  expect((await page.textContent('#unitPercent')) === '0%', 'התקדמות התחלתית אינה 0%');
+  expect((await page.$$eval('[data-page-panel]', (els) => els.filter((e) => !e.hidden).length)) === 1, 'יותר מדף אחד גלוי');
+
+  for (const id of pages) {
+    await page.click(`#pageNav button[data-page="${id}"]`);
+    const panel = page.locator(`[data-page-panel="${id}"]`);
+    const complete = { click: () => panel.locator('.complete-page').click({ force: true }) };
+    if (['images', 'presentation', 'practice'].includes(id)) {
+      if (id === 'images') {
+        const cards = panel.locator('[data-recognition]');
+        const targets = panel.locator('[data-match-target]');
+        if ((await cards.count()) || (await targets.count())) {
+          await complete.click();
+          expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני חשיפת התמונות`);
+        }
+        for (let i = 0; i < (await cards.count()); i++) await cards.nth(i).click({ force: true });
+        if (await cards.count()) expect((await cards.first().getAttribute('class')).includes('revealed'), `${id}: תמונה לא סומנה כנחשפה`);
+        for (let i = 0; i < (await targets.count()); i++) {
+          const key = await targets.nth(i).getAttribute('data-match-target');
+          await panel.locator(`[data-match-label="${key}"]`).click({ force: true });
+          await targets.nth(i).dispatchEvent('click'); // המפה חסומה בבדיקה, היעדים חופפים
+        }
+        if (await targets.count()) expect((await panel.locator('#matchFeedback').textContent()).startsWith(`${await targets.count()} מתוך`), `${id}: המפה האילמת לא הושלמה`);
+      }
+      if (id === 'presentation' && data.slides.length) {
+        await complete.click();
+        expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני סוף המצגת`);
+        for (let i = 1; i < data.slides.length; i++) await page.click('#nextSlide');
+        expect((await page.textContent('#slideCount')).trim() === `${data.slides.length} / ${data.slides.length}`, `${id}: מונה השקופיות שגוי`);
+      }
+      if (id === 'practice') {
+        if (data.quiz.length) {
+          await complete.click();
+          expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני הבוחן`);
+          await page.click('#startQuiz');
+          for (const q of data.quiz) {
+            await page.locator('#answerList button').nth(q.correct).click();
+            await page.click('#nextQuestion');
+          }
+          expect((await page.textContent('#unitQuiz')).includes('הציון שלך: 100'), `${id}: ציון מלא לא הוצג`);
+        } else {
+          expect((await panel.locator('#examBank .exam-part').count()) >= 3, `${id}: פחות מ-3 סעיפי תרגול`);
+          await complete.click();
+          expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני שליחת סעיף`);
+          // בלי שרת אי אפשר לשלוח סעיף — מדמים שני כשלים דרך שאלת סיום? לא: כאן בודקים שהחסימה כנה ועוצרים.
+          continue;
+        }
+      }
+      await complete.click();
+    } else {
+      const textarea = panel.locator('.check-card textarea');
+      await complete.click();
+      expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני מענה על שאלת הדף`);
+      await textarea.fill('קצר');
+      await panel.locator('.check-open').click();
+      expect((await panel.locator('.answer-feedback').textContent()).includes('לפחות'), `${id}: תשובה קצרה לא נדחתה`);
+      await textarea.fill(LONG_ANSWER);
+      await panel.locator('.check-open').click();
+      await page.waitForTimeout(200);
+      const fb = await panel.locator('.answer-feedback').textContent();
+      expect(fb.includes('השליחה נכשלה') && fb.includes('נשארה בתיבה'), `${id}: כשל שרת לא דווח בכנות (${fb.slice(0, 60)})`);
+      await panel.locator('.check-open').click();
+      await page.waitForTimeout(200);
+      await complete.click(); // אחרי שני כשלי שרת מותר להמשיך
+    }
+    const done = await page.$$eval('#pageNav button.done', (els) => els.map((e) => e.dataset.page));
+    if (!(id === 'practice' && !data.quiz.length)) expect(done.includes(id), `${id}: הדף לא סומן כהושלם`);
+  }
+
+  const pct = await page.textContent('#unitPercent');
+  const expected = data.quiz.length ? '100%' : `${Math.round(((pages.length - 1) / pages.length) * 100)}%`;
+  expect(pct === expected, `התקדמות סופית ${pct}, ציפיתי ${expected}`);
+  // רענון: המצב נשמר מקומית
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(200);
+  expect((await page.textContent('#unitPercent')) === expected, 'ההתקדמות לא שרדה רענון');
+  if (errors.length) problems.push('שגיאות JS: ' + errors.join(' | '));
+
+  console.log(`${problems.length ? 'FAIL' : 'ok  '} ${file} (${pages.length} דפים, בוחן ${data.quiz.length})`);
+  problems.forEach((p) => console.log('      - ' + p));
+  if (problems.length) failures++;
+  await context.close();
+}
+
+await browser.close();
+server.close();
+if (failures) { console.error(`\n${failures} יחידות נכשלו`); process.exit(1); }
+console.log('\nכל היחידות מתנהגות לפי התקן');

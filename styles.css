@@ -3027,8 +3027,11 @@ footer {
 .teacher-only-link[hidden] {
   display: none !important;
 }
-.protected-teacher-page > * {
-  display: none;
+/* שער הכניסה: מסתירים את הדף רק כל עוד <html> לא סומן כמאושר. כך ה-display המקורי של כל
+   אלמנט (flex/grid של הסרגל והטופבר) נשמר אחרי הכניסה. עד 04.09 היה כאן display:revert על
+   כל הילדים, שדרס את ה-flex של הסרגל וגרם לחפיפה בין "לכל היחידות" לכפתור הניווט האחרון. */
+html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gate) {
+  display: none !important;
 }
 .protected-teacher-page > .teacher-access-gate {
   display: grid;
@@ -3052,9 +3055,6 @@ footer {
 .teacher-access-gate > a:last-child {
   color: var(--forest);
   font-weight: 700;
-}
-.teacher-authorized .protected-teacher-page > * {
-  display: revert;
 }
 .teacher-authorized .protected-teacher-page > .teacher-access-gate {
   display: none;
@@ -4340,8 +4340,8 @@ footer {
 }
 
 /* Site-wide login gate (guest mode removed 25.08.2026 — login required everywhere) */
-.protected-page > * {
-  display: none;
+html:not(.page-authorized) .protected-page > :not(.access-gate) {
+  display: none !important;
 }
 .protected-page > .access-gate {
   display: grid;
@@ -4366,9 +4366,6 @@ footer {
   color: var(--muted);
   line-height: 1.6;
 }
-.page-authorized .protected-page > * {
-  display: revert;
-}
 .page-authorized .protected-page > .access-gate {
   display: none;
 }
@@ -4383,4 +4380,54 @@ footer {
 #unitFilterEmpty {
   text-align: center;
   padding: 18px 0;
+}
+
+/* ===== מנוע היחידות המשותף (unit-runtime.js) ===== */
+.page-gate-note {
+  margin: 18px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fbe9d7;
+  color: #7a3f10;
+  font-weight: 700;
+}
+.page-gate-note[hidden] {
+  display: none;
+}
+.exam-hints {
+  margin: 10px 0 0;
+  padding: 0 18px 0 0;
+  font-size: 14px;
+}
+.exam-hints li.met {
+  color: #2e7d5b;
+}
+.exam-hints li.missing {
+  color: #7a3f10;
+}
+.answer-feedback.needs-work:not(:empty) {
+  background: #fbe9d7;
+}
+.answer-feedback.loading:not(:empty) {
+  background: #eef2f0;
+}
+.answer-feedback small {
+  display: block;
+  margin-top: 6px;
+  color: #4d6660;
+}
+.jerusalem-unit .unit-contract {
+  margin-bottom: 22px;
+}
+.jerusalem-unit .block-heading {
+  margin-bottom: 14px;
+}
+.jerusalem-unit .visual-story-strip .visual-poster span {
+  display: none;
+}
+.jerusalem-unit .visual-story-strip .visual-poster.revealed span {
+  display: block;
+}
+.jerusalem-unit .visual-story-strip .visual-poster.revealed b {
+  display: none;
 }

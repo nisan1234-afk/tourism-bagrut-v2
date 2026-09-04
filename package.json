@@ -7,10 +7,12 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run check && npm run standard && npm run smoke && npm run behavior",
     "check": "node scripts/check.mjs",
     "smoke": "node tests/smoke.mjs",
-    "format": "prettier --write '*.js' '*.css' 'backend/*.gs'"
+    "format": "prettier --write '*.js' '*.css' 'backend/*.gs'",
+    "standard": "node tests/standard.mjs",
+    "behavior": "node tests/behavior.mjs"
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,7 @@
 name: CI (frontend)
 
-# בכל push ו-PR: בדיקת תחביר לכל קובצי ה-JS, ובדיקת עשן שפותחת את כל 7 הדפים
-# בדפדפן אמיתי עם משתמש מזויף, ונכשלת על שגיאת JavaScript או קובץ מקומי חסר.
+# בכל push ו-PR: תחביר (check), תקן היחידות (standard), עשן בדפדפן על כל הדפים (smoke),
+# והתנהגות המנוע המשותף בכל יחידה (behavior). ר' docs/UNIT_TEMPLATE.md.
 
 on:
   push:
@@ -19,5 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run standard
       - run: npx playwright install --with-deps chromium
       - run: npm run smoke
+      - run: npm run behavior
