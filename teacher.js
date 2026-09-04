@@ -2,7 +2,7 @@
 // של המורה. עד 04.09.2026 הטאב הציג את הניסיונות של הדפדפן המקומי בלבד (ממצא A2 בסקירה).
 const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', hashivut: 'חשיבות התיירות' };
 const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html' };
-const WEEK = 7 * 24 * 60 * 60 * 1000;
+const WEEK = 7 * 24 * 60 * 60 * 1000; // פעילות = כל שמירה לשרת: דף שהושלם, תשובה, בוחן, תמונה
 function lastActivityOf(student) {
   const times = [student.last_active, ...(student.units || []).map((u) => u.last_activity)].filter(Boolean).map((t) => new Date(t).getTime()).filter((t) => !isNaN(t));
   return times.length ? Math.max(...times) : 0;
@@ -14,7 +14,13 @@ function renderInsights(students, pendingCount) {
   const activeWeek = students.filter((s) => Date.now() - lastActivityOf(s) < WEEK).length;
   const avg = total ? Math.round(students.reduce((sum, s) => sum + (Number(s.percent) || 0), 0) / total) : 0;
   const passedAny = students.filter((s) => (s.units || []).some((u) => u.completed)).length;
+  const DAY = 24 * 60 * 60 * 1000;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const activeToday = students.filter((s) => lastActivityOf(s) >= startOfToday.getTime());
+  const missingToday = students.filter((s) => lastActivityOf(s) < startOfToday.getTime());
   stats.innerHTML =
+    `<article><span>פעילים היום</span><b>${activeToday.length}</b><small>${missingToday.length ? 'לא נראו היום: ' + missingToday.slice(0, 8).map((s) => safe(s.name || s.email)).join(', ') + (missingToday.length > 8 ? ' ועוד ' + (missingToday.length - 8) : '') : 'כל הכיתה פעילה היום'}</small></article>` +
     `<article><span>פעילים השבוע</span><b>${activeWeek}</b><small>מתוך ${total} תלמידים רשומים</small></article>` +
     `<article><span>התקדמות ממוצעת</span><b>${avg}%</b><small>ממוצע אחוזי היחידות לכל תלמיד/ה</small></article>` +
     `<article><span>עברו בוחן</span><b>${passedAny}</b><small>לפחות ביחידה אחת (60 ומעלה)</small></article>` +
