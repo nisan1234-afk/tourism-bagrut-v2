@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=30">
+  <link rel="stylesheet" href="styles.css?v=31">
 <script>
   (function () {
     var hub = 'https://nisan1234-afk.github.io/';
@@ -70,6 +70,12 @@
           </div>
         </section>
 
+        <section class="section today-task" id="todayTask" hidden aria-labelledby="today-task-title">
+          <div class="today-task-card">
+            <div><span class="eyebrow">המשימה להיום מהמורה</span><h2 id="today-task-title">—</h2><p id="todayTaskNote"></p></div>
+            <a class="button button-primary" id="todayTaskLink" href="#units">פתיחת היחידה ←</a>
+          </div>
+        </section>
         <section class="section progress-section" id="journeySection" hidden aria-labelledby="journey-title">
           <div class="section-heading">
             <div><span class="eyebrow">המסלול שלך</span><h2 id="journey-title">ממשיכים בדיוק מהמקום שבו עצרת</h2></div>
@@ -122,7 +128,7 @@
   </div>
 
   <div class="overlay" id="overlay"></div>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
 

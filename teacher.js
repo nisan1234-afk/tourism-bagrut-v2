@@ -450,3 +450,59 @@ async function resetField(btn) {
 loadClassroom();
 loadPendingReviews();
 loadEditContent();
+
+// ---------- "המשימה להיום" ----------
+function renderAssignmentOptions() {
+  const select = document.getElementById('assignmentUnit');
+  if (!select) return;
+  CONTENT_PAGES.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p.unit_id;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+}
+function renderAssignment(assignment) {
+  const box = document.getElementById('assignmentCurrent');
+  if (!box) return;
+  if (!assignment) {
+    box.innerHTML = '<span class="review-badge">אין משימה פעילה</span>';
+    return;
+  }
+  const page = CONTENT_PAGES.find((p) => p.unit_id === assignment.unit_id);
+  box.innerHTML = `<span class="review-badge ok">פעילה</span> <b>${safe(assignment.unit_name)}</b>${assignment.note ? ' · ' + safe(assignment.note) : ''} <a href="${page ? page.url : 'index.html'}">לפתיחה ←</a>`;
+  document.getElementById('assignmentUnit').value = assignment.unit_id;
+  document.getElementById('assignmentNote').value = assignment.note || '';
+}
+async function loadAssignment() {
+  if (!teacherUser?.token || !document.getElementById('assignmentCurrent')) return;
+  try {
+    const data = await teacherAPI('getBagrutAssignment');
+    renderAssignment(data.assignment);
+  } catch (e) {
+    document.getElementById('assignmentCurrent').textContent = 'לא ניתן לטעון את המשימה: ' + e.message;
+  }
+}
+async function saveAssignment(unit_id) {
+  const status = document.getElementById('assignmentStatus');
+  status.textContent = 'שומר…';
+  try {
+    await teacherAPI('setBagrutAssignment', { unit_id, note: document.getElementById('assignmentNote').value.trim() });
+    status.textContent = unit_id ? 'פורסם לתלמידים ✓' : 'המשימה בוטלה';
+    await loadAssignment();
+  } catch (e) {
+    status.textContent = 'שגיאה: ' + e.message;
+  }
+}
+renderAssignmentOptions();
+document.getElementById('assignmentForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const unit = document.getElementById('assignmentUnit').value;
+  if (!unit) {
+    document.getElementById('assignmentStatus').textContent = 'בחרו יחידה קודם.';
+    return;
+  }
+  saveAssignment(unit);
+});
+document.getElementById('assignmentClear')?.addEventListener('click', () => saveAssignment(''));
+loadAssignment();
