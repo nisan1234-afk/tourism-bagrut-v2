@@ -92,7 +92,7 @@ for (const file of unitFiles) {
           expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני הבוחן`);
           await page.click('#startQuiz');
           for (const q of data.quiz) {
-            await page.locator('#answerList button').nth(q.correct).click();
+            await page.locator('#answerList button', { hasText: q.a[q.correct] }).first().click();
             await page.click('#nextQuestion');
           }
           expect((await page.textContent('#unitQuiz')).includes('הציון שלך: 100'), `${id}: ציון מלא לא הוצג`);

@@ -406,7 +406,10 @@
       '<p class="quiz-feedback" id="quizFeedback"></p><button class="button button-primary" id="nextQuestion" disabled>' +
       (qIndex === QUIZ.length - 1 ? 'סיום הבוחן' : 'לשאלה הבאה') + '</button></div>';
     const list = $('answerList');
-    x.a.forEach((label, i) => {
+    // סדר התשובות מעורבב בכל הצגה, כדי שהמיקום לא ילמד את התשובה
+    const order = x.a.map((_, i) => i).sort(() => Math.random() - 0.5);
+    order.forEach((i) => {
+      const label = x.a[i];
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = label;
@@ -416,7 +419,7 @@
         if (ok) qScore++;
         $$('#answerList button').forEach((n, j) => {
           n.disabled = true;
-          if (j === x.correct) n.classList.add('correct');
+          if (order[j] === x.correct) n.classList.add('correct');
         });
         if (!ok) b.classList.add('wrong');
         $('quizFeedback').textContent = (ok ? 'נכון! ' : 'לא מדויק. ') + (x.explain || '');
