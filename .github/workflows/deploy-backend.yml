@@ -82,7 +82,7 @@ jobs:
       - name: Verify live API responds
         run: |
           sleep 5
-          BODY=$(curl -sS -L -X POST "$API_URL" -H 'Content-Type: text/plain' \
+          BODY=$(curl -sS -L "$API_URL" -H 'Content-Type: text/plain' \
             --data '{"action":"getContentOverrides","unit_id":"galil"}')
           echo "$BODY" | head -c 400; echo
           echo "$BODY" | grep -q '"ok":true' || { echo "::error::ה-API לא ענה ok:true אחרי הפריסה"; exit 1; }
