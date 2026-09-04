@@ -140,10 +140,9 @@
       return;
     }
     const session = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
-    if (!session?.token) {
-      localStorage.setItem('dead-sea-' + (textarea.dataset.key || textarea.dataset.openQuestion), answer);
-      feedback.textContent = 'נשמר במכשיר. לאחר התחברות התשובה תוכל להישמר גם למורה.';
-      feedback.className = 'answer-feedback local';
+    if (!session?.token || window.kitahSession?.isExpired()) {
+      feedback.textContent = 'הכניסה פגה. התשובה נשארה בתיבה, היכנסו מחדש ושלחו שוב.';
+      feedback.className = 'answer-feedback needs-work';
       return;
     }
     feedback.textContent = 'בודק את התשובה…';
@@ -163,9 +162,8 @@
       feedback.textContent = d.data?.feedback || 'התשובה נשלחה ונשמרה.';
       feedback.className = 'answer-feedback success';
     } catch (e) {
-      feedback.textContent = 'הבדיקה אינה זמינה כרגע; התשובה נשמרה במכשיר.';
-      feedback.className = 'answer-feedback local';
-      localStorage.setItem('dead-sea-' + (textarea.dataset.key || textarea.dataset.openQuestion), answer);
+      feedback.textContent = 'השליחה נכשלה (' + e.message + '). התשובה נשארה בתיבה, נסו לשלוח שוב.';
+      feedback.className = 'answer-feedback needs-work';
     }
   }
   document.querySelectorAll('.check-open,.check-exam').forEach(

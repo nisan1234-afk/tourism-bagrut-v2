@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
 <script>
   (function () {
     var hub = 'https://nisan1234-afk.github.io/';
@@ -19,6 +19,7 @@
     } catch (_) { location.replace(hub); }
   }());
 </script>
+<script src="session-guard.js?v=1"></script>
 
 </head>
 <body class="protected-page"><section class="access-gate"><span class="dialog-mark">כ+</span><h1>האתר דורש כניסה</h1><p>תיירות לבגרות זמין רק למשתמשים מחוברים דרך כיתה פלוס.</p><a class="button button-primary button-large" href="https://nisan1234-afk.github.io/">כניסה דרך כיתה פלוס</a></section>
@@ -32,8 +33,8 @@
       <nav class="main-nav">
         <a class="nav-link active" href="#top"><span>⌂</span>סקירה</a>
         <a class="nav-link" href="#units"><span>▦</span>יחידות לימוד</a>
-        <a class="nav-link locked" href="#"><span>◔</span>ההתקדמות שלי<em>נעול</em></a>
-        <a class="nav-link locked" href="#"><span>◇</span>תרגול אישי<em>נעול</em></a>
+        <a class="nav-link locked" href="#" aria-disabled="true" tabindex="-1"><span>◔</span>ההתקדמות שלי<em>בקרוב</em></a>
+        <a class="nav-link locked" href="#" aria-disabled="true" tabindex="-1"><span>◇</span>תרגול אישי<em>בקרוב</em></a>
         <a class="nav-link" href="#images"><span>▧</span>זיהוי אתרים</a>
       </nav>
 
@@ -59,14 +60,13 @@
               <a class="button button-outline button-large" href="#units">לכל יחידות הלימוד</a>
             </div>
           </div>
-          <div class="hero-visual" aria-label="מפת התקדמות לדוגמה">
+          <div class="hero-visual" aria-label="ההתקדמות שלך">
             <div class="map-lines" aria-hidden="true"></div>
             <div class="progress-orbit">
-              <div class="progress-center"><strong>32%</strong><span>התקדמות כללית</span></div>
+              <div class="progress-center"><strong id="heroOverallPct">0%</strong><span>התקדמות כללית</span></div>
               <i class="pin pin-one"></i><i class="pin pin-two"></i><i class="pin pin-three"></i>
             </div>
-            <div class="floating-card card-one"><small>השלב הבא</small><strong>מישור החוף</strong><span>מצגת מלווה · 12 דקות</span></div>
-            <div class="floating-card card-two"><small>רצף למידה</small><strong>4 ימים</strong><span>כל הכבוד, ממשיכים</span></div>
+            <div class="floating-card card-one"><small id="heroNextLabel">מתחילים</small><strong id="heroNextUnit">מישור החוף</strong><span id="heroNextSub">יחידת הפיילוט · מומלץ להתחיל כאן</span></div>
           </div>
         </section>
 
@@ -76,7 +76,7 @@
           </div>
           <div class="journey-card">
             <div class="journey-title"><span class="unit-symbol coast">▣</span><div><small>יחידה בתהליך</small><h3 id="journeyUnitName">—</h3><p id="journeyPageInfo">—</p></div></div>
-            <div class="journey-meter"><div class="meter-label"><span>התקדמות ביחידה</span><strong id="journeyPercent">0%</strong></div><div class="meter"><i id="journeyMeterBar" style="width:0%"></i></div><div class="milestones"><span class="done">תוכן</span><span class="current">מצגת</span><span>תמונות</span><span>תרגול</span><span>בוחן</span></div></div>
+            <div class="journey-meter"><div class="meter-label"><span>התקדמות ביחידה</span><strong id="journeyPercent">0%</strong></div><div class="meter"><i id="journeyMeterBar" style="width:0%"></i></div></div>
             <button class="round-action" id="journeyResumeBtn" aria-label="המשך הלמידה">←</button>
           </div>
         </section>
@@ -122,7 +122,7 @@
   </div>
 
   <div class="overlay" id="overlay"></div>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
 

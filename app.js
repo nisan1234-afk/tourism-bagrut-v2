@@ -127,6 +127,33 @@ function renderLastVisit() {
 
 renderLastVisit();
 
+// המספרים ב-hero: ממוצע ההתקדמות בכל היחידות ומיקום אחרון, מאותו מקום שבו היחידות שומרות.
+function renderHeroVisual() {
+  const pct = document.getElementById('heroOverallPct');
+  if (!pct) return;
+  let progress = {};
+  let last = null;
+  try {
+    progress = JSON.parse(localStorage.getItem('tourismUnitProgress') || '{}');
+    last = JSON.parse(localStorage.getItem('tourismLastVisit') || 'null');
+  } catch (_) {
+    /* ignore */
+  }
+  const unitIds = [...document.querySelectorAll('.unit-card[data-unit-id]')].map((c) => c.dataset.unitId);
+  const total = unitIds.reduce((sum, id) => {
+    const rec = progress[id];
+    return sum + (rec && rec.pageTotal ? Math.min(1, (rec.pageIndex + 1) / rec.pageTotal) : 0);
+  }, 0);
+  pct.textContent = (unitIds.length ? Math.round((total / unitIds.length) * 100) : 0) + '%';
+  if (last && last.label) {
+    document.getElementById('heroNextLabel').textContent = 'ממשיכים';
+    document.getElementById('heroNextUnit').textContent = last.label;
+    document.getElementById('heroNextSub').textContent =
+      (last.pageLabel || '') + (last.pageTotal ? ' · דף ' + (last.pageIndex + 1) + ' מתוך ' + last.pageTotal : '');
+  }
+}
+renderHeroVisual();
+
 function renderUnitGrid() {
   let progress = {};
   try {

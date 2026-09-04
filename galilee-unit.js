@@ -142,10 +142,9 @@
       return;
     }
     const session = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
-    if (!session?.token) {
-      localStorage.setItem('galilee-' + (t.dataset.key || t.dataset.openQuestion), answer);
-      f.textContent = 'נשמר במכשיר. התחברו כדי לשמור גם למורה.';
-      f.className = 'answer-feedback local';
+    if (!session?.token || window.kitahSession?.isExpired()) {
+      f.textContent = 'הכניסה פגה. התשובה נשארה בתיבה, היכנסו מחדש ושלחו שוב.';
+      f.className = 'answer-feedback needs-work';
       return;
     }
     f.textContent = 'בודק את התשובה…';
@@ -165,9 +164,8 @@
       f.textContent = d.data?.feedback || 'התשובה נשלחה ונשמרה.';
       f.className = 'answer-feedback success';
     } catch (e) {
-      f.textContent = 'הבדיקה אינה זמינה כרגע; התשובה נשמרה במכשיר.';
-      f.className = 'answer-feedback local';
-      localStorage.setItem('galilee-' + (t.dataset.key || t.dataset.openQuestion), answer);
+      f.textContent = 'השליחה נכשלה (' + e.message + '). התשובה נשארה בתיבה, נסו לשלוח שוב.';
+      f.className = 'answer-feedback needs-work';
     }
   }
   document.querySelectorAll('.check-open,.check-exam').forEach(

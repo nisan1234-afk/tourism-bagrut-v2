@@ -141,10 +141,9 @@
     feedback.textContent = 'בודק את התשובה…';
     feedback.className = 'answer-feedback loading';
     const session = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
-    if (!session?.token) {
-      feedback.textContent = 'התשובה נשמרה במכשיר. התחברו כדי לקבל בדיקת בוט ולשמור למורה.';
-      feedback.className = 'answer-feedback local';
-      localStorage.setItem('valley-answer-' + (textarea.dataset.exam || textarea.dataset.openQuestion), answer);
+    if (!session?.token || window.kitahSession?.isExpired()) {
+      feedback.textContent = 'הכניסה פגה. התשובה נשארה בתיבה, היכנסו מחדש ושלחו שוב.';
+      feedback.className = 'answer-feedback needs-work';
       return;
     }
     try {
@@ -163,9 +162,8 @@
       feedback.textContent = data.data?.feedback || 'התשובה נשלחה ונשמרה לבדיקה.';
       feedback.className = 'answer-feedback success';
     } catch (e) {
-      feedback.textContent = 'התשובה נשמרה במכשיר ותישלח בחיבור הבא.';
-      feedback.className = 'answer-feedback local';
-      localStorage.setItem('valley-answer-' + (textarea.dataset.exam || textarea.dataset.openQuestion), answer);
+      feedback.textContent = 'השליחה נכשלה (' + e.message + '). התשובה נשארה בתיבה, נסו לשלוח שוב.';
+      feedback.className = 'answer-feedback needs-work';
     }
   }
   document.querySelectorAll('.check-open,.check-exam').forEach(
