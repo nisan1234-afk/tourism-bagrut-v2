@@ -1,0 +1,32 @@
+{
+  "name": "tourism-bagrut-v2",
+  "version": "1.0.0",
+  "description": "מערכת לימוד מלאה לתלמידים ולמורים, כחלק מכיתה פלוס.",
+  "main": "app.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check": "node scripts/check.mjs",
+    "smoke": "node tests/smoke.mjs",
+    "format": "prettier --write '*.js' '*.css' 'backend/*.gs'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nisan1234-afk/tourism-bagrut-v2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nisan1234-afk/tourism-bagrut-v2/issues"
+  },
+  "homepage": "https://github.com/nisan1234-afk/tourism-bagrut-v2#readme",
+  "private": "true",
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "prettier": "^3.9.6"
+  }
+}

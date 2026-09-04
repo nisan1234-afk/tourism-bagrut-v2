@@ -1,0 +1,23 @@
+name: CI (frontend)
+
+# בכל push ו-PR: בדיקת תחביר לכל קובצי ה-JS, ובדיקת עשן שפותחת את כל 7 הדפים
+# בדפדפן אמיתי עם משתמש מזויף, ונכשלת על שגיאת JavaScript או קובץ מקומי חסר.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run smoke
