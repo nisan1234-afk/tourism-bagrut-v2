@@ -1,58 +1,65 @@
-const attempts = JSON.parse(localStorage.getItem('coastal-open-attempts') || '[]');
-const completed = JSON.parse(localStorage.getItem('coastal-demo-progress') || '[]');
-const passedParts = new Set(JSON.parse(localStorage.getItem('coastal-bank-open-passed-v2') || '[]').map(String));
-const questionNames = [
-  'נוף ותיירות בדרום',
-  'יפו והעיר הלבנה',
-  'ארכאולוגיה, בהאים ותל אביב',
-  'מוזיאונים והכפרים הדרוזיים',
-  'בית גוברין ומוקדי משיכה',
-  'גבולות, ראש הנקרה וחיפה',
-  'עכו, טבע ודת בחיפה',
-  'חיפה, קיסריה ומושבות',
-  'זכרון יעקב וסיור מנהרייה',
-];
-const latest = new Map();
-attempts.forEach((item) => latest.set(`${item.scope}:${item.id}`, item));
-const bankAttempts = [...latest.values()].filter((item) => item.scope === 'bank');
-const average = bankAttempts.length
-  ? Math.round(bankAttempts.reduce((sum, item) => sum + item.score, 0) / bankAttempts.length)
-  : 0;
-const improved = attempts.filter(
-  (item, index) =>
-    index > 0 &&
-    item.scope === 'bank' &&
-    attempts.slice(0, index).some((old) => old.scope === item.scope && old.id === item.id && item.score > old.score)
-).length;
-document.getElementById('teacherStats').innerHTML =
-  `<article><span>התקדמות ביחידה</span><b>${Math.round((completed.length / 10) * 100)}%</b><small>${completed.length} מתוך 10 דפים הושלמו</small></article><article><span>סעיפי בגרות שעברו</span><b>${passedParts.size}/27</b><small>${bankAttempts.length} סעיפים נבדקו לפחות פעם אחת</small></article><article><span>ממוצע רכיבי תשובה</span><b>${average}%</b><small>לפי הניסיון האחרון בכל סעיף</small></article><article><span>שיפורים לאחר משוב</span><b>${improved}</b><small>ניסיונות שבהם הציון עלה</small></article>`;
-const missing = bankAttempts.flatMap((item) => item.missing),
-  counts = missing.reduce((all, label) => ((all[label] = (all[label] || 0) + 1), all), {}),
-  difficulties = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-document.getElementById('difficultyList').innerHTML = difficulties.length
-  ? difficulties
-      .slice(0, 6)
-      .map(
-        ([label, count], index) =>
-          `<div><i>${index + 1}</i><span><b>${label}</b><small>חסר ב־${count} תשובות אחרונות</small></span><em style="--difficulty:${Math.min(100, (count / Math.max(1, bankAttempts.length)) * 100)}%"></em></div>`
-      )
-      .join('')
-  : '<p class="empty-state">עדיין אין מספיק תשובות שנבדקו כדי לזהות דפוס.</p>';
-const topDifficulty = difficulties[0]?.[0];
-document.getElementById('teacherAction').innerHTML = topDifficulty
-  ? `<span class="action-number">01</span><h3>לחזור בקצרה על: ${topDifficulty}</h3><p>פתחו את השיעור בדוגמה מלאה, בקשו מהתלמידים לסמן את רכיבי התשובה, ואז אפשרו ניסיון חוזר בשאלה המתאימה.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת תרגול ממוקד</a>`
-  : `<span class="action-number">01</span><h3>לאסוף ניסיון ראשון</h3><p>בקשו מהתלמידים לענות על סעיף אחד לפחות. לאחר הבדיקה תופיע כאן המלצה המבוססת על הקושי החוזר.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת מאגר השאלות</a>`;
-document.getElementById('questionPerformance').innerHTML = questionNames
-  .map((name, i) => {
-    const parts = [0, 1, 2].map((p) => `${i}-${p}`),
-      passed = parts.filter((key) => passedParts.has(key)).length,
-      questionAttempts = bankAttempts.filter((item) => item.id.startsWith(`${i}-`)),
-      score = questionAttempts.length
-        ? Math.round(questionAttempts.reduce((sum, item) => sum + item.score, 0) / questionAttempts.length)
-        : 0;
-    return `<div><span><b>שאלה ${i + 1}</b><small>${name}</small></span><div class="part-dots">${parts.map((key, p) => `<i class="${passedParts.has(key) ? 'done' : ''}" title="סעיף ${String.fromCharCode(1488 + p)}">${String.fromCharCode(1488 + p)}</i>`).join('')}</div><strong>${passed}/3</strong><em>${questionAttempts.length ? score + '%' : 'טרם נבדק'}</em></div>`;
-  })
-  .join('');
+// טאב "תובנות": נבנה מנתוני הכיתה שמגיעים מהשרת (getBagrutTeacherDashboard), לא מה-localStorage
+// של המורה. עד 04.09.2026 הטאב הציג את הניסיונות של הדפדפן המקומי בלבד (ממצא A2 בסקירה).
+const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', hashivut: 'חשיבות התיירות' };
+const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html' };
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+function lastActivityOf(student) {
+  const times = [student.last_active, ...(student.units || []).map((u) => u.last_activity)].filter(Boolean).map((t) => new Date(t).getTime()).filter((t) => !isNaN(t));
+  return times.length ? Math.max(...times) : 0;
+}
+function renderInsights(students, pendingCount) {
+  const stats = document.getElementById('teacherStats');
+  if (!stats) return;
+  const total = students.length;
+  const activeWeek = students.filter((s) => Date.now() - lastActivityOf(s) < WEEK).length;
+  const avg = total ? Math.round(students.reduce((sum, s) => sum + (Number(s.percent) || 0), 0) / total) : 0;
+  const passedAny = students.filter((s) => (s.units || []).some((u) => u.completed)).length;
+  stats.innerHTML =
+    `<article><span>פעילים השבוע</span><b>${activeWeek}</b><small>מתוך ${total} תלמידים רשומים</small></article>` +
+    `<article><span>התקדמות ממוצעת</span><b>${avg}%</b><small>ממוצע אחוזי היחידות לכל תלמיד/ה</small></article>` +
+    `<article><span>עברו בוחן</span><b>${passedAny}</b><small>לפחות ביחידה אחת (60 ומעלה)</small></article>` +
+    `<article><span>ממתינות לבדיקתך</span><b>${pendingCount ?? '—'}</b><small>תשובות פתוחות שהבוט לא היה בטוח לגביהן</small></article>`;
+
+  // מוקדי קושי: היחידות עם הציון הממוצע הנמוך ביותר בבוחן, בין מי שניגש
+  const perUnit = {};
+  students.forEach((s) =>
+    (s.units || []).forEach((u) => {
+      const rec = (perUnit[u.unit_id] = perUnit[u.unit_id] || { unit_id: u.unit_id, name: u.name || UNIT_LABELS[u.unit_id] || u.unit_id, attempted: 0, passed: 0, scoreSum: 0, started: 0, percentSum: 0 });
+      if (u.attempts > 0 && u.total_questions) {
+        rec.attempted++;
+        rec.scoreSum += Math.round((u.best_score / u.total_questions) * 100);
+      }
+      if (u.completed) rec.passed++;
+      if ((Number(u.percent) || 0) > 0 || u.attempts > 0) rec.started++;
+      rec.percentSum += Number(u.percent) || 0;
+    })
+  );
+  const units = Object.values(perUnit).filter((u) => u.unit_id !== 'hashivut');
+  const difficulties = units.filter((u) => u.attempted > 0).map((u) => ({ ...u, avgScore: Math.round(u.scoreSum / u.attempted) })).sort((a, b) => a.avgScore - b.avgScore);
+  document.getElementById('difficultyList').innerHTML = difficulties.length
+    ? difficulties
+        .slice(0, 6)
+        .map((u, i) => `<div><i>${i + 1}</i><span><b>${safe(u.name)}</b><small>ממוצע בוחן ${u.avgScore} · ${u.passed} מתוך ${u.attempted} עברו</small></span><em style="--difficulty:${100 - u.avgScore}%"></em></div>`)
+        .join('')
+    : '<p class="empty-state">עדיין אף תלמיד/ה לא ניגש/ה לבוחן. הקושי לפי יחידה יופיע אחרי הבוחנים הראשונים.</p>';
+
+  const weakest = difficulties[0];
+  const notStarted = units.filter((u) => total && u.started === 0);
+  document.getElementById('teacherAction').innerHTML = weakest && weakest.avgScore < 70
+    ? `<span class="action-number">01</span><h3>לחזור בקצרה על: ${safe(weakest.name)}</h3><p>הציון הממוצע בבוחן ${weakest.avgScore}. פתחו את המצגת של היחידה בכיתה, ובקשו ניסיון נוסף בבוחן אחרי החזרה.</p><a class="button button-primary" href="${UNIT_LINKS[weakest.unit_id] || 'index.html'}#presentation">פתיחת המצגת</a>`
+    : notStarted.length && total
+      ? `<span class="action-number">01</span><h3>להתחיל את ${safe(notStarted[0].name)}</h3><p>אף תלמיד/ה עדיין לא התחיל/ה את היחידה. הפנו אליה בשיעור הבא.</p><a class="button button-primary" href="${UNIT_LINKS[notStarted[0].unit_id] || 'index.html'}">פתיחת היחידה</a>`
+      : `<span class="action-number">01</span><h3>לאסוף נתונים ראשונים</h3><p>כשהתלמידים יענו על שאלות דף ויעשו בוחן, כאן תופיע המלצה לפי הקושי שחוזר.</p><a class="button button-primary" href="index.html#units">ליחידות הלימוד</a>`;
+
+  document.getElementById('questionPerformance').innerHTML = units.length
+    ? units
+        .map((u) => {
+          const avgPct = total ? Math.round(u.percentSum / total) : 0;
+          return `<div><span><b>${safe(u.name)}</b><small>${u.started} התחילו · ${u.passed} עברו בוחן</small></span><div class="part-dots"></div><strong>${avgPct}%</strong><em>${u.attempted ? 'ממוצע בוחן ' + Math.round(u.scoreSum / u.attempted) : 'טרם נבחנו'}</em></div>`;
+        })
+        .join('')
+    : '<p class="empty-state">אין עדיין תלמידים רשומים.</p>';
+}
 
 const TEACHER_API =
   'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
@@ -131,12 +138,14 @@ async function loadClassroom() {
     const data = await teacherAPI('getBagrutTeacherDashboard');
     roster = data.students || [];
     renderRoster();
+    renderInsights(roster, window.__pendingCount);
     document.getElementById('teacherDataState').textContent = 'מחובר לכיתה פלוס';
     document.getElementById('overviewMessage').textContent = roster.length
       ? `${roster.length} תלמידים רשומים. עברו לרשימה כדי לזהות מי טרם התחיל ומי זקוק לחיזוק.`
       : 'עדיין אין תלמידים רשומים במקצוע.';
   } catch (e) {
     document.getElementById('teacherDataState').textContent = 'החיבור דורש בדיקה';
+    renderInsights([], undefined);
     document.getElementById('overviewMessage').textContent = 'לא הצלחנו לטעון את נתוני הכיתה: ' + e.message;
     document.getElementById('studentsBody').innerHTML = '<tr><td colspan="6">' + e.message + '</td></tr>';
   }
@@ -281,6 +290,8 @@ async function loadPendingReviews() {
   try {
     const data = await teacherAPI('getBagrutPendingReviewsForTeacher'),
       pending = data.pending || [];
+    window.__pendingCount = pending.length;
+    if (roster.length) renderInsights(roster, pending.length);
     countChip.textContent = pending.length ? `${pending.length} ממתינות` : 'הכל נבדק';
     box.innerHTML = pending.length
       ? pending
