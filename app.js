@@ -3,8 +3,11 @@ const menuButton = document.getElementById('menuButton');
 const overlay = document.getElementById('overlay');
 
 function getKitahUser() {
-  try { return JSON.parse(sessionStorage.getItem('kitahUser') || 'null'); }
-  catch (_) { return null; }
+  try {
+    return JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+  } catch (_) {
+    return null;
+  }
 }
 
 function isStaffUser(user) {
@@ -26,15 +29,22 @@ function setMenu(open) {
 if (menuButton && sidebar) menuButton.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
 if (overlay) overlay.addEventListener('click', () => setMenu(false));
 
-const REVIEW_API = 'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
+const REVIEW_API =
+  'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
 
 function escapeReviewText(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  return String(value ?? '').replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]
+  );
 }
 
 async function reviewApi(action, params = {}) {
   const user = getKitahUser();
-  const res = await fetch(REVIEW_API, { method: 'POST', body: JSON.stringify({ action, token: user?.token, ...params }) });
+  const res = await fetch(REVIEW_API, {
+    method: 'POST',
+    body: JSON.stringify({ action, token: user?.token, ...params }),
+  });
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || 'שגיאה');
   return data.data;
@@ -56,7 +66,11 @@ function showReviewNotice(notices) {
   document.body.appendChild(box);
   box.querySelector('[data-ack-notice]').addEventListener('click', async () => {
     box.remove();
-    try { await reviewApi('ackReviewNotice', { answer_key: notice.answer_key }); } catch (_) { /* לא חוסם UX */ }
+    try {
+      await reviewApi('ackReviewNotice', { answer_key: notice.answer_key });
+    } catch (_) {
+      /* לא חוסם UX */
+    }
     showReviewNotice(rest);
   });
 }
@@ -67,14 +81,20 @@ async function checkReviewNotices() {
   try {
     const data = await reviewApi('getMyReviewNotices');
     showReviewNotice(data.notices || []);
-  } catch (_) { /* שקט — לא חוסם את הדף */ }
+  } catch (_) {
+    /* שקט — לא חוסם את הדף */
+  }
 }
 
 checkReviewNotices();
 
 function renderLastVisit() {
   let last = null;
-  try { last = JSON.parse(localStorage.getItem('tourismLastVisit') || 'null'); } catch (_) { /* ignore */ }
+  try {
+    last = JSON.parse(localStorage.getItem('tourismLastVisit') || 'null');
+  } catch (_) {
+    /* ignore */
+  }
   const resumeButton = document.getElementById('resumeButton');
   const journeySection = document.getElementById('journeySection');
   if (!last || !last.file) return;
@@ -85,17 +105,23 @@ function renderLastVisit() {
     const arrow = document.createElement('span');
     arrow.textContent = '←';
     resumeButton.appendChild(arrow);
-    resumeButton.addEventListener('click', () => { location.href = href; });
+    resumeButton.addEventListener('click', () => {
+      location.href = href;
+    });
   }
   if (journeySection) {
     const pct = last.pageTotal ? Math.round(((last.pageIndex + 1) / last.pageTotal) * 100) : 0;
     journeySection.hidden = false;
     journeySection.querySelector('#journeyUnitName').textContent = last.label;
-    journeySection.querySelector('#journeyPageInfo').textContent = (last.pageLabel || '') + ' · דף ' + (last.pageIndex + 1) + ' מתוך ' + last.pageTotal;
+    journeySection.querySelector('#journeyPageInfo').textContent =
+      (last.pageLabel || '') + ' · דף ' + (last.pageIndex + 1) + ' מתוך ' + last.pageTotal;
     journeySection.querySelector('#journeyPercent').textContent = pct + '%';
     journeySection.querySelector('#journeyMeterBar').style.width = pct + '%';
     const resumeBtn = journeySection.querySelector('#journeyResumeBtn');
-    if (resumeBtn) resumeBtn.addEventListener('click', () => { location.href = href; });
+    if (resumeBtn)
+      resumeBtn.addEventListener('click', () => {
+        location.href = href;
+      });
   }
 }
 
@@ -103,12 +129,19 @@ renderLastVisit();
 
 function renderUnitGrid() {
   let progress = {};
-  try { progress = JSON.parse(localStorage.getItem('tourismUnitProgress') || '{}'); } catch (_) { /* ignore */ }
+  try {
+    progress = JSON.parse(localStorage.getItem('tourismUnitProgress') || '{}');
+  } catch (_) {
+    /* ignore */
+  }
   document.querySelectorAll('.unit-card[data-unit-id]').forEach((card) => {
     const rec = progress[card.dataset.unitId];
     const bar = card.querySelector('[data-mini-bar]');
     const label = card.querySelector('[data-mini-label]');
-    if (!rec || !rec.pageTotal) { card.dataset.status = 'new'; return; }
+    if (!rec || !rec.pageTotal) {
+      card.dataset.status = 'new';
+      return;
+    }
     const pct = Math.round(((rec.pageIndex + 1) / rec.pageTotal) * 100);
     const done = rec.pageIndex + 1 >= rec.pageTotal;
     card.dataset.status = done ? 'done' : 'progress';
@@ -122,7 +155,8 @@ function applyUnitFilter(filter) {
   let visibleCount = 0;
   cards.forEach((card) => {
     const status = card.dataset.status || 'new';
-    const show = filter === 'all' || (filter === 'progress' && status === 'progress') || (filter === 'done' && status === 'done');
+    const show =
+      filter === 'all' || (filter === 'progress' && status === 'progress') || (filter === 'done' && status === 'done');
     card.hidden = !show;
     if (show) visibleCount++;
   });
@@ -132,10 +166,12 @@ function applyUnitFilter(filter) {
 
 function setupUnitFilters() {
   const buttons = document.querySelectorAll('.view-switch button[data-filter]');
-  buttons.forEach((btn) => btn.addEventListener('click', () => {
-    buttons.forEach((b) => b.classList.toggle('selected', b === btn));
-    applyUnitFilter(btn.dataset.filter);
-  }));
+  buttons.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.toggle('selected', b === btn));
+      applyUnitFilter(btn.dataset.filter);
+    })
+  );
 }
 
 function setupUnitSearch() {
@@ -143,7 +179,10 @@ function setupUnitSearch() {
   if (!toggle) return;
   toggle.addEventListener('click', () => {
     let input = document.getElementById('unitSearchInput');
-    if (input) { input.focus(); return; }
+    if (input) {
+      input.focus();
+      return;
+    }
     input = document.createElement('input');
     input.type = 'search';
     input.id = 'unitSearchInput';
@@ -166,4 +205,3 @@ function setupUnitSearch() {
 renderUnitGrid();
 setupUnitFilters();
 setupUnitSearch();
-

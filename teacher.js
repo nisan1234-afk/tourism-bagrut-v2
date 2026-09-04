@@ -1,66 +1,441 @@
-const attempts=JSON.parse(localStorage.getItem('coastal-open-attempts')||'[]');
-const completed=JSON.parse(localStorage.getItem('coastal-demo-progress')||'[]');
-const passedParts=new Set(JSON.parse(localStorage.getItem('coastal-bank-open-passed-v2')||'[]').map(String));
-const questionNames=['נוף ותיירות בדרום','יפו והעיר הלבנה','ארכאולוגיה, בהאים ותל אביב','מוזיאונים והכפרים הדרוזיים','בית גוברין ומוקדי משיכה','גבולות, ראש הנקרה וחיפה','עכו, טבע ודת בחיפה','חיפה, קיסריה ומושבות','זכרון יעקב וסיור מנהרייה'];
-const latest=new Map();attempts.forEach(item=>latest.set(`${item.scope}:${item.id}`,item));
-const bankAttempts=[...latest.values()].filter(item=>item.scope==='bank');
-const average=bankAttempts.length?Math.round(bankAttempts.reduce((sum,item)=>sum+item.score,0)/bankAttempts.length):0;
-const improved=attempts.filter((item,index)=>index>0&&item.scope==='bank'&&attempts.slice(0,index).some(old=>old.scope===item.scope&&old.id===item.id&&item.score>old.score)).length;
-document.getElementById('teacherStats').innerHTML=`<article><span>התקדמות ביחידה</span><b>${Math.round(completed.length/10*100)}%</b><small>${completed.length} מתוך 10 דפים הושלמו</small></article><article><span>סעיפי בגרות שעברו</span><b>${passedParts.size}/27</b><small>${bankAttempts.length} סעיפים נבדקו לפחות פעם אחת</small></article><article><span>ממוצע רכיבי תשובה</span><b>${average}%</b><small>לפי הניסיון האחרון בכל סעיף</small></article><article><span>שיפורים לאחר משוב</span><b>${improved}</b><small>ניסיונות שבהם הציון עלה</small></article>`;
-const missing=bankAttempts.flatMap(item=>item.missing),counts=missing.reduce((all,label)=>(all[label]=(all[label]||0)+1,all),{}),difficulties=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-document.getElementById('difficultyList').innerHTML=difficulties.length?difficulties.slice(0,6).map(([label,count],index)=>`<div><i>${index+1}</i><span><b>${label}</b><small>חסר ב־${count} תשובות אחרונות</small></span><em style="--difficulty:${Math.min(100,count/Math.max(1,bankAttempts.length)*100)}%"></em></div>`).join(''):'<p class="empty-state">עדיין אין מספיק תשובות שנבדקו כדי לזהות דפוס.</p>';
-const topDifficulty=difficulties[0]?.[0];document.getElementById('teacherAction').innerHTML=topDifficulty?`<span class="action-number">01</span><h3>לחזור בקצרה על: ${topDifficulty}</h3><p>פתחו את השיעור בדוגמה מלאה, בקשו מהתלמידים לסמן את רכיבי התשובה, ואז אפשרו ניסיון חוזר בשאלה המתאימה.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת תרגול ממוקד</a>`:`<span class="action-number">01</span><h3>לאסוף ניסיון ראשון</h3><p>בקשו מהתלמידים לענות על סעיף אחד לפחות. לאחר הבדיקה תופיע כאן המלצה המבוססת על הקושי החוזר.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת מאגר השאלות</a>`;
-document.getElementById('questionPerformance').innerHTML=questionNames.map((name,i)=>{const parts=[0,1,2].map(p=>`${i}-${p}`),passed=parts.filter(key=>passedParts.has(key)).length,questionAttempts=bankAttempts.filter(item=>item.id.startsWith(`${i}-`)),score=questionAttempts.length?Math.round(questionAttempts.reduce((sum,item)=>sum+item.score,0)/questionAttempts.length):0;return`<div><span><b>שאלה ${i+1}</b><small>${name}</small></span><div class="part-dots">${parts.map((key,p)=>`<i class="${passedParts.has(key)?'done':''}" title="סעיף ${String.fromCharCode(1488+p)}">${String.fromCharCode(1488+p)}</i>`).join('')}</div><strong>${passed}/3</strong><em>${questionAttempts.length?score+'%':'טרם נבדק'}</em></div>`}).join('');
-
-const TEACHER_API='https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
-let teacherUser=null,roster=[];
-try{teacherUser=JSON.parse(sessionStorage.getItem('kitahUser')||'null')}catch(_){}
-if(teacherUser)document.getElementById('teacherUserName').textContent=teacherUser.name||teacherUser.email||'מורה';
-function switchTeacherTab(id){document.querySelectorAll('[data-teacher-tab]').forEach(x=>x.classList.toggle('active',x.dataset.teacherTab===id));document.querySelectorAll('[data-teacher-tab-button]').forEach(x=>x.classList.toggle('active',x.dataset.teacherTabButton===id))}
-document.querySelectorAll('[data-teacher-tab-button]').forEach(b=>b.addEventListener('click',()=>switchTeacherTab(b.dataset.teacherTabButton)));
-document.querySelectorAll('[data-open-teacher-tab]').forEach(b=>b.addEventListener('click',()=>switchTeacherTab(b.dataset.openTeacherTab)));
-async function teacherAPI(action,params={}){const response=await fetch(TEACHER_API,{method:'POST',body:JSON.stringify({action,token:teacherUser?.token,...params})}),data=await response.json();if(!data.ok)throw new Error(data.error||'שגיאה בחיבור');return data.data}
-function safe(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
-function renderRoster(){const body=document.getElementById('studentsBody');document.getElementById('rosterSummary').innerHTML=`<b>${roster.length}</b><span>תלמידים רשומים במקצוע</span>`;body.innerHTML=roster.length?roster.map(s=>`<tr><td><b>${safe(s.name||'ללא שם')}</b><small>${safe(s.email||'')}</small></td><td>${safe(s.class_name||'—')}</td><td>${safe(s.progress_percent??s.percent??0)}%</td><td>${safe(s.best_score??'—')}</td><td>${s.last_active?new Date(s.last_active).toLocaleDateString('he-IL'):'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name||s.email)}">הסרה</button></div></td></tr>`).join(''):'<tr><td colspan="6">אין תלמידים רשומים עדיין.</td></tr>';const progress=roster.map(s=>Number(s.progress_percent??s.percent??0)||0),notStarted=progress.filter(x=>x===0).length,needsHelp=roster.filter((s,i)=>progress[i]>0&&(progress[i]<40||Number(s.best_score||100)<60)).length,onTrack=Math.max(0,roster.length-notStarted-needsHelp),averageProgress=progress.length?Math.round(progress.reduce((a,b)=>a+b,0)/progress.length):0;document.getElementById('classPulse').innerHTML=`<article><span>טרם התחילו</span><b>${notStarted}</b></article><article><span>זקוקים לחיזוק</span><b>${needsHelp}</b></article><article><span>בדרך הנכונה</span><b>${onTrack}</b></article><article><span>התקדמות ממוצעת</span><b>${averageProgress}%</b></article>`;document.querySelectorAll('[data-student-answers]').forEach(b=>b.addEventListener('click',()=>openStudentAnswers(b.dataset.studentAnswers)));document.querySelectorAll('[data-remove-student]').forEach(b=>b.addEventListener('click',()=>removeStudent(b.dataset.removeStudent,b.dataset.studentName)))}
-async function loadClassroom(){if(!teacherUser?.token){document.getElementById('teacherDataState').textContent='נדרשת כניסה מחדש';document.getElementById('overviewMessage').textContent='כדי לטעון את נתוני הכיתה יש להיכנס דרך כיתה פלוס.';document.getElementById('studentsBody').innerHTML='<tr><td colspan="6">נתוני התלמידים יוצגו לאחר כניסה דרך כיתה פלוס.</td></tr>';return}try{const data=await teacherAPI('getBagrutTeacherDashboard');roster=data.students||[];renderRoster();document.getElementById('teacherDataState').textContent='מחובר לכיתה פלוס';document.getElementById('overviewMessage').textContent=roster.length?`${roster.length} תלמידים רשומים. עברו לרשימה כדי לזהות מי טרם התחיל ומי זקוק לחיזוק.`:'עדיין אין תלמידים רשומים במקצוע.'}catch(e){document.getElementById('teacherDataState').textContent='החיבור דורש בדיקה';document.getElementById('overviewMessage').textContent='לא הצלחנו לטעון את נתוני הכיתה: '+e.message;document.getElementById('studentsBody').innerHTML='<tr><td colspan="6">'+e.message+'</td></tr>'}}
-document.getElementById('toggleStudentForm').addEventListener('click',()=>document.getElementById('studentAddForm').hidden=!document.getElementById('studentAddForm').hidden);
-document.getElementById('toggleBulkForm').addEventListener('click',()=>document.getElementById('studentBulkForm').hidden=!document.getElementById('studentBulkForm').hidden);
-document.getElementById('studentAddForm').addEventListener('submit',async e=>{e.preventDefault();const feedback=document.getElementById('studentFormFeedback');feedback.textContent='שומר…';try{await teacherAPI('addBagrutStudent',{name:document.getElementById('newStudentName').value.trim(),email:document.getElementById('newStudentEmail').value.trim(),class_name:document.getElementById('newStudentClass').value.trim()});e.target.reset();feedback.textContent='התלמיד/ה נוספו';await loadClassroom()}catch(err){feedback.textContent='שגיאה: '+err.message}});
-function downloadCSV(filename,rows){const csv=rows.map(r=>r.join(',')).join('\r\n'),blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
-document.getElementById('downloadBulkTemplate').addEventListener('click',()=>downloadCSV('תבנית_ייבוא_תלמידים.csv',[['שם','דוא"ל','כיתה'],['נועה ישראלי','noa@example.com','י"א 1']]));
-document.getElementById('studentBulkForm').addEventListener('submit',async e=>{e.preventDefault();const feedback=document.getElementById('bulkFormFeedback'),file=document.getElementById('bulkFile').files[0];if(!file){feedback.textContent='בחרו קובץ קודם.';return}feedback.textContent='קורא את הקובץ…';let students;try{const text=(await file.text()).replace(/^﻿/,''),lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);students=lines.map(line=>{const [name,email,class_name='']=line.split(/[,\t]/).map(x=>x.trim().replace(/^"|"$/g,''));return{name,email,class_name}}).filter(s=>s.name&&s.email.includes('@'))}catch(err){feedback.textContent='שגיאה בקריאת הקובץ: '+err.message;return}if(!students.length){feedback.textContent='לא נמצאו שורות תקינות בקובץ (שם + דוא״ל).';return}feedback.textContent=`מוסיף ${students.length} תלמידים…`;try{await teacherAPI('addBagrutStudentsBulk',{students});e.target.reset();feedback.textContent='הרשימה נוספה בהצלחה';await loadClassroom()}catch(err){feedback.textContent='שגיאה: '+err.message}});
-async function removeStudent(email,name){if(!confirm(`להסיר את ${name} מרשימת תלמידי תיירות?`))return;try{await teacherAPI('removeBagrutStudent',{studentEmail:email,email});await loadClassroom()}catch(err){alert('לא ניתן להסיר: '+err.message)}}
-function reviewStatusLabel(status){return{auto:'נבדק אוטומטית',pending_review:'ממתין לבדיקה',approved:'אושרה',returned:'הוחזרה לתיקון',rejected:'נדחתה'}[status]||'טרם נבדק'}
-function reviewStatusClass(status){return{auto:'ok',approved:'ok',pending_review:'warn',returned:'warn',rejected:'bad'}[status]||''}
-async function openStudentAnswers(email){switchTeacherTab('answers');const state=document.getElementById('answersState');state.textContent='טוען תשובות…';try{const data=await teacherAPI('getBagrutStudentOpenAnswers',{studentEmail:email}),answers=data.answers||data||[];state.innerHTML=answers.length?answers.map(a=>`<article class="student-answer-card"><span class="review-badge ${reviewStatusClass(a.status)}">${reviewStatusLabel(a.status)}</span> <span>${safe(a.unit_name||a.unit_id||'יחידה')}</span><h3>${safe(a.question||'שאלה פתוחה')}</h3><p>${safe(a.answer||a.answer_text||'')}</p>${a.teacher_note?`<blockquote>הערת מורה: ${safe(a.teacher_note)}</blockquote>`:''}<small>${a.timestamp?new Date(a.timestamp).toLocaleString('he-IL'):(a.created_at?new Date(a.created_at).toLocaleString('he-IL'):'')}</small></article>`).join(''):'אין עדיין תשובות פתוחות לתלמיד/ה זה.'}catch(e){state.textContent='שגיאה: '+e.message}}
-async function loadPendingReviews(){const box=document.getElementById('pendingReviewsState'),countChip=document.getElementById('pendingCount');if(!teacherUser?.token){box.innerHTML='<div class="empty-state">נדרשת כניסה מחדש דרך כיתה פלוס.</div>';countChip.textContent='—';return}try{const data=await teacherAPI('getBagrutPendingReviewsForTeacher'),pending=data.pending||[];countChip.textContent=pending.length?`${pending.length} ממתינות`:'הכל נבדק';box.innerHTML=pending.length?pending.map(r=>`<article class="review-queue-card" data-answer-key="${safe(r.answer_key)}"><div class="review-queue-head"><span class="review-badge warn">ממתין לבדיקה</span><small>${safe(r.email)} · ${safe(r.unit_id)}</small></div><h3>${safe(r.question||'שאלה פתוחה')}</h3><textarea class="review-note" placeholder="הערה לתלמיד/ה (לא חובה)"></textarea><div class="review-actions"><button class="button button-primary" data-review-decision="approved" type="button">✓ אישור</button><button class="button button-outline" data-review-decision="returned" type="button">↩ להחזיר לתיקון</button><button class="button button-outline danger" data-review-decision="rejected" type="button">✗ דחייה</button></div></article>`).join(''):'<div class="empty-state">אין תשובות שממתינות לבדיקה כרגע 🎉</div>';box.querySelectorAll('[data-review-decision]').forEach(btn=>btn.addEventListener('click',()=>submitReview(btn)))}catch(e){box.innerHTML='<div class="empty-state">שגיאה בטעינת התשובות הממתינות: '+e.message+'</div>';countChip.textContent='שגיאה'}}
-async function submitReview(btn){const card=btn.closest('[data-answer-key]'),answerKey=card.dataset.answerKey,decision=btn.dataset.reviewDecision,note=card.querySelector('.review-note').value.trim();card.querySelectorAll('button').forEach(b=>b.disabled=true);try{await teacherAPI('reviewOpenAnswer',{answer_key:answerKey,decision,teacher_note:note});await loadPendingReviews()}catch(e){alert('שגיאה בשמירת ההחלטה: '+e.message);card.querySelectorAll('button').forEach(b=>b.disabled=false)}}
-const CONTENT_PAGES=[
-  {unit_id:'mishor_hachof',url:'units/coastal-plain.html',label:'מישור החוף'},
-  {unit_id:'yerushalayim',url:'units/jerusalem.html',label:'ירושלים'},
-  {unit_id:'haamakim',url:'units/valleys.html',label:'העמקים'},
-  {unit_id:'yam_hamelach',url:'units/dead-sea.html',label:'ים המלח ומדבר יהודה'},
-  {unit_id:'galil',url:'units/galilee.html',label:'הגליל'}
+const attempts = JSON.parse(localStorage.getItem('coastal-open-attempts') || '[]');
+const completed = JSON.parse(localStorage.getItem('coastal-demo-progress') || '[]');
+const passedParts = new Set(JSON.parse(localStorage.getItem('coastal-bank-open-passed-v2') || '[]').map(String));
+const questionNames = [
+  'נוף ותיירות בדרום',
+  'יפו והעיר הלבנה',
+  'ארכאולוגיה, בהאים ותל אביב',
+  'מוזיאונים והכפרים הדרוזיים',
+  'בית גוברין ומוקדי משיכה',
+  'גבולות, ראש הנקרה וחיפה',
+  'עכו, טבע ודת בחיפה',
+  'חיפה, קיסריה ומושבות',
+  'זכרון יעקב וסיור מנהרייה',
 ];
-async function discoverEditableFields(){
-  const results=[];
-  for(const page of CONTENT_PAGES){
-    try{
-      const html=await fetch(page.url).then(r=>r.text());
-      const doc=new DOMParser().parseFromString(html,'text/html');
-      doc.querySelectorAll('[data-field-key]').forEach(el=>{
-        const key=el.getAttribute('data-field-key'),parts=key.split('__'),pageId=parts.length===3?parts[1]:'כללי';
-        results.push({unit_id:page.unit_id,unitLabel:page.label,field_key:key,tag:el.tagName.toLowerCase(),pageId,default:el.textContent.trim()});
+const latest = new Map();
+attempts.forEach((item) => latest.set(`${item.scope}:${item.id}`, item));
+const bankAttempts = [...latest.values()].filter((item) => item.scope === 'bank');
+const average = bankAttempts.length
+  ? Math.round(bankAttempts.reduce((sum, item) => sum + item.score, 0) / bankAttempts.length)
+  : 0;
+const improved = attempts.filter(
+  (item, index) =>
+    index > 0 &&
+    item.scope === 'bank' &&
+    attempts.slice(0, index).some((old) => old.scope === item.scope && old.id === item.id && item.score > old.score)
+).length;
+document.getElementById('teacherStats').innerHTML =
+  `<article><span>התקדמות ביחידה</span><b>${Math.round((completed.length / 10) * 100)}%</b><small>${completed.length} מתוך 10 דפים הושלמו</small></article><article><span>סעיפי בגרות שעברו</span><b>${passedParts.size}/27</b><small>${bankAttempts.length} סעיפים נבדקו לפחות פעם אחת</small></article><article><span>ממוצע רכיבי תשובה</span><b>${average}%</b><small>לפי הניסיון האחרון בכל סעיף</small></article><article><span>שיפורים לאחר משוב</span><b>${improved}</b><small>ניסיונות שבהם הציון עלה</small></article>`;
+const missing = bankAttempts.flatMap((item) => item.missing),
+  counts = missing.reduce((all, label) => ((all[label] = (all[label] || 0) + 1), all), {}),
+  difficulties = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+document.getElementById('difficultyList').innerHTML = difficulties.length
+  ? difficulties
+      .slice(0, 6)
+      .map(
+        ([label, count], index) =>
+          `<div><i>${index + 1}</i><span><b>${label}</b><small>חסר ב־${count} תשובות אחרונות</small></span><em style="--difficulty:${Math.min(100, (count / Math.max(1, bankAttempts.length)) * 100)}%"></em></div>`
+      )
+      .join('')
+  : '<p class="empty-state">עדיין אין מספיק תשובות שנבדקו כדי לזהות דפוס.</p>';
+const topDifficulty = difficulties[0]?.[0];
+document.getElementById('teacherAction').innerHTML = topDifficulty
+  ? `<span class="action-number">01</span><h3>לחזור בקצרה על: ${topDifficulty}</h3><p>פתחו את השיעור בדוגמה מלאה, בקשו מהתלמידים לסמן את רכיבי התשובה, ואז אפשרו ניסיון חוזר בשאלה המתאימה.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת תרגול ממוקד</a>`
+  : `<span class="action-number">01</span><h3>לאסוף ניסיון ראשון</h3><p>בקשו מהתלמידים לענות על סעיף אחד לפחות. לאחר הבדיקה תופיע כאן המלצה המבוססת על הקושי החוזר.</p><a class="button button-primary" href="units/coastal-plain.html#open-practice">פתיחת מאגר השאלות</a>`;
+document.getElementById('questionPerformance').innerHTML = questionNames
+  .map((name, i) => {
+    const parts = [0, 1, 2].map((p) => `${i}-${p}`),
+      passed = parts.filter((key) => passedParts.has(key)).length,
+      questionAttempts = bankAttempts.filter((item) => item.id.startsWith(`${i}-`)),
+      score = questionAttempts.length
+        ? Math.round(questionAttempts.reduce((sum, item) => sum + item.score, 0) / questionAttempts.length)
+        : 0;
+    return `<div><span><b>שאלה ${i + 1}</b><small>${name}</small></span><div class="part-dots">${parts.map((key, p) => `<i class="${passedParts.has(key) ? 'done' : ''}" title="סעיף ${String.fromCharCode(1488 + p)}">${String.fromCharCode(1488 + p)}</i>`).join('')}</div><strong>${passed}/3</strong><em>${questionAttempts.length ? score + '%' : 'טרם נבדק'}</em></div>`;
+  })
+  .join('');
+
+const TEACHER_API =
+  'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
+let teacherUser = null,
+  roster = [];
+try {
+  teacherUser = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+} catch (_) {}
+if (teacherUser)
+  document.getElementById('teacherUserName').textContent = teacherUser.name || teacherUser.email || 'מורה';
+function switchTeacherTab(id) {
+  document
+    .querySelectorAll('[data-teacher-tab]')
+    .forEach((x) => x.classList.toggle('active', x.dataset.teacherTab === id));
+  document
+    .querySelectorAll('[data-teacher-tab-button]')
+    .forEach((x) => x.classList.toggle('active', x.dataset.teacherTabButton === id));
+}
+document
+  .querySelectorAll('[data-teacher-tab-button]')
+  .forEach((b) => b.addEventListener('click', () => switchTeacherTab(b.dataset.teacherTabButton)));
+document
+  .querySelectorAll('[data-open-teacher-tab]')
+  .forEach((b) => b.addEventListener('click', () => switchTeacherTab(b.dataset.openTeacherTab)));
+async function teacherAPI(action, params = {}) {
+  const response = await fetch(TEACHER_API, {
+      method: 'POST',
+      body: JSON.stringify({ action, token: teacherUser?.token, ...params }),
+    }),
+    data = await response.json();
+  if (!data.ok) throw new Error(data.error || 'שגיאה בחיבור');
+  return data.data;
+}
+function safe(value) {
+  return String(value ?? '').replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]
+  );
+}
+function renderRoster() {
+  const body = document.getElementById('studentsBody');
+  document.getElementById('rosterSummary').innerHTML = `<b>${roster.length}</b><span>תלמידים רשומים במקצוע</span>`;
+  body.innerHTML = roster.length
+    ? roster
+        .map(
+          (s) =>
+            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.email || '')}</small></td><td>${safe(s.class_name || '—')}</td><td>${safe(s.progress_percent ?? s.percent ?? 0)}%</td><td>${safe(s.best_score ?? '—')}</td><td>${s.last_active ? new Date(s.last_active).toLocaleDateString('he-IL') : 'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">הסרה</button></div></td></tr>`
+        )
+        .join('')
+    : '<tr><td colspan="6">אין תלמידים רשומים עדיין.</td></tr>';
+  const progress = roster.map((s) => Number(s.progress_percent ?? s.percent ?? 0) || 0),
+    notStarted = progress.filter((x) => x === 0).length,
+    needsHelp = roster.filter(
+      (s, i) => progress[i] > 0 && (progress[i] < 40 || Number(s.best_score || 100) < 60)
+    ).length,
+    onTrack = Math.max(0, roster.length - notStarted - needsHelp),
+    averageProgress = progress.length ? Math.round(progress.reduce((a, b) => a + b, 0) / progress.length) : 0;
+  document.getElementById('classPulse').innerHTML =
+    `<article><span>טרם התחילו</span><b>${notStarted}</b></article><article><span>זקוקים לחיזוק</span><b>${needsHelp}</b></article><article><span>בדרך הנכונה</span><b>${onTrack}</b></article><article><span>התקדמות ממוצעת</span><b>${averageProgress}%</b></article>`;
+  document
+    .querySelectorAll('[data-student-answers]')
+    .forEach((b) => b.addEventListener('click', () => openStudentAnswers(b.dataset.studentAnswers)));
+  document
+    .querySelectorAll('[data-remove-student]')
+    .forEach((b) => b.addEventListener('click', () => removeStudent(b.dataset.removeStudent, b.dataset.studentName)));
+}
+async function loadClassroom() {
+  if (!teacherUser?.token) {
+    document.getElementById('teacherDataState').textContent = 'נדרשת כניסה מחדש';
+    document.getElementById('overviewMessage').textContent = 'כדי לטעון את נתוני הכיתה יש להיכנס דרך כיתה פלוס.';
+    document.getElementById('studentsBody').innerHTML =
+      '<tr><td colspan="6">נתוני התלמידים יוצגו לאחר כניסה דרך כיתה פלוס.</td></tr>';
+    return;
+  }
+  try {
+    const data = await teacherAPI('getBagrutTeacherDashboard');
+    roster = data.students || [];
+    renderRoster();
+    document.getElementById('teacherDataState').textContent = 'מחובר לכיתה פלוס';
+    document.getElementById('overviewMessage').textContent = roster.length
+      ? `${roster.length} תלמידים רשומים. עברו לרשימה כדי לזהות מי טרם התחיל ומי זקוק לחיזוק.`
+      : 'עדיין אין תלמידים רשומים במקצוע.';
+  } catch (e) {
+    document.getElementById('teacherDataState').textContent = 'החיבור דורש בדיקה';
+    document.getElementById('overviewMessage').textContent = 'לא הצלחנו לטעון את נתוני הכיתה: ' + e.message;
+    document.getElementById('studentsBody').innerHTML = '<tr><td colspan="6">' + e.message + '</td></tr>';
+  }
+}
+document
+  .getElementById('toggleStudentForm')
+  .addEventListener(
+    'click',
+    () => (document.getElementById('studentAddForm').hidden = !document.getElementById('studentAddForm').hidden)
+  );
+document
+  .getElementById('toggleBulkForm')
+  .addEventListener(
+    'click',
+    () => (document.getElementById('studentBulkForm').hidden = !document.getElementById('studentBulkForm').hidden)
+  );
+document.getElementById('studentAddForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const feedback = document.getElementById('studentFormFeedback');
+  feedback.textContent = 'שומר…';
+  try {
+    await teacherAPI('addBagrutStudent', {
+      name: document.getElementById('newStudentName').value.trim(),
+      email: document.getElementById('newStudentEmail').value.trim(),
+      class_name: document.getElementById('newStudentClass').value.trim(),
+    });
+    e.target.reset();
+    feedback.textContent = 'התלמיד/ה נוספו';
+    await loadClassroom();
+  } catch (err) {
+    feedback.textContent = 'שגיאה: ' + err.message;
+  }
+});
+function downloadCSV(filename, rows) {
+  const csv = rows.map((r) => r.join(',')).join('\r\n'),
+    blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }),
+    url = URL.createObjectURL(blob),
+    a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+document.getElementById('downloadBulkTemplate').addEventListener('click', () =>
+  downloadCSV('תבנית_ייבוא_תלמידים.csv', [
+    ['שם', 'דוא"ל', 'כיתה'],
+    ['נועה ישראלי', 'noa@example.com', 'י"א 1'],
+  ])
+);
+document.getElementById('studentBulkForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const feedback = document.getElementById('bulkFormFeedback'),
+    file = document.getElementById('bulkFile').files[0];
+  if (!file) {
+    feedback.textContent = 'בחרו קובץ קודם.';
+    return;
+  }
+  feedback.textContent = 'קורא את הקובץ…';
+  let students;
+  try {
+    const text = (await file.text()).replace(/^﻿/, ''),
+      lines = text
+        .split(/\r?\n/)
+        .map((x) => x.trim())
+        .filter(Boolean);
+    students = lines
+      .map((line) => {
+        const [name, email, class_name = ''] = line.split(/[,\t]/).map((x) => x.trim().replace(/^"|"$/g, ''));
+        return { name, email, class_name };
+      })
+      .filter((s) => s.name && s.email.includes('@'));
+  } catch (err) {
+    feedback.textContent = 'שגיאה בקריאת הקובץ: ' + err.message;
+    return;
+  }
+  if (!students.length) {
+    feedback.textContent = 'לא נמצאו שורות תקינות בקובץ (שם + דוא״ל).';
+    return;
+  }
+  feedback.textContent = `מוסיף ${students.length} תלמידים…`;
+  try {
+    await teacherAPI('addBagrutStudentsBulk', { students });
+    e.target.reset();
+    feedback.textContent = 'הרשימה נוספה בהצלחה';
+    await loadClassroom();
+  } catch (err) {
+    feedback.textContent = 'שגיאה: ' + err.message;
+  }
+});
+async function removeStudent(email, name) {
+  if (!confirm(`להסיר את ${name} מרשימת תלמידי תיירות?`)) return;
+  try {
+    await teacherAPI('removeBagrutStudent', { studentEmail: email, email });
+    await loadClassroom();
+  } catch (err) {
+    alert('לא ניתן להסיר: ' + err.message);
+  }
+}
+function reviewStatusLabel(status) {
+  return (
+    {
+      auto: 'נבדק אוטומטית',
+      pending_review: 'ממתין לבדיקה',
+      approved: 'אושרה',
+      returned: 'הוחזרה לתיקון',
+      rejected: 'נדחתה',
+    }[status] || 'טרם נבדק'
+  );
+}
+function reviewStatusClass(status) {
+  return { auto: 'ok', approved: 'ok', pending_review: 'warn', returned: 'warn', rejected: 'bad' }[status] || '';
+}
+async function openStudentAnswers(email) {
+  switchTeacherTab('answers');
+  const state = document.getElementById('answersState');
+  state.textContent = 'טוען תשובות…';
+  try {
+    const data = await teacherAPI('getBagrutStudentOpenAnswers', { studentEmail: email }),
+      answers = data.answers || data || [];
+    state.innerHTML = answers.length
+      ? answers
+          .map(
+            (a) =>
+              `<article class="student-answer-card"><span class="review-badge ${reviewStatusClass(a.status)}">${reviewStatusLabel(a.status)}</span> <span>${safe(a.unit_name || a.unit_id || 'יחידה')}</span><h3>${safe(a.question || 'שאלה פתוחה')}</h3><p>${safe(a.answer || a.answer_text || '')}</p>${a.teacher_note ? `<blockquote>הערת מורה: ${safe(a.teacher_note)}</blockquote>` : ''}<small>${a.timestamp ? new Date(a.timestamp).toLocaleString('he-IL') : a.created_at ? new Date(a.created_at).toLocaleString('he-IL') : ''}</small></article>`
+          )
+          .join('')
+      : 'אין עדיין תשובות פתוחות לתלמיד/ה זה.';
+  } catch (e) {
+    state.textContent = 'שגיאה: ' + e.message;
+  }
+}
+async function loadPendingReviews() {
+  const box = document.getElementById('pendingReviewsState'),
+    countChip = document.getElementById('pendingCount');
+  if (!teacherUser?.token) {
+    box.innerHTML = '<div class="empty-state">נדרשת כניסה מחדש דרך כיתה פלוס.</div>';
+    countChip.textContent = '—';
+    return;
+  }
+  try {
+    const data = await teacherAPI('getBagrutPendingReviewsForTeacher'),
+      pending = data.pending || [];
+    countChip.textContent = pending.length ? `${pending.length} ממתינות` : 'הכל נבדק';
+    box.innerHTML = pending.length
+      ? pending
+          .map(
+            (r) =>
+              `<article class="review-queue-card" data-answer-key="${safe(r.answer_key)}"><div class="review-queue-head"><span class="review-badge warn">ממתין לבדיקה</span><small>${safe(r.email)} · ${safe(r.unit_id)}</small></div><h3>${safe(r.question || 'שאלה פתוחה')}</h3><textarea class="review-note" placeholder="הערה לתלמיד/ה (לא חובה)"></textarea><div class="review-actions"><button class="button button-primary" data-review-decision="approved" type="button">✓ אישור</button><button class="button button-outline" data-review-decision="returned" type="button">↩ להחזיר לתיקון</button><button class="button button-outline danger" data-review-decision="rejected" type="button">✗ דחייה</button></div></article>`
+          )
+          .join('')
+      : '<div class="empty-state">אין תשובות שממתינות לבדיקה כרגע 🎉</div>';
+    box
+      .querySelectorAll('[data-review-decision]')
+      .forEach((btn) => btn.addEventListener('click', () => submitReview(btn)));
+  } catch (e) {
+    box.innerHTML = '<div class="empty-state">שגיאה בטעינת התשובות הממתינות: ' + e.message + '</div>';
+    countChip.textContent = 'שגיאה';
+  }
+}
+async function submitReview(btn) {
+  const card = btn.closest('[data-answer-key]'),
+    answerKey = card.dataset.answerKey,
+    decision = btn.dataset.reviewDecision,
+    note = card.querySelector('.review-note').value.trim();
+  card.querySelectorAll('button').forEach((b) => (b.disabled = true));
+  try {
+    await teacherAPI('reviewOpenAnswer', { answer_key: answerKey, decision, teacher_note: note });
+    await loadPendingReviews();
+  } catch (e) {
+    alert('שגיאה בשמירת ההחלטה: ' + e.message);
+    card.querySelectorAll('button').forEach((b) => (b.disabled = false));
+  }
+}
+const CONTENT_PAGES = [
+  { unit_id: 'mishor_hachof', url: 'units/coastal-plain.html', label: 'מישור החוף' },
+  { unit_id: 'yerushalayim', url: 'units/jerusalem.html', label: 'ירושלים' },
+  { unit_id: 'haamakim', url: 'units/valleys.html', label: 'העמקים' },
+  { unit_id: 'yam_hamelach', url: 'units/dead-sea.html', label: 'ים המלח ומדבר יהודה' },
+  { unit_id: 'galil', url: 'units/galilee.html', label: 'הגליל' },
+];
+async function discoverEditableFields() {
+  const results = [];
+  for (const page of CONTENT_PAGES) {
+    try {
+      const html = await fetch(page.url).then((r) => r.text());
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      doc.querySelectorAll('[data-field-key]').forEach((el) => {
+        const key = el.getAttribute('data-field-key'),
+          parts = key.split('__'),
+          pageId = parts.length === 3 ? parts[1] : 'כללי';
+        results.push({
+          unit_id: page.unit_id,
+          unitLabel: page.label,
+          field_key: key,
+          tag: el.tagName.toLowerCase(),
+          pageId,
+          default: el.textContent.trim(),
+        });
       });
-    }catch(e){/* עמוד לא זמין כרגע — מדלגים עליו בסריקה הזו */}
+    } catch (e) {
+      /* עמוד לא זמין כרגע — מדלגים עליו בסריקה הזו */
+    }
   }
   return results;
 }
-let discoveredFields=[];
-async function loadEditContent(){const box=document.getElementById('editContentState');if(!teacherUser?.token){box.innerHTML='<div class="empty-state">נדרשת כניסה מחדש דרך כיתה פלוס.</div>';return}box.innerHTML='<div class="empty-state">סורק את תוכן היחידות…</div>';try{const [fields,overridesData]=await Promise.all([discoverEditableFields(),teacherAPI('getAllContentOverrides')]);discoveredFields=fields;const saved=overridesData.overrides||[],byKey={};saved.forEach(r=>{byKey[r.unit_id+'|'+r.field_key]=r.text});if(!fields.length){box.innerHTML='<div class="empty-state">לא נמצאו שדות עריכה כרגע.</div>';return}const groups={};fields.forEach(f=>{groups[f.unit_id]=groups[f.unit_id]||{label:f.unitLabel,pages:{}};groups[f.unit_id].pages[f.pageId]=groups[f.unit_id].pages[f.pageId]||[];groups[f.unit_id].pages[f.pageId].push(f)});box.innerHTML='<input type="search" id="editContentSearch" class="search-input" placeholder="חיפוש בטקסטים הניתנים לעריכה…">'+Object.values(groups).map(g=>`<details class="edit-unit-group"><summary>${safe(g.label)} <small>(${Object.values(g.pages).reduce((s,a)=>s+a.length,0)} שדות)</small></summary>${Object.entries(g.pages).map(([pageId,list])=>`<div class="edit-page-group"><h4>עמוד: ${safe(pageId)}</h4>${list.map(f=>{const current=byKey[f.unit_id+'|'+f.field_key];return`<article class="edit-content-card" data-unit-id="${f.unit_id}" data-field-key="${f.field_key}"><span class="edit-field-tag">${f.tag}</span><textarea class="review-note">${safe(current??f.default)}</textarea><div class="review-actions"><button class="button button-primary" data-save-field type="button">שמירה</button><button class="button button-outline" data-reset-field type="button">איפוס לברירת המחדל</button><small class="edit-content-status"></small></div></article>`}).join('')}</div>`).join('')}</details>`).join('');box.querySelectorAll('[data-save-field]').forEach(btn=>btn.addEventListener('click',()=>saveField(btn)));box.querySelectorAll('[data-reset-field]').forEach(btn=>btn.addEventListener('click',()=>resetField(btn)));document.getElementById('editContentSearch').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();box.querySelectorAll('.edit-content-card').forEach(card=>{const hay=(card.querySelector('textarea').value+' '+card.dataset.fieldKey).toLowerCase();card.style.display=!q||hay.includes(q)?'':'none'})})}catch(e){box.innerHTML='<div class="empty-state">שגיאה בסריקת התוכן: '+e.message+'</div>'}}
-async function saveField(btn){const card=btn.closest('[data-field-key]'),unit_id=card.dataset.unitId,field_key=card.dataset.fieldKey,text=card.querySelector('textarea').value,status=card.querySelector('.edit-content-status');status.textContent='שומר…';btn.disabled=true;try{await teacherAPI('saveContentOverride',{unit_id,field_key,text});status.textContent='נשמר ✓'}catch(e){status.textContent='שגיאה: '+e.message}btn.disabled=false}
-async function resetField(btn){const card=btn.closest('[data-field-key]'),unit_id=card.dataset.unitId,field_key=card.dataset.fieldKey,field=discoveredFields.find(f=>f.unit_id===unit_id&&f.field_key===field_key),status=card.querySelector('.edit-content-status');card.querySelector('textarea').value=field?field.default:'';status.textContent='שומר…';btn.disabled=true;try{await teacherAPI('saveContentOverride',{unit_id,field_key,text:''});status.textContent='אופס לברירת המחדל ✓'}catch(e){status.textContent='שגיאה: '+e.message}btn.disabled=false}
+let discoveredFields = [];
+async function loadEditContent() {
+  const box = document.getElementById('editContentState');
+  if (!teacherUser?.token) {
+    box.innerHTML = '<div class="empty-state">נדרשת כניסה מחדש דרך כיתה פלוס.</div>';
+    return;
+  }
+  box.innerHTML = '<div class="empty-state">סורק את תוכן היחידות…</div>';
+  try {
+    const [fields, overridesData] = await Promise.all([discoverEditableFields(), teacherAPI('getAllContentOverrides')]);
+    discoveredFields = fields;
+    const saved = overridesData.overrides || [],
+      byKey = {};
+    saved.forEach((r) => {
+      byKey[r.unit_id + '|' + r.field_key] = r.text;
+    });
+    if (!fields.length) {
+      box.innerHTML = '<div class="empty-state">לא נמצאו שדות עריכה כרגע.</div>';
+      return;
+    }
+    const groups = {};
+    fields.forEach((f) => {
+      groups[f.unit_id] = groups[f.unit_id] || { label: f.unitLabel, pages: {} };
+      groups[f.unit_id].pages[f.pageId] = groups[f.unit_id].pages[f.pageId] || [];
+      groups[f.unit_id].pages[f.pageId].push(f);
+    });
+    box.innerHTML =
+      '<input type="search" id="editContentSearch" class="search-input" placeholder="חיפוש בטקסטים הניתנים לעריכה…">' +
+      Object.values(groups)
+        .map(
+          (g) =>
+            `<details class="edit-unit-group"><summary>${safe(g.label)} <small>(${Object.values(g.pages).reduce((s, a) => s + a.length, 0)} שדות)</small></summary>${Object.entries(
+              g.pages
+            )
+              .map(
+                ([pageId, list]) =>
+                  `<div class="edit-page-group"><h4>עמוד: ${safe(pageId)}</h4>${list
+                    .map((f) => {
+                      const current = byKey[f.unit_id + '|' + f.field_key];
+                      return `<article class="edit-content-card" data-unit-id="${f.unit_id}" data-field-key="${f.field_key}"><span class="edit-field-tag">${f.tag}</span><textarea class="review-note">${safe(current ?? f.default)}</textarea><div class="review-actions"><button class="button button-primary" data-save-field type="button">שמירה</button><button class="button button-outline" data-reset-field type="button">איפוס לברירת המחדל</button><small class="edit-content-status"></small></div></article>`;
+                    })
+                    .join('')}</div>`
+              )
+              .join('')}</details>`
+        )
+        .join('');
+    box.querySelectorAll('[data-save-field]').forEach((btn) => btn.addEventListener('click', () => saveField(btn)));
+    box.querySelectorAll('[data-reset-field]').forEach((btn) => btn.addEventListener('click', () => resetField(btn)));
+    document.getElementById('editContentSearch').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      box.querySelectorAll('.edit-content-card').forEach((card) => {
+        const hay = (card.querySelector('textarea').value + ' ' + card.dataset.fieldKey).toLowerCase();
+        card.style.display = !q || hay.includes(q) ? '' : 'none';
+      });
+    });
+  } catch (e) {
+    box.innerHTML = '<div class="empty-state">שגיאה בסריקת התוכן: ' + e.message + '</div>';
+  }
+}
+async function saveField(btn) {
+  const card = btn.closest('[data-field-key]'),
+    unit_id = card.dataset.unitId,
+    field_key = card.dataset.fieldKey,
+    text = card.querySelector('textarea').value,
+    status = card.querySelector('.edit-content-status');
+  status.textContent = 'שומר…';
+  btn.disabled = true;
+  try {
+    await teacherAPI('saveContentOverride', { unit_id, field_key, text });
+    status.textContent = 'נשמר ✓';
+  } catch (e) {
+    status.textContent = 'שגיאה: ' + e.message;
+  }
+  btn.disabled = false;
+}
+async function resetField(btn) {
+  const card = btn.closest('[data-field-key]'),
+    unit_id = card.dataset.unitId,
+    field_key = card.dataset.fieldKey,
+    field = discoveredFields.find((f) => f.unit_id === unit_id && f.field_key === field_key),
+    status = card.querySelector('.edit-content-status');
+  card.querySelector('textarea').value = field ? field.default : '';
+  status.textContent = 'שומר…';
+  btn.disabled = true;
+  try {
+    await teacherAPI('saveContentOverride', { unit_id, field_key, text: '' });
+    status.textContent = 'אופס לברירת המחדל ✓';
+  } catch (e) {
+    status.textContent = 'שגיאה: ' + e.message;
+  }
+  btn.disabled = false;
+}
 loadClassroom();
 loadPendingReviews();
 loadEditContent();
-

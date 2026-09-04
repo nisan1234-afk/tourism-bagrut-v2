@@ -1,94 +1,321 @@
-const steps=['overview','north','carmel','telaviv','south','games','images','presentation','practice','open-practice'];
-const BAGRUT_API='https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
-const BAGRUT_UNIT_ID='mishor_hachof';
-let kitahUser=null;try{kitahUser=JSON.parse(sessionStorage.getItem('kitahUser')||'null')}catch(_){}
-async function bagrutAPI(action,params={}){if(!kitahUser?.token)return null;const response=await fetch(BAGRUT_API,{method:'POST',body:JSON.stringify({action,token:kitahUser.token,...params})}),data=await response.json();if(!data.ok)throw new Error(data.error||'שגיאה בשמירת הנתונים');return data.data}
-async function syncOpenAnswer(question,answer,box){if(!kitahUser?.token)return;const note=document.createElement('small');note.className='server-feedback';note.textContent='שומר ובודק גם בכיתה פלוס…';box.appendChild(note);try{const data=await bagrutAPI('submitOpenAnswer',{unit_id:BAGRUT_UNIT_ID,question,answer});note.textContent=data?.feedback?'משוב הבוט: '+data.feedback:'התשובה נשמרה בכיתה פלוס ✓'}catch(e){note.textContent='הבדיקה המקומית הושלמה; השמירה בכיתה פלוס נכשלה: '+e.message}}
-const completed=new Set(JSON.parse(localStorage.getItem('coastal-demo-progress')||'[]'));
-function renderProgress(){const value=Math.round(completed.size/steps.length*100);document.getElementById('unitMeter').style.width=`${value}%`;document.getElementById('unitPercent').textContent=`${value}%`;document.querySelectorAll('.lesson-nav a').forEach(a=>a.classList.toggle('completed',completed.has(a.dataset.step)));document.querySelectorAll('[data-complete]').forEach(b=>{const done=completed.has(b.dataset.complete);b.classList.toggle('is-complete',done);b.textContent=done?'השלמתי — כל הכבוד ✓':'סיימתי, אפשר להתקדם'});document.querySelectorAll('[data-live-percent]').forEach(el=>el.textContent=`${value}%`);document.querySelectorAll('[data-live-meter]').forEach(el=>el.style.width=`${value}%`);}
-function completeStep(step){completed.add(step);localStorage.setItem('coastal-demo-progress',JSON.stringify([...completed]));renderProgress();}
-document.querySelectorAll('[data-complete]').forEach(b=>b.addEventListener('click',()=>attemptCompleteChapter(b.dataset.complete)));
+const steps = [
+  'overview',
+  'north',
+  'carmel',
+  'telaviv',
+  'south',
+  'games',
+  'images',
+  'presentation',
+  'practice',
+  'open-practice',
+];
+const BAGRUT_API =
+  'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
+const BAGRUT_UNIT_ID = 'mishor_hachof';
+let kitahUser = null;
+try {
+  kitahUser = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+} catch (_) {}
+async function bagrutAPI(action, params = {}) {
+  if (!kitahUser?.token) return null;
+  const response = await fetch(BAGRUT_API, {
+      method: 'POST',
+      body: JSON.stringify({ action, token: kitahUser.token, ...params }),
+    }),
+    data = await response.json();
+  if (!data.ok) throw new Error(data.error || 'שגיאה בשמירת הנתונים');
+  return data.data;
+}
+async function syncOpenAnswer(question, answer, box) {
+  if (!kitahUser?.token) return;
+  const note = document.createElement('small');
+  note.className = 'server-feedback';
+  note.textContent = 'שומר ובודק גם בכיתה פלוס…';
+  box.appendChild(note);
+  try {
+    const data = await bagrutAPI('submitOpenAnswer', { unit_id: BAGRUT_UNIT_ID, question, answer });
+    note.textContent = data?.feedback ? 'משוב הבוט: ' + data.feedback : 'התשובה נשמרה בכיתה פלוס ✓';
+  } catch (e) {
+    note.textContent = 'הבדיקה המקומית הושלמה; השמירה בכיתה פלוס נכשלה: ' + e.message;
+  }
+}
+const completed = new Set(JSON.parse(localStorage.getItem('coastal-demo-progress') || '[]'));
+function renderProgress() {
+  const value = Math.round((completed.size / steps.length) * 100);
+  document.getElementById('unitMeter').style.width = `${value}%`;
+  document.getElementById('unitPercent').textContent = `${value}%`;
+  document
+    .querySelectorAll('.lesson-nav a')
+    .forEach((a) => a.classList.toggle('completed', completed.has(a.dataset.step)));
+  document.querySelectorAll('[data-complete]').forEach((b) => {
+    const done = completed.has(b.dataset.complete);
+    b.classList.toggle('is-complete', done);
+    b.textContent = done ? 'השלמתי — כל הכבוד ✓' : 'סיימתי, אפשר להתקדם';
+  });
+  document.querySelectorAll('[data-live-percent]').forEach((el) => (el.textContent = `${value}%`));
+  document.querySelectorAll('[data-live-meter]').forEach((el) => (el.style.width = `${value}%`));
+}
+function completeStep(step) {
+  completed.add(step);
+  localStorage.setItem('coastal-demo-progress', JSON.stringify([...completed]));
+  renderProgress();
+}
+document
+  .querySelectorAll('[data-complete]')
+  .forEach((b) => b.addEventListener('click', () => attemptCompleteChapter(b.dataset.complete)));
 
-const firstOpenStep=steps.find(step=>!completed.has(step))||'open-practice';
-const stepCoach={overview:['מכירים את המפה','8 דקות'],north:['ראש הנקרה, עכו וחיפה','14 דקות'],carmel:['קיסריה והכרמל','12 דקות'],telaviv:['תל אביב–יפו','12 דקות'],south:['אשקלון ובית גוברין','9 דקות'],games:['משחקי חזרה','10 דקות'],images:['זיהוי אתרים','7 דקות'],presentation:['מצגת מלווה','12 דקות'],practice:['בדיקת מוכנות','8 דקות'],'open-practice':['שאלות בגרות אמיתיות','15 דקות']};
-const coachIntro=document.createElement('section');
-coachIntro.className='student-coach-home';
-coachIntro.innerHTML=`<div class="coach-welcome"><span>המאמן האישי שלך לבגרות</span><h2>${completed.size?'ממשיכים בדיוק מהמקום שעצרת':'יוצאים לדרך במישור החוף'}</h2><p>${completed.size?'כבר בנית בסיס טוב. המשימה הבאה קצרה ומחברת ישירות למה שצריך לדעת לבגרות.':'עשרה צעדים קצרים, תמונות ומשחקים — ובסוף תדע בדיוק אם אתה מוכן.'}</p><div class="coach-actions"><a class="button button-primary button-large" href="#${firstOpenStep}">המשימה הבאה: ${stepCoach[firstOpenStep][0]} ←</a><small>${stepCoach[firstOpenStep][1]} · אפשר לעצור בכל רגע</small></div></div><aside class="readiness-card"><span>המוכנות שלי</span><strong data-live-percent>0%</strong><div class="meter"><i data-live-meter></i></div><ul><li class="${completed.size>=3?'done':''}">להבין את האזור</li><li class="${completed.has('images')?'done':''}">לזהות את האתרים</li><li class="${completed.has('practice')?'done':''}">לענות כמו בבגרות</li></ul><button class="coach-help" onclick="toggleCoachWidget(true)">לא בטוח מה לעשות? שאל את המאמן</button></aside>`;
+const firstOpenStep = steps.find((step) => !completed.has(step)) || 'open-practice';
+const stepCoach = {
+  overview: ['מכירים את המפה', '8 דקות'],
+  north: ['ראש הנקרה, עכו וחיפה', '14 דקות'],
+  carmel: ['קיסריה והכרמל', '12 דקות'],
+  telaviv: ['תל אביב–יפו', '12 דקות'],
+  south: ['אשקלון ובית גוברין', '9 דקות'],
+  games: ['משחקי חזרה', '10 דקות'],
+  images: ['זיהוי אתרים', '7 דקות'],
+  presentation: ['מצגת מלווה', '12 דקות'],
+  practice: ['בדיקת מוכנות', '8 דקות'],
+  'open-practice': ['שאלות בגרות אמיתיות', '15 דקות'],
+};
+const coachIntro = document.createElement('section');
+coachIntro.className = 'student-coach-home';
+coachIntro.innerHTML = `<div class="coach-welcome"><span>המאמן האישי שלך לבגרות</span><h2>${completed.size ? 'ממשיכים בדיוק מהמקום שעצרת' : 'יוצאים לדרך במישור החוף'}</h2><p>${completed.size ? 'כבר בנית בסיס טוב. המשימה הבאה קצרה ומחברת ישירות למה שצריך לדעת לבגרות.' : 'עשרה צעדים קצרים, תמונות ומשחקים — ובסוף תדע בדיוק אם אתה מוכן.'}</p><div class="coach-actions"><a class="button button-primary button-large" href="#${firstOpenStep}">המשימה הבאה: ${stepCoach[firstOpenStep][0]} ←</a><small>${stepCoach[firstOpenStep][1]} · אפשר לעצור בכל רגע</small></div></div><aside class="readiness-card"><span>המוכנות שלי</span><strong data-live-percent>0%</strong><div class="meter"><i data-live-meter></i></div><ul><li class="${completed.size >= 3 ? 'done' : ''}">להבין את האזור</li><li class="${completed.has('images') ? 'done' : ''}">לזהות את האתרים</li><li class="${completed.has('practice') ? 'done' : ''}">לענות כמו בבגרות</li></ul><button class="coach-help" onclick="toggleCoachWidget(true)">לא בטוח מה לעשות? שאל את המאמן</button></aside>`;
 document.getElementById('overview')?.prepend(coachIntro);
 
-const enrichment={
-north:['עוד אתרים שחייבים להכיר בצפון',['מוזיאון אסירי המחתרות','בית הכלא הבריטי בעכו שבו נכלאו לוחמי אצ״ל ולח״י; במקום תא הגרדום וסיפור פריצת הכלא.'],['מנהרת הטמפלרים','מנהרה תת־קרקעית של המסדר הטמפלרי המחברת בין המצודה לנמל עכו.'],['בית לוחמי הגטאות','מוזיאון לשואה שהקימו ניצולים שלחמו בגטאות.'],['גן לאומי אכזיב','לגונות וברכות ים, שרידי כפר דייגים, חוף ושטחי קמפינג.'],['מבצר מונפורט','מבצר צלבני בנחל כזיב ובו שרידי מגדל וחומות.'],['מבצר יחיעם','שרידים צלבניים ועות׳מאניים וסיפור מלחמת העצמאות.']],
-carmel:['מוקדי הביקור בקיסריה ובכרמל',['התיאטרון הרומי','כ־3,500 מקומות; נבנה בתקופת הורדוס ומשמש גם כיום למופעים.'],['האקוודוקט','אמת מים רומית באורך כ־20 ק״מ שהובילה מים מהכרמל לקיסריה.'],['ההיפודרום וארמון הורדוס','מתחם למרוצי סוסים ושרידי ארמון מפואר על קו הים.'],['בית אהרנסון','בית המשפחה ומרכז סיפורה של מחתרת ניל״י.'],['רמת הנדיב','גני זיכרון וקברי הברון רוטשילד ורעייתו.'],['דלית אל־כרמל ועוספיה','שוק, מטבח, מורשת ואירוח המציגים את התרבות הדרוזית.']],
-telaviv:['תרבות, בילוי ומוזיאונים בתל אביב',['נמל תל אביב','נמל ששוקם והפך למתחם פנאי ותרבות.'],['שרונה','מושבה טמפלרית משנת 1871 ובה עשרות מבנים ששומרו.'],['שוק הכרמל ונחלת בנימין','שוק מזון מרכזי ולצדו מדרחוב ויריד אמנים.'],['פארק הירקון','הריאה הירוקה העירונית ובה אגם ומתקני פנאי.'],['מוזיאון אנו','מוזיאון אינטראקטיבי לסיפור העם היהודי והתפוצות.'],['מוזיאוני הפלמ״ח וההגנה','אתרי מורשת על המאבק להקמת המדינה.']],
-south:['מה מזהים ומה מסבירים בבגרות',['השער הכנעני באשקלון','שער מקושת בן כ־3,500 שנה, מן הקדומים מסוגו בעולם.'],['ייחוד תל אשקלון','שילוב ארכאולוגיה, חוף ים וטיילת צוק.'],['מערות הפעמון','חללים גדולים שנחצבו בידי אדם בסלע הקירטון.'],['קולומבריום ומקוואות','מתקנים לגידול יונים ובריכות טבילה קדומות בבית גוברין.']]
+const enrichment = {
+  north: [
+    'עוד אתרים שחייבים להכיר בצפון',
+    ['מוזיאון אסירי המחתרות', 'בית הכלא הבריטי בעכו שבו נכלאו לוחמי אצ״ל ולח״י; במקום תא הגרדום וסיפור פריצת הכלא.'],
+    ['מנהרת הטמפלרים', 'מנהרה תת־קרקעית של המסדר הטמפלרי המחברת בין המצודה לנמל עכו.'],
+    ['בית לוחמי הגטאות', 'מוזיאון לשואה שהקימו ניצולים שלחמו בגטאות.'],
+    ['גן לאומי אכזיב', 'לגונות וברכות ים, שרידי כפר דייגים, חוף ושטחי קמפינג.'],
+    ['מבצר מונפורט', 'מבצר צלבני בנחל כזיב ובו שרידי מגדל וחומות.'],
+    ['מבצר יחיעם', 'שרידים צלבניים ועות׳מאניים וסיפור מלחמת העצמאות.'],
+  ],
+  carmel: [
+    'מוקדי הביקור בקיסריה ובכרמל',
+    ['התיאטרון הרומי', 'כ־3,500 מקומות; נבנה בתקופת הורדוס ומשמש גם כיום למופעים.'],
+    ['האקוודוקט', 'אמת מים רומית באורך כ־20 ק״מ שהובילה מים מהכרמל לקיסריה.'],
+    ['ההיפודרום וארמון הורדוס', 'מתחם למרוצי סוסים ושרידי ארמון מפואר על קו הים.'],
+    ['בית אהרנסון', 'בית המשפחה ומרכז סיפורה של מחתרת ניל״י.'],
+    ['רמת הנדיב', 'גני זיכרון וקברי הברון רוטשילד ורעייתו.'],
+    ['דלית אל־כרמל ועוספיה', 'שוק, מטבח, מורשת ואירוח המציגים את התרבות הדרוזית.'],
+  ],
+  telaviv: [
+    'תרבות, בילוי ומוזיאונים בתל אביב',
+    ['נמל תל אביב', 'נמל ששוקם והפך למתחם פנאי ותרבות.'],
+    ['שרונה', 'מושבה טמפלרית משנת 1871 ובה עשרות מבנים ששומרו.'],
+    ['שוק הכרמל ונחלת בנימין', 'שוק מזון מרכזי ולצדו מדרחוב ויריד אמנים.'],
+    ['פארק הירקון', 'הריאה הירוקה העירונית ובה אגם ומתקני פנאי.'],
+    ['מוזיאון אנו', 'מוזיאון אינטראקטיבי לסיפור העם היהודי והתפוצות.'],
+    ['מוזיאוני הפלמ״ח וההגנה', 'אתרי מורשת על המאבק להקמת המדינה.'],
+  ],
+  south: [
+    'מה מזהים ומה מסבירים בבגרות',
+    ['השער הכנעני באשקלון', 'שער מקושת בן כ־3,500 שנה, מן הקדומים מסוגו בעולם.'],
+    ['ייחוד תל אשקלון', 'שילוב ארכאולוגיה, חוף ים וטיילת צוק.'],
+    ['מערות הפעמון', 'חללים גדולים שנחצבו בידי אדם בסלע הקירטון.'],
+    ['קולומבריום ומקוואות', 'מתקנים לגידול יונים ובריכות טבילה קדומות בבית גוברין.'],
+  ],
 };
-const imageMap={
-'מוזיאון אסירי המחתרות':'../assets/coastal/acre-knights-halls.webp',
-'בית לוחמי הגטאות':'https://nisan1234-afk.github.io/jerusalem-tour/images/image88.png',
-'גן לאומי אכזיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image102.png',
-'מבצר מונפורט':'https://nisan1234-afk.github.io/jerusalem-tour/images/image89.png',
-'מבצר יחיעם':'https://nisan1234-afk.github.io/jerusalem-tour/images/image90.png',
-'התיאטרון הרומי':'../assets/coastal/caesarea-theater.webp',
-'האקוודוקט':'../assets/coastal/caesarea-aqueduct.webp',
-'בית אהרנסון':'../assets/coastal/aaronsohn-house.webp',
-'רמת הנדיב':'https://nisan1234-afk.github.io/jerusalem-tour/images/image94.png',
-'נמל תל אביב':'../assets/coastal/tel-aviv-port.webp',
-'שרונה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png',
-'שוק הכרמל ונחלת בנימין':'https://nisan1234-afk.github.io/jerusalem-tour/images/image66.png',
-'פארק הירקון':'https://nisan1234-afk.github.io/jerusalem-tour/images/image73.png',
-'מוזיאון אנו':'https://nisan1234-afk.github.io/jerusalem-tour/images/image84.png',
-'מוזיאוני הפלמ״ח וההגנה':'https://nisan1234-afk.github.io/jerusalem-tour/images/image68.png',
-'ייחוד תל אשקלון':'../assets/coastal/ashkelon-canaanite-gate.webp',
-'מערות הפעמון':'../assets/coastal/beit-guvrin-caves.webp'
+const imageMap = {
+  'מוזיאון אסירי המחתרות': '../assets/coastal/acre-knights-halls.webp',
+  'בית לוחמי הגטאות': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image88.png',
+  'גן לאומי אכזיב': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image102.png',
+  'מבצר מונפורט': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image89.png',
+  'מבצר יחיעם': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image90.png',
+  'התיאטרון הרומי': '../assets/coastal/caesarea-theater.webp',
+  האקוודוקט: '../assets/coastal/caesarea-aqueduct.webp',
+  'בית אהרנסון': '../assets/coastal/aaronsohn-house.webp',
+  'רמת הנדיב': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image94.png',
+  'נמל תל אביב': '../assets/coastal/tel-aviv-port.webp',
+  שרונה: 'https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png',
+  'שוק הכרמל ונחלת בנימין': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image66.png',
+  'פארק הירקון': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image73.png',
+  'מוזיאון אנו': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image84.png',
+  'מוזיאוני הפלמ״ח וההגנה': 'https://nisan1234-afk.github.io/jerusalem-tour/images/image68.png',
+  'ייחוד תל אשקלון': '../assets/coastal/ashkelon-canaanite-gate.webp',
+  'מערות הפעמון': '../assets/coastal/beit-guvrin-caves.webp',
 };
-Object.entries(enrichment).forEach(([id,g])=>{const s=document.getElementById(id),btn=s?.querySelector('.complete-button');if(!s||!btn)return;const w=document.createElement('div');w.className='expanded-material';w.innerHTML=`<h3>${g[0]}</h3><div class="detail-grid">${g.slice(1).map(c=>`<article>${imageMap[c[0]]?`<img src="${imageMap[c[0]]}" alt="${c[0]}" loading="lazy">`:''}<div><span>חומר חובה</span><h4>${c[0]}</h4><p>${c[1]}</p></div></article>`).join('')}</div>`;s.insertBefore(w,btn)});
+Object.entries(enrichment).forEach(([id, g]) => {
+  const s = document.getElementById(id),
+    btn = s?.querySelector('.complete-button');
+  if (!s || !btn) return;
+  const w = document.createElement('div');
+  w.className = 'expanded-material';
+  w.innerHTML = `<h3>${g[0]}</h3><div class="detail-grid">${g
+    .slice(1)
+    .map(
+      (c) =>
+        `<article>${imageMap[c[0]] ? `<img src="${imageMap[c[0]]}" alt="${c[0]}" loading="lazy">` : ''}<div><span>חומר חובה</span><h4>${c[0]}</h4><p>${c[1]}</p></div></article>`
+    )
+    .join('')}</div>`;
+  s.insertBefore(w, btn);
+});
 
-const visualStories={
-north:[['ראש הנקרה','תופעת טבע בקצה הצפוני','../assets/coastal/rosh-hanikra.webp'],['אולמות האבירים','עכו הצלבנית שמתחת לפני הרחוב','../assets/coastal/acre-knights-halls.webp'],['הגנים הבהאיים','דת, אדריכלות ונוף בחיפה','../assets/coastal/bahai-gardens.webp']],
-carmel:[['התיאטרון בקיסריה','עירו של הורדוס על הים','../assets/coastal/caesarea-theater.webp'],['האקוודוקט','מערכת המים הרומית','../assets/coastal/caesarea-aqueduct.webp'],['בית אהרנסון','סיפורה של מחתרת ניל״י','../assets/coastal/aaronsohn-house.webp']],
-telaviv:[['יפו העתיקה','נמל, דת ומורשת','../assets/coastal/old-jaffa.webp'],['נמל תל אביב','מנמל היסטורי למרחב בילוי','../assets/coastal/tel-aviv-port.webp'],['נווה צדק','השכונה שקדמה לתל אביב','https://nisan1234-afk.github.io/jerusalem-tour/images/image80.png']],
-south:[['השער הכנעני באשקלון','מן השערים המקושתים הקדומים בעולם','../assets/coastal/ashkelon-canaanite-gate.webp'],['בית גוברין','ארץ אלף המערות','../assets/coastal/beit-guvrin-caves.webp'],['מערת הנטיפים','נוף קרסטי בשפלת יהודה','https://nisan1234-afk.github.io/jerusalem-tour/images/image106.png']]
+const visualStories = {
+  north: [
+    ['ראש הנקרה', 'תופעת טבע בקצה הצפוני', '../assets/coastal/rosh-hanikra.webp'],
+    ['אולמות האבירים', 'עכו הצלבנית שמתחת לפני הרחוב', '../assets/coastal/acre-knights-halls.webp'],
+    ['הגנים הבהאיים', 'דת, אדריכלות ונוף בחיפה', '../assets/coastal/bahai-gardens.webp'],
+  ],
+  carmel: [
+    ['התיאטרון בקיסריה', 'עירו של הורדוס על הים', '../assets/coastal/caesarea-theater.webp'],
+    ['האקוודוקט', 'מערכת המים הרומית', '../assets/coastal/caesarea-aqueduct.webp'],
+    ['בית אהרנסון', 'סיפורה של מחתרת ניל״י', '../assets/coastal/aaronsohn-house.webp'],
+  ],
+  telaviv: [
+    ['יפו העתיקה', 'נמל, דת ומורשת', '../assets/coastal/old-jaffa.webp'],
+    ['נמל תל אביב', 'מנמל היסטורי למרחב בילוי', '../assets/coastal/tel-aviv-port.webp'],
+    ['נווה צדק', 'השכונה שקדמה לתל אביב', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image80.png'],
+  ],
+  south: [
+    ['השער הכנעני באשקלון', 'מן השערים המקושתים הקדומים בעולם', '../assets/coastal/ashkelon-canaanite-gate.webp'],
+    ['בית גוברין', 'ארץ אלף המערות', '../assets/coastal/beit-guvrin-caves.webp'],
+    ['מערת הנטיפים', 'נוף קרסטי בשפלת יהודה', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image106.png'],
+  ],
 };
-Object.entries(visualStories).forEach(([id,items])=>{const section=document.getElementById(id),heading=section?.querySelector('.block-heading');if(!section||!heading)return;const strip=document.createElement('div');strip.className='visual-story-strip';strip.innerHTML=items.map((x,i)=>`<figure class="visual-poster ${i===0?'poster-main':''}"><img src="${x[2]}" alt="${x[0]}" loading="lazy"><figcaption><b>${x[0]}</b><span>${x[1]}</span></figcaption></figure>`).join('');heading.insertAdjacentElement('afterend',strip);strip.insertAdjacentHTML('afterend','<small class="media-source-note">מתוך חומרי הגלם והמצגות של אתר תיירות אלוני הבשן</small>')});
+Object.entries(visualStories).forEach(([id, items]) => {
+  const section = document.getElementById(id),
+    heading = section?.querySelector('.block-heading');
+  if (!section || !heading) return;
+  const strip = document.createElement('div');
+  strip.className = 'visual-story-strip';
+  strip.innerHTML = items
+    .map(
+      (x, i) =>
+        `<figure class="visual-poster ${i === 0 ? 'poster-main' : ''}"><img src="${x[2]}" alt="${x[0]}" loading="lazy"><figcaption><b>${x[0]}</b><span>${x[1]}</span></figcaption></figure>`
+    )
+    .join('');
+  heading.insertAdjacentElement('afterend', strip);
+  strip.insertAdjacentHTML(
+    'afterend',
+    '<small class="media-source-note">מתוך חומרי הגלם והמצגות של אתר תיירות אלוני הבשן</small>'
+  );
+});
 
-const imageChallenge=[
-['ראש הנקרה','https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg'],
-['הגנים הבהאיים בחיפה','https://nisan1234-afk.github.io/jerusalem-tour/images/image98.jpg'],
-['אולמות האבירים בעכו','https://nisan1234-afk.github.io/jerusalem-tour/images/image87.png'],
-['האקוודוקט בקיסריה','https://nisan1234-afk.github.io/jerusalem-tour/images/image58.png'],
-['נמל יפו','https://nisan1234-afk.github.io/jerusalem-tour/images/image64.png'],
-['שרונה','https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png'],
-['גן לאומי אשקלון','https://nisan1234-afk.github.io/jerusalem-tour/images/image104.png'],
-['מערות בית גוברין','https://nisan1234-afk.github.io/jerusalem-tour/images/image105.png']
+const imageChallenge = [
+  ['ראש הנקרה', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg'],
+  ['הגנים הבהאיים בחיפה', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image98.jpg'],
+  ['אולמות האבירים בעכו', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image87.png'],
+  ['האקוודוקט בקיסריה', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image58.png'],
+  ['נמל יפו', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image64.png'],
+  ['שרונה', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image69.png'],
+  ['גן לאומי אשקלון', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image104.png'],
+  ['מערות בית גוברין', 'https://nisan1234-afk.github.io/jerusalem-tour/images/image105.png'],
 ];
-const presentationSection=document.getElementById('presentation');
-const imageSection=document.createElement('section');
-imageSection.className='learning-block tinted image-practice';
-imageSection.id='images';
-imageSection.dataset.trackStep='images';
-imageSection.innerHTML=`<div class="block-heading"><span class="number">06</span><div><span class="eyebrow">זיהוי אתרים מתמונה</span><h2>רואים, מזהים ומסבירים</h2></div></div><p class="practice-intro">בחרו את שם האתר המופיע בתמונה. לאחר הזיהוי תקבלו גם את פרט המפתח שכדאי לזכור לבגרות.</p><div class="recognition-card"><img id="recognitionImage" alt=""><div><span class="quiz-kicker" id="recognitionCount"></span><h3>איזה אתר מופיע בתמונה?</h3><div class="answer-list" id="recognitionAnswers"></div><p class="quiz-feedback" id="recognitionFeedback"></p><button class="button button-primary" id="nextRecognition" disabled>לתמונה הבאה</button></div></div>`;
-presentationSection.parentNode.insertBefore(imageSection,presentationSection);
-const presentationNav=document.querySelector('[data-step="presentation"]');
-const imageNav=document.createElement('a');
-imageNav.href='#images';imageNav.dataset.step='images';
-imageNav.innerHTML='<i>6</i><span>זיהוי מתמונה<small>אתגר חזותי</small></span><b>✓</b>';
-presentationNav.parentNode.insertBefore(imageNav,presentationNav);
-document.querySelectorAll('[data-step="presentation"] i,[data-step="practice"] i').forEach((n,i)=>n.textContent=String(i+7));
-let recognitionIndex=0,recognitionCorrect=0;
-function renderRecognition(){const item=imageChallenge[recognitionIndex];document.getElementById('recognitionImage').src=item[1];document.getElementById('recognitionImage').alt='אתר לזיהוי';document.getElementById('recognitionCount').textContent=`תמונה ${recognitionIndex+1} מתוך ${imageChallenge.length}`;const wrong=imageChallenge.filter(x=>x[0]!==item[0]).sort(()=>.5-Math.random()).slice(0,2).map(x=>x[0]);const choices=[item[0],...wrong].sort(()=>.5-Math.random());const box=document.getElementById('recognitionAnswers');box.innerHTML='';choices.forEach(name=>{const b=document.createElement('button');b.textContent=name;b.addEventListener('click',()=>{box.querySelectorAll('button').forEach(x=>{x.disabled=true;if(x.textContent===item[0])x.classList.add('correct')});if(name===item[0])recognitionCorrect++;else b.classList.add('wrong');document.getElementById('recognitionFeedback').textContent=name===item[0]?'נכון — זהו '+item[0]+'.':'כמעט. התשובה הנכונה היא '+item[0]+'.';bagrutAPI('saveSiteKnown',{site:item[0],region:BAGRUT_UNIT_ID,known:name===item[0]}).catch(()=>{});document.getElementById('nextRecognition').disabled=false});box.appendChild(b)});document.getElementById('recognitionFeedback').textContent='';document.getElementById('nextRecognition').disabled=true;}
-document.getElementById('nextRecognition').addEventListener('click',()=>{if(recognitionIndex<imageChallenge.length-1){recognitionIndex++;renderRecognition();return}completeStep('images');document.querySelector('.recognition-card>div').innerHTML=`<span class="eyebrow">האתגר הושלם</span><h3>זיהית ${recognitionCorrect} מתוך ${imageChallenge.length} אתרים</h3><p>אפשר לחזור ליחידה בכל עת ולתרגל שוב.</p>`});renderRecognition();
+const presentationSection = document.getElementById('presentation');
+const imageSection = document.createElement('section');
+imageSection.className = 'learning-block tinted image-practice';
+imageSection.id = 'images';
+imageSection.dataset.trackStep = 'images';
+imageSection.innerHTML = `<div class="block-heading"><span class="number">06</span><div><span class="eyebrow">זיהוי אתרים מתמונה</span><h2>רואים, מזהים ומסבירים</h2></div></div><p class="practice-intro">בחרו את שם האתר המופיע בתמונה. לאחר הזיהוי תקבלו גם את פרט המפתח שכדאי לזכור לבגרות.</p><div class="recognition-card"><img id="recognitionImage" alt=""><div><span class="quiz-kicker" id="recognitionCount"></span><h3>איזה אתר מופיע בתמונה?</h3><div class="answer-list" id="recognitionAnswers"></div><p class="quiz-feedback" id="recognitionFeedback"></p><button class="button button-primary" id="nextRecognition" disabled>לתמונה הבאה</button></div></div>`;
+presentationSection.parentNode.insertBefore(imageSection, presentationSection);
+const presentationNav = document.querySelector('[data-step="presentation"]');
+const imageNav = document.createElement('a');
+imageNav.href = '#images';
+imageNav.dataset.step = 'images';
+imageNav.innerHTML = '<i>6</i><span>זיהוי מתמונה<small>אתגר חזותי</small></span><b>✓</b>';
+presentationNav.parentNode.insertBefore(imageNav, presentationNav);
+document
+  .querySelectorAll('[data-step="presentation"] i,[data-step="practice"] i')
+  .forEach((n, i) => (n.textContent = String(i + 7)));
+let recognitionIndex = 0,
+  recognitionCorrect = 0;
+function renderRecognition() {
+  const item = imageChallenge[recognitionIndex];
+  document.getElementById('recognitionImage').src = item[1];
+  document.getElementById('recognitionImage').alt = 'אתר לזיהוי';
+  document.getElementById('recognitionCount').textContent =
+    `תמונה ${recognitionIndex + 1} מתוך ${imageChallenge.length}`;
+  const wrong = imageChallenge
+    .filter((x) => x[0] !== item[0])
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 2)
+    .map((x) => x[0]);
+  const choices = [item[0], ...wrong].sort(() => 0.5 - Math.random());
+  const box = document.getElementById('recognitionAnswers');
+  box.innerHTML = '';
+  choices.forEach((name) => {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach((x) => {
+        x.disabled = true;
+        if (x.textContent === item[0]) x.classList.add('correct');
+      });
+      if (name === item[0]) recognitionCorrect++;
+      else b.classList.add('wrong');
+      document.getElementById('recognitionFeedback').textContent =
+        name === item[0] ? 'נכון — זהו ' + item[0] + '.' : 'כמעט. התשובה הנכונה היא ' + item[0] + '.';
+      bagrutAPI('saveSiteKnown', { site: item[0], region: BAGRUT_UNIT_ID, known: name === item[0] }).catch(() => {});
+      document.getElementById('nextRecognition').disabled = false;
+    });
+    box.appendChild(b);
+  });
+  document.getElementById('recognitionFeedback').textContent = '';
+  document.getElementById('nextRecognition').disabled = true;
+}
+document.getElementById('nextRecognition').addEventListener('click', () => {
+  if (recognitionIndex < imageChallenge.length - 1) {
+    recognitionIndex++;
+    renderRecognition();
+    return;
+  }
+  completeStep('images');
+  document.querySelector('.recognition-card>div').innerHTML =
+    `<span class="eyebrow">האתגר הושלם</span><h3>זיהית ${recognitionCorrect} מתוך ${imageChallenge.length} אתרים</h3><p>אפשר לחזור ליחידה בכל עת ולתרגל שוב.</p>`;
+});
+renderRecognition();
 
-const deepReads={
-overview:['למה רוב האוכלוסייה כאן?','המישור הרחב, הקרבה לים, אפשרויות הבנייה והחקלאות וצירי התחבורה המרכזיים סייעו להתפתחות רצף עירוני גדול. לכן מרבית תושבי ישראל מתגוררים במישור החוף.','מה חייבים לכתוב בתשובה?','בתיאור נוף משלבים לפחות שלושה רכיבים: תבליט מישורי, קו חוף ישר וחולי בדרום, ורוחב ההולך וגדל מצפון לדרום.'],
-north:['מה מושך תיירים לצפון?','האזור מאפשר לבנות מסלול מגוון: תופעת טבע בראש הנקרה, עיר היסטורית בעכו, אתרים דתיים בחיפה ושמורות ומבצרים בגליל המערבי.','תיירות דתית בחיפה','מערת אליהו מושכת בני ארבע דתות, סטלה מאריס מושך צליינים נוצרים, והגנים הבהאיים מושכים מאמינים ותיירים כלליים.'],
-carmel:['קיסריה כמוצר תיירותי','ייחודה של קיסריה אינו רק בעתיקות. התיאטרון עדיין משמש למופעים והאקוודוקט ניצב על חוף פעיל — חיבור בין מורשת, תרבות ונופש.','מושבות העלייה הראשונה','זכרון יעקב משמרת את בית אהרנסון, רחובות המושבה ויקבים. אלה הופכים סיפור התיישבותי למוקדי ביקור חיים.'],
-telaviv:['למה תל אביב מושכת תיירים?','חופי ים, חיי לילה, שווקים, אדריכלות, מוזיאונים, קולינריה ואירועים יוצרים מוצר עירוני מגוון המתאים לקהלים שונים.','יפו ותל אביב — ניגוד משלים','יפו מציעה נמל עתיק, שוק ומורשת; תל אביב מציעה עיר מודרנית, תרבות והעיר הלבנה. יחד נוצר מסלול המחבר עבר והווה.'],
-south:['אשקלון לעומת נתניה','שתיהן מציעות חוף, מלונות וקניות. אשקלון מוסיפה פארק ארכאולוגי ושער כנעני, ואילו נתניה מזוהה יותר עם תיירות חוף ועם מסורת ליטוש היהלומים.','בית גוברין בשפלת יהודה','האתר נמצא באזור המעבר בין מישור החוף להר. הקירטון הרך איפשר חציבת מערות ששימשו למחצבות, גידול יונים, קבורה וטהרה.']
+const deepReads = {
+  overview: [
+    'למה רוב האוכלוסייה כאן?',
+    'המישור הרחב, הקרבה לים, אפשרויות הבנייה והחקלאות וצירי התחבורה המרכזיים סייעו להתפתחות רצף עירוני גדול. לכן מרבית תושבי ישראל מתגוררים במישור החוף.',
+    'מה חייבים לכתוב בתשובה?',
+    'בתיאור נוף משלבים לפחות שלושה רכיבים: תבליט מישורי, קו חוף ישר וחולי בדרום, ורוחב ההולך וגדל מצפון לדרום.',
+  ],
+  north: [
+    'מה מושך תיירים לצפון?',
+    'האזור מאפשר לבנות מסלול מגוון: תופעת טבע בראש הנקרה, עיר היסטורית בעכו, אתרים דתיים בחיפה ושמורות ומבצרים בגליל המערבי.',
+    'תיירות דתית בחיפה',
+    'מערת אליהו מושכת בני ארבע דתות, סטלה מאריס מושך צליינים נוצרים, והגנים הבהאיים מושכים מאמינים ותיירים כלליים.',
+  ],
+  carmel: [
+    'קיסריה כמוצר תיירותי',
+    'ייחודה של קיסריה אינו רק בעתיקות. התיאטרון עדיין משמש למופעים והאקוודוקט ניצב על חוף פעיל — חיבור בין מורשת, תרבות ונופש.',
+    'מושבות העלייה הראשונה',
+    'זכרון יעקב משמרת את בית אהרנסון, רחובות המושבה ויקבים. אלה הופכים סיפור התיישבותי למוקדי ביקור חיים.',
+  ],
+  telaviv: [
+    'למה תל אביב מושכת תיירים?',
+    'חופי ים, חיי לילה, שווקים, אדריכלות, מוזיאונים, קולינריה ואירועים יוצרים מוצר עירוני מגוון המתאים לקהלים שונים.',
+    'יפו ותל אביב — ניגוד משלים',
+    'יפו מציעה נמל עתיק, שוק ומורשת; תל אביב מציעה עיר מודרנית, תרבות והעיר הלבנה. יחד נוצר מסלול המחבר עבר והווה.',
+  ],
+  south: [
+    'אשקלון לעומת נתניה',
+    'שתיהן מציעות חוף, מלונות וקניות. אשקלון מוסיפה פארק ארכאולוגי ושער כנעני, ואילו נתניה מזוהה יותר עם תיירות חוף ועם מסורת ליטוש היהלומים.',
+    'בית גוברין בשפלת יהודה',
+    'האתר נמצא באזור המעבר בין מישור החוף להר. הקירטון הרך איפשר חציבת מערות ששימשו למחצבות, גידול יונים, קבורה וטהרה.',
+  ],
 };
-Object.entries(deepReads).forEach(([id,d])=>{const section=document.getElementById(id),button=section?.querySelector('.complete-button');if(!section||!button)return;const read=document.createElement('div');read.className='deep-read';read.innerHTML=`<article><span>להבין את התמונה</span><h3>${d[0]}</h3><p>${d[1]}</p></article><article><span>לבגרות</span><h3>${d[2]}</h3><p>${d[3]}</p></article>`;section.insertBefore(read,button)});
+Object.entries(deepReads).forEach(([id, d]) => {
+  const section = document.getElementById(id),
+    button = section?.querySelector('.complete-button');
+  if (!section || !button) return;
+  const read = document.createElement('div');
+  read.className = 'deep-read';
+  read.innerHTML = `<article><span>להבין את התמונה</span><h3>${d[0]}</h3><p>${d[1]}</p></article><article><span>לבגרות</span><h3>${d[2]}</h3><p>${d[3]}</p></article>`;
+  section.insertBefore(read, button);
+});
 
-const gameSection=document.createElement('section');gameSection.className='learning-block learning-games';gameSection.id='games';gameSection.dataset.trackStep='games';
-gameSection.innerHTML=`<div class="block-heading"><span class="number">06</span><div><span class="eyebrow">מעקב תרגול</span><h2>סיכום הפעילויות ביחידות הלימוד</h2></div></div><p class="practice-intro">עשרת המשחקים שובצו בתוך חמש יחידות הלימוד לפי המיומנות שהם מתרגלים. כאן אפשר לראות מה הושלם ולחזור ישירות ליחידה שדורשת חיזוק.</p><div class="game-status"><b id="gamesCompleted">0 מתוך 10 משחקים הושלמו</b><div class="meter"><i id="gamesMeter"></i></div></div><div class="games-grid">
+const gameSection = document.createElement('section');
+gameSection.className = 'learning-block learning-games';
+gameSection.id = 'games';
+gameSection.dataset.trackStep = 'games';
+gameSection.innerHTML = `<div class="block-heading"><span class="number">06</span><div><span class="eyebrow">מעקב תרגול</span><h2>סיכום הפעילויות ביחידות הלימוד</h2></div></div><p class="practice-intro">עשרת המשחקים שובצו בתוך חמש יחידות הלימוד לפי המיומנות שהם מתרגלים. כאן אפשר לראות מה הושלם ולחזור ישירות ליחידה שדורשת חיזוק.</p><div class="game-status"><b id="gamesCompleted">0 מתוך 10 משחקים הושלמו</b><div class="meter"><i id="gamesMeter"></i></div></div><div class="games-grid">
 <article class="learning-game" data-game-card="regions"><span>משחק 1</span><h3>איפה נמצא האתר?</h3><p>התאימו כל אתר לאזור הנכון.</p><div id="regionGame"></div><button class="button button-outline" id="checkRegions">בדיקה</button><small id="regionFeedback"></small></article>
 <article class="learning-game" data-game-card="clues"><span>משחק 2</span><h3>מי אני?</h3><p id="clueText"></p><div class="game-choices" id="clueChoices"></div><small id="clueFeedback"></small><button class="button button-outline" id="nextClue" disabled>הרמז הבא</button></article>
 <article class="learning-game" data-game-card="route"><span>משחק 3</span><h3>מסלול מצפון לדרום</h3><p>סדרו את התחנות לפי כיוון הנסיעה.</p><div class="route-selects"><select id="route1"></select><select id="route2"></select><select id="route3"></select></div><button class="button button-outline" id="checkRoute">בדיקת המסלול</button><small id="routeFeedback"></small></article>
@@ -99,170 +326,1268 @@ gameSection.innerHTML=`<div class="block-heading"><span class="number">06</span>
 <article class="learning-game" data-game-card="streak"><span>משחק 8</span><h3>רצף נכון או לא נכון</h3><p id="streakStatement"></p><div class="binary-actions"><button data-streak-answer="true">נכון</button><button data-streak-answer="false">לא נכון</button></div><small id="streakFeedback"></small><button class="button button-outline" id="resetStreak">התחלה מחדש</button></article>
 <article class="learning-game" data-game-card="speed"><span>משחק 9</span><h3>אתגר מהיר</h3><p id="speedQuestion">ענו על 5 מתוך 6 שאלות לפני שהזמן נגמר.</p><div class="speed-head"><b id="speedTimer">45</b><span id="speedScore">0 / 6</span></div><div class="game-choices" id="speedChoices"></div><small id="speedFeedback">השעון יתחיל בלחיצה</small><button class="button button-outline" id="startSpeed">התחלת האתגר</button></article>
 <article class="learning-game wide-game" data-game-card="silent-map"><span>משחק 10</span><h3>מפה אילמת על מפת ישראל</h3><p>גררו כל מקום אל מיקומו הגאוגרפי. בטלפון: בחרו שם ואז לחצו על הנקודה.</p><div class="silent-map-game"><div class="map-label-bank" id="silentMapLabels"></div><div><div class="silent-coast-map" id="silentCoastMap"></div><a class="map-credit" href="https://commons.wikimedia.org/wiki/File:Israel_location_map_current_borders.svg" target="_blank" rel="noopener">מפה: Wikimedia Commons · CC BY-SA 3.0</a></div></div><small id="silentMapFeedback"></small><button class="button button-outline" id="resetSilentMap">איפוס המפה</button></article>
-</div>`;imageSection.parentNode.insertBefore(gameSection,imageSection);
-const chapterPlan={
-overview:{number:1,title:'קוראים את המרחב',intro:'לפני שמכירים את האתרים, מבינים את המבנה של מישור החוף ואת ההבדל בין סוגי החופים.',goals:['למקם את גבולות מישור החוף','להבחין בין חוף צבירה לחוף סחיפה','להסביר מדוע האזור מיושב בצפיפות'],enrichment:['כיצד רוחב המישור משתנה מצפון לדרום'],skill:'תיאור נוף גאוגרפי מלא',games:['concepts','streak'],next:'north'},
-north:{number:2,title:'טבע, מורשת ודת בצפון',intro:'מסע מראש הנקרה דרך עכו ועד חיפה, תוך חיבור בין נוף, היסטוריה ומגזרי תיירות.',goals:['לתאר את ראש הנקרה ותשתיות האתר','להכיר את מוקדי עכו העתיקה','להסביר את המשיכה הדתית של חיפה'],enrichment:['אכזיב, מונפורט, יחיעם ובית לוחמי הגטאות'],skill:'בחירת אתר והסבר ייחודו',games:['clues','map','silent-map'],next:'carmel'},
-carmel:{number:3,title:'קיסריה והכרמל',intro:'מהעיר הרומית של הורדוס אל מושבות העלייה הראשונה והכפרים הדרוזיים.',goals:['להכיר את אתרי קיסריה המרכזיים','להסביר את תפקיד האקוודוקט','להכיר את מוקדי זכרון יעקב והכרמל'],enrichment:['רמת הנדיב והתרבות הדרוזית'],skill:'קישור בין תקופה, אתר ושימוש תיירותי',games:['route','puzzle'],next:'telaviv'},
-telaviv:{number:4,title:'תל אביב–יפו: עבר והווה',intro:'יחידה עירונית המחברת נמל עתיק, שכונות ראשונות, העיר הלבנה, תרבות ופנאי.',goals:['להכיר מוקדי תיירות ביפו','להסביר את חשיבות נווה צדק','לתאר את ייחוד העיר הלבנה'],enrichment:['שווקים, מוזיאונים, פארק הירקון ונמל תל אביב'],skill:'השוואה בין עיר עתיקה לעיר מודרנית',games:['memory','speed'],next:'south'},
-south:{number:5,title:'אשקלון ושפלת יהודה',intro:'ארכאולוגיה, חוף ומערות — ומה מייחד את הדרום מול מוקדי תיירות אחרים.',goals:['לתאר את השער הכנעני באשקלון','להכיר את מערות בית גוברין','להבחין בין סוגי התיירות בדרום'],enrichment:['הקשר בין מסלע הקירטון לחציבת המערות'],skill:'תשובה משווה הכוללת דוגמאות',games:['regions'],next:'games'}
+</div>`;
+imageSection.parentNode.insertBefore(gameSection, imageSection);
+const chapterPlan = {
+  overview: {
+    number: 1,
+    title: 'קוראים את המרחב',
+    intro: 'לפני שמכירים את האתרים, מבינים את המבנה של מישור החוף ואת ההבדל בין סוגי החופים.',
+    goals: ['למקם את גבולות מישור החוף', 'להבחין בין חוף צבירה לחוף סחיפה', 'להסביר מדוע האזור מיושב בצפיפות'],
+    enrichment: ['כיצד רוחב המישור משתנה מצפון לדרום'],
+    skill: 'תיאור נוף גאוגרפי מלא',
+    games: ['concepts', 'streak'],
+    next: 'north',
+  },
+  north: {
+    number: 2,
+    title: 'טבע, מורשת ודת בצפון',
+    intro: 'מסע מראש הנקרה דרך עכו ועד חיפה, תוך חיבור בין נוף, היסטוריה ומגזרי תיירות.',
+    goals: ['לתאר את ראש הנקרה ותשתיות האתר', 'להכיר את מוקדי עכו העתיקה', 'להסביר את המשיכה הדתית של חיפה'],
+    enrichment: ['אכזיב, מונפורט, יחיעם ובית לוחמי הגטאות'],
+    skill: 'בחירת אתר והסבר ייחודו',
+    games: ['clues', 'map', 'silent-map'],
+    next: 'carmel',
+  },
+  carmel: {
+    number: 3,
+    title: 'קיסריה והכרמל',
+    intro: 'מהעיר הרומית של הורדוס אל מושבות העלייה הראשונה והכפרים הדרוזיים.',
+    goals: ['להכיר את אתרי קיסריה המרכזיים', 'להסביר את תפקיד האקוודוקט', 'להכיר את מוקדי זכרון יעקב והכרמל'],
+    enrichment: ['רמת הנדיב והתרבות הדרוזית'],
+    skill: 'קישור בין תקופה, אתר ושימוש תיירותי',
+    games: ['route', 'puzzle'],
+    next: 'telaviv',
+  },
+  telaviv: {
+    number: 4,
+    title: 'תל אביב–יפו: עבר והווה',
+    intro: 'יחידה עירונית המחברת נמל עתיק, שכונות ראשונות, העיר הלבנה, תרבות ופנאי.',
+    goals: ['להכיר מוקדי תיירות ביפו', 'להסביר את חשיבות נווה צדק', 'לתאר את ייחוד העיר הלבנה'],
+    enrichment: ['שווקים, מוזיאונים, פארק הירקון ונמל תל אביב'],
+    skill: 'השוואה בין עיר עתיקה לעיר מודרנית',
+    games: ['memory', 'speed'],
+    next: 'south',
+  },
+  south: {
+    number: 5,
+    title: 'אשקלון ושפלת יהודה',
+    intro: 'ארכאולוגיה, חוף ומערות — ומה מייחד את הדרום מול מוקדי תיירות אחרים.',
+    goals: ['לתאר את השער הכנעני באשקלון', 'להכיר את מערות בית גוברין', 'להבחין בין סוגי התיירות בדרום'],
+    enrichment: ['הקשר בין מסלע הקירטון לחציבת המערות'],
+    skill: 'תשובה משווה הכוללת דוגמאות',
+    games: ['regions'],
+    next: 'games',
+  },
 };
-const chapterGameMap=Object.fromEntries(Object.entries(chapterPlan).map(([id,c])=>[id,c.games]));
-Object.entries(chapterPlan).forEach(([id,c])=>{const section=document.getElementById(id),heading=section?.querySelector('.block-heading'),button=section?.querySelector('.complete-button');if(!section||!heading||!button)return;section.classList.add('study-unit');const contract=document.createElement('div');contract.className='unit-contract';contract.innerHTML=`<div><span>יחידת לימוד ${c.number} מתוך 5</span><h2>${c.title}</h2><p>${c.intro}</p><div class="content-levels"><b>חובה לבגרות</b><em>העשרה</em></div></div><aside><strong>בסיום היחידה אוכל:</strong><ul>${c.goals.map(x=>`<li>${x}</li>`).join('')}</ul><small>העמקה: ${c.enrichment[0]}</small></aside>`;section.insertBefore(contract,heading);const practice=document.createElement('div');practice.className='chapter-practice';practice.id=`practice-${id}`;practice.innerHTML=`<div class="chapter-practice-heading"><span>תרגול בתוך היחידה</span><h3>בודקים הבנה לפני שממשיכים</h3><p>השלימו את הפעילויות כדי לסמן את יחידת הלימוד כהושלמה.</p></div><div class="chapter-game-grid"></div>`;section.insertBefore(practice,button);c.games.forEach(game=>{const card=document.querySelector(`[data-game-card="${game}"]`);if(card)practice.querySelector('.chapter-game-grid').appendChild(card)});const checkpoint=document.createElement('div');checkpoint.className='chapter-checkpoint';checkpoint.innerHTML=`<div><span>מיומנות הבגרות</span><b>${c.skill}</b><small data-chapter-feedback="${id}"></small></div>`;button.parentNode.insertBefore(checkpoint,button);button.textContent='סיימתי את יחידת הלימוד';const next=document.createElement('a');next.className='chapter-next';next.href=`#${c.next}`;next.textContent=c.next==='games'?'לסיכום כל התרגולים ←':'ליחידת הלימוד הבאה ←';button.insertAdjacentElement('afterend',next)});
-const gameDirectory=document.querySelector('.learning-games .games-grid');gameDirectory.className='practice-directory';gameDirectory.innerHTML=Object.entries(chapterPlan).map(([id,c])=>`<a href="#practice-${id}"><span>יחידה ${c.number}</span><b>${c.title}</b><small>${c.games.length} פעילויות</small></a>`).join('');
-const chapterOpenQuestions={
-overview:{question:'תארו את הנוף האופייני למישור החוף והסבירו הבדל אחד בין החוף בצפון לחוף בדרום.',criteria:[['תיאור המישור',['מישורי','מישור']],['החוף הצפוני',['סחיפה','סלע','מפרצ']],['החוף הדרומי',['צבירה','חולי','חול','רחב']]]},
-north:{question:'תארו אתר ארכאולוגי אחד ואתר קדוש אחד בעכו, והסבירו מה ניתן לראות בכל אחד.',criteria:[['אתר ארכאולוגי',['אולמות האבירים','צלבני','מנהרת הטמפלרים']],['אתר קדוש',['מסגד אל־ג׳זאר','מסגד','קדוש']],['תיאור או הסבר',['תת־קרקע','עות׳מאני','מוסלמ']]]},
-carmel:{question:'בחרו שני אתרים בקיסריה או בכרמל. תארו כל אתר והסבירו מדוע הוא מושך תיירים.',criteria:[['אתר ראשון',['קיסריה','תיאטרון','אקוודוקט','היפודרום']],['אתר שני',['זכרון','אהרנסון','רמת הנדיב','דלית','עוספיה']],['הסבר תיירותי',['מושך','מבקרים','תייר','מורשת','היסטור']]]},
-telaviv:{question:'הסבירו כיצד תל אביב–יפו משלבת עבר והווה. הביאו שתי דוגמאות מן החומר.',criteria:[['דוגמה היסטורית',['יפו','נווה צדק','אחוזת בית','שעון']],['דוגמה מודרנית',['עיר הלבנה','נמל תל אביב','תרבות','בילוי']],['קשר בין עבר להווה',['שימור','היסטור','כיום','מודרנ']]]},
-south:{question:'השוו בין תל אשקלון לבית גוברין: ציינו ממצא מרכזי בכל אתר והסבירו מה מייחד אותו.',criteria:[['תל אשקלון',['שער כנעני','אשקלון']],['בית גוברין',['מערות פעמון','קולומבריום','בית גוברין']],['השוואה או ייחוד',['לעומת','בשונה','מייחד','ואילו','שילוב']]]}
+const chapterGameMap = Object.fromEntries(Object.entries(chapterPlan).map(([id, c]) => [id, c.games]));
+Object.entries(chapterPlan).forEach(([id, c]) => {
+  const section = document.getElementById(id),
+    heading = section?.querySelector('.block-heading'),
+    button = section?.querySelector('.complete-button');
+  if (!section || !heading || !button) return;
+  section.classList.add('study-unit');
+  const contract = document.createElement('div');
+  contract.className = 'unit-contract';
+  contract.innerHTML = `<div><span>יחידת לימוד ${c.number} מתוך 5</span><h2>${c.title}</h2><p>${c.intro}</p><div class="content-levels"><b>חובה לבגרות</b><em>העשרה</em></div></div><aside><strong>בסיום היחידה אוכל:</strong><ul>${c.goals.map((x) => `<li>${x}</li>`).join('')}</ul><small>העמקה: ${c.enrichment[0]}</small></aside>`;
+  section.insertBefore(contract, heading);
+  const practice = document.createElement('div');
+  practice.className = 'chapter-practice';
+  practice.id = `practice-${id}`;
+  practice.innerHTML = `<div class="chapter-practice-heading"><span>תרגול בתוך היחידה</span><h3>בודקים הבנה לפני שממשיכים</h3><p>השלימו את הפעילויות כדי לסמן את יחידת הלימוד כהושלמה.</p></div><div class="chapter-game-grid"></div>`;
+  section.insertBefore(practice, button);
+  c.games.forEach((game) => {
+    const card = document.querySelector(`[data-game-card="${game}"]`);
+    if (card) practice.querySelector('.chapter-game-grid').appendChild(card);
+  });
+  const checkpoint = document.createElement('div');
+  checkpoint.className = 'chapter-checkpoint';
+  checkpoint.innerHTML = `<div><span>מיומנות הבגרות</span><b>${c.skill}</b><small data-chapter-feedback="${id}"></small></div>`;
+  button.parentNode.insertBefore(checkpoint, button);
+  button.textContent = 'סיימתי את יחידת הלימוד';
+  const next = document.createElement('a');
+  next.className = 'chapter-next';
+  next.href = `#${c.next}`;
+  next.textContent = c.next === 'games' ? 'לסיכום כל התרגולים ←' : 'ליחידת הלימוד הבאה ←';
+  button.insertAdjacentElement('afterend', next);
+});
+const gameDirectory = document.querySelector('.learning-games .games-grid');
+gameDirectory.className = 'practice-directory';
+gameDirectory.innerHTML = Object.entries(chapterPlan)
+  .map(
+    ([id, c]) =>
+      `<a href="#practice-${id}"><span>יחידה ${c.number}</span><b>${c.title}</b><small>${c.games.length} פעילויות</small></a>`
+  )
+  .join('');
+const chapterOpenQuestions = {
+  overview: {
+    question: 'תארו את הנוף האופייני למישור החוף והסבירו הבדל אחד בין החוף בצפון לחוף בדרום.',
+    criteria: [
+      ['תיאור המישור', ['מישורי', 'מישור']],
+      ['החוף הצפוני', ['סחיפה', 'סלע', 'מפרצ']],
+      ['החוף הדרומי', ['צבירה', 'חולי', 'חול', 'רחב']],
+    ],
+  },
+  north: {
+    question: 'תארו אתר ארכאולוגי אחד ואתר קדוש אחד בעכו, והסבירו מה ניתן לראות בכל אחד.',
+    criteria: [
+      ['אתר ארכאולוגי', ['אולמות האבירים', 'צלבני', 'מנהרת הטמפלרים']],
+      ['אתר קדוש', ['מסגד אל־ג׳זאר', 'מסגד', 'קדוש']],
+      ['תיאור או הסבר', ['תת־קרקע', 'עות׳מאני', 'מוסלמ']],
+    ],
+  },
+  carmel: {
+    question: 'בחרו שני אתרים בקיסריה או בכרמל. תארו כל אתר והסבירו מדוע הוא מושך תיירים.',
+    criteria: [
+      ['אתר ראשון', ['קיסריה', 'תיאטרון', 'אקוודוקט', 'היפודרום']],
+      ['אתר שני', ['זכרון', 'אהרנסון', 'רמת הנדיב', 'דלית', 'עוספיה']],
+      ['הסבר תיירותי', ['מושך', 'מבקרים', 'תייר', 'מורשת', 'היסטור']],
+    ],
+  },
+  telaviv: {
+    question: 'הסבירו כיצד תל אביב–יפו משלבת עבר והווה. הביאו שתי דוגמאות מן החומר.',
+    criteria: [
+      ['דוגמה היסטורית', ['יפו', 'נווה צדק', 'אחוזת בית', 'שעון']],
+      ['דוגמה מודרנית', ['עיר הלבנה', 'נמל תל אביב', 'תרבות', 'בילוי']],
+      ['קשר בין עבר להווה', ['שימור', 'היסטור', 'כיום', 'מודרנ']],
+    ],
+  },
+  south: {
+    question: 'השוו בין תל אשקלון לבית גוברין: ציינו ממצא מרכזי בכל אתר והסבירו מה מייחד אותו.',
+    criteria: [
+      ['תל אשקלון', ['שער כנעני', 'אשקלון']],
+      ['בית גוברין', ['מערות פעמון', 'קולומבריום', 'בית גוברין']],
+      ['השוואה או ייחוד', ['לעומת', 'בשונה', 'מייחד', 'ואילו', 'שילוב']],
+    ],
+  },
 };
-const chapterOpenPassed=new Set(JSON.parse(localStorage.getItem('coastal-open-checkpoints')||'[]'));
-function evaluateAgainstRubric(answer,criteria,minWords=12){const normalized=answer.replace(/[״׳]/g,'').toLowerCase(),words=answer.trim()?answer.trim().split(/\s+/).length:0;const checks=criteria.map(([label,terms])=>({label,met:terms.some(term=>normalized.includes(term.replace(/[״׳]/g,'').toLowerCase()))}));const met=checks.filter(x=>x.met).length,score=Math.round(met/checks.length*100);return{checks,words,score,passed:words>=minWords&&score>=67}}
-function recordOpenAttempt(scope,id,result){const attempts=JSON.parse(localStorage.getItem('coastal-open-attempts')||'[]'),previous=attempts.filter(x=>x.scope===scope&&x.id===String(id)).at(-1);const entry={scope,id:String(id),attempt:attempts.filter(x=>x.scope===scope&&x.id===String(id)).length+1,score:result.score,words:result.words,missing:result.checks.filter(x=>!x.met).map(x=>x.label),time:new Date().toISOString()};attempts.push(entry);localStorage.setItem('coastal-open-attempts',JSON.stringify(attempts.slice(-100)));return{...entry,improvement:previous?entry.score-previous.score:0}}
-function renderSmartFeedback(box,result,attempt){box.className=`smart-feedback ${result.passed?'passed':'needs-work'}`;box.innerHTML=`<b>${result.passed?'התשובה בכיוון הנכון ✓':'כדאי לשפר את התשובה'}</b><span>נמצאו ${result.checks.filter(x=>x.met).length} מתוך ${result.checks.length} רכיבים · ${result.words} מילים${attempt?` · ניסיון ${attempt.attempt}${attempt.improvement>0?` · שיפור של ${attempt.improvement}%`:''}`:''}</span><ul>${result.checks.map(x=>`<li class="${x.met?'met':'missing'}">${x.met?'נמצא':'חסר'}: ${x.label}</li>`).join('')}</ul><small>${result.passed?'אפשר להמשיך, או להעמיק ולבדוק שוב.':'הוסיפו את הרכיבים החסרים במילים שלכם ושלחו לבדיקה חוזרת.'}</small>`}
-Object.entries(chapterOpenQuestions).forEach(([id,item])=>{const section=document.getElementById(id),practice=document.getElementById(`practice-${id}`);if(!section||!practice)return;section.querySelector('.exam-question')?.remove();const saved=JSON.parse(localStorage.getItem('coastal-chapter-open-drafts')||'{}');const card=document.createElement('article');card.className='smart-open-question';card.id=`open-check-${id}`;card.innerHTML=`<span>שאלה פתוחה · הכנה לבדיקת הבוט</span><h3>${item.question}</h3><textarea rows="5" data-chapter-open="${id}" placeholder="כתבו תשובה מלאה במילים שלכם..."></textarea><div class="smart-question-actions"><button class="button button-primary" data-check-chapter="${id}">בדיקת התשובה</button><small>הבדיקה מבוססת רק על המחוון וחומרי היחידה</small></div><div class="smart-feedback" data-smart-feedback="${id}" aria-live="polite"></div>`;const textarea=card.querySelector('textarea');textarea.value=saved[id]||'';textarea.addEventListener('input',()=>{chapterOpenPassed.delete(id);localStorage.setItem('coastal-open-checkpoints',JSON.stringify([...chapterOpenPassed]));card.querySelector('[data-smart-feedback]').className='smart-feedback'});practice.parentNode.insertBefore(card,practice);card.querySelector('[data-check-chapter]').addEventListener('click',()=>{const drafts=JSON.parse(localStorage.getItem('coastal-chapter-open-drafts')||'{}');drafts[id]=textarea.value;localStorage.setItem('coastal-chapter-open-drafts',JSON.stringify(drafts));const result=evaluateAgainstRubric(textarea.value,item.criteria),attempt=recordOpenAttempt('chapter',id,result),box=card.querySelector('[data-smart-feedback]');renderSmartFeedback(box,result,attempt);syncOpenAnswer(item.question,textarea.value,box);if(result.passed){chapterOpenPassed.add(id);localStorage.setItem('coastal-open-checkpoints',JSON.stringify([...chapterOpenPassed]))}})});
-function attemptCompleteChapter(id){const needed=chapterGameMap[id]||[],missing=needed.filter(game=>!gameDone.has(game)),feedback=document.querySelector(`[data-chapter-feedback="${id}"]`);if(!chapterOpenPassed.has(id)){if(feedback)feedback.textContent='יש להשלים בהצלחה את השאלה הפתוחה לפני סימון היחידה.';document.getElementById(`open-check-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'});return}if(missing.length){if(feedback)feedback.textContent=`נשארו ${missing.length} פעילויות להשלמה לפני שהיחידה תסומן.`;document.getElementById(`practice-${id}`)?.scrollIntoView({behavior:'smooth',block:'start'});return}if(feedback)feedback.textContent='השאלה והפעילויות הושלמו ✓';completeStep(id)}
-const gameNav=document.createElement('a');gameNav.href='#games';gameNav.dataset.step='games';gameNav.innerHTML='<i>6</i><span>מעקב תרגול<small>10 פעילויות ביחידות</small></span><b>✓</b>';imageNav.parentNode.insertBefore(gameNav,imageNav);document.querySelectorAll('[data-step="images"] i,[data-step="presentation"] i,[data-step="practice"] i').forEach((n,i)=>n.textContent=String(i+7));
-const gameDone=new Set(JSON.parse(localStorage.getItem('coastal-games-done')||'[]'));function renderGamesProgress(){document.querySelectorAll('[data-game-card]').forEach(c=>c.classList.toggle('game-complete',gameDone.has(c.dataset.gameCard)));document.getElementById('gamesCompleted').textContent=`${gameDone.size} מתוך 10 משחקים הושלמו`;document.getElementById('gamesMeter').style.width=`${Math.round(gameDone.size/10*100)}%`;localStorage.setItem('coastal-games-done',JSON.stringify([...gameDone]));if(gameDone.size===10)completeStep('games')}
-const regionItems=[['ראש הנקרה','צפון'],['עכו','צפון'],['קיסריה','כרמל'],['זכרון יעקב','כרמל'],['יפו','מרכז'],['בית גוברין','דרום']];document.getElementById('regionGame').innerHTML=regionItems.map((x,i)=>`<label><b>${x[0]}</b><select data-region="${i}"><option value="">בחרו אזור</option><option>צפון</option><option>כרמל</option><option>מרכז</option><option>דרום</option></select></label>`).join('');document.getElementById('checkRegions').addEventListener('click',()=>{const correct=regionItems.filter((x,i)=>document.querySelector(`[data-region="${i}"]`).value===x[1]).length;document.getElementById('regionFeedback').textContent=`${correct} מתוך ${regionItems.length} התאמות נכונות`;if(correct===regionItems.length){gameDone.add('regions');renderGamesProgress()}});
-const clueItems=[['יש בי 19 טרסות וכיפת זהב',['הגנים הבהאיים','רמת הנדיב','סטלה מאריס'],0],['אני אמת מים רומית באורך כ־20 ק״מ',['האקוודוקט','מנהרת הטמפלרים','נמל יפו'],0],['מכנים אותי ארץ אלף המערות',['בית גוברין','ראש הנקרה','קיסריה'],0],['אני שכונה יהודית שנוסדה בשנת 1887',['נווה צדק','שרונה','עוספיה'],0],['אצלי נמצא שער כנעני מקושת בן כ־3,500 שנה',['תל אשקלון','עכו','מונפורט'],0]];let clueIndex=0,clueScore=0;function renderClue(){const c=clueItems[clueIndex];document.getElementById('clueText').textContent=c[0];document.getElementById('clueFeedback').textContent=`רמז ${clueIndex+1} מתוך ${clueItems.length}`;document.getElementById('clueChoices').innerHTML='';[...c[1]].sort(()=>.5-Math.random()).forEach(name=>{const b=document.createElement('button');b.textContent=name;b.addEventListener('click',()=>{document.querySelectorAll('#clueChoices button').forEach(x=>x.disabled=true);if(name===c[1][c[2]]){b.classList.add('correct');clueScore++}else{b.classList.add('wrong');[...document.querySelectorAll('#clueChoices button')].find(x=>x.textContent===c[1][c[2]])?.classList.add('correct')}document.getElementById('nextClue').disabled=false});document.getElementById('clueChoices').appendChild(b)})}document.getElementById('nextClue').addEventListener('click',()=>{if(clueIndex<clueItems.length-1){clueIndex++;document.getElementById('nextClue').disabled=true;renderClue();return}document.getElementById('clueFeedback').textContent=`סיימתם עם ${clueScore} מתוך ${clueItems.length}`;if(clueScore>=4){gameDone.add('clues');renderGamesProgress()}else{clueIndex=0;clueScore=0;document.getElementById('nextClue').disabled=true;renderClue()}});renderClue();
-const routeStops=['בחרו תחנה','ראש הנקרה','עכו','חיפה'];['route1','route2','route3'].forEach(id=>document.getElementById(id).innerHTML=routeStops.map(x=>`<option>${x}</option>`).join(''));document.getElementById('checkRoute').addEventListener('click',()=>{const route=['route1','route2','route3'].map(id=>document.getElementById(id).value),ok=route.join('|')==='ראש הנקרה|עכו|חיפה';document.getElementById('routeFeedback').textContent=ok?'מסלול נכון: מצפון לדרום ✓':'בדקו שוב את המיקום הגיאוגרפי של התחנות.';if(ok){gameDone.add('route');renderGamesProgress()}});renderGamesProgress();
-const memoryPairs=[['ראש הנקרה','נקרות בסלע הגיר'],['עכו','אולמות אבירים תת־קרקעיים'],['חיפה','19 טרסות בהאיות'],['קיסריה','אמת מים רומית'],['תל אביב','העיר הלבנה'],['בית גוברין','ארץ אלף המערות']];let memoryOpen=[],memoryLocked=false,memoryMatches=0;function buildMemory(){memoryOpen=[];memoryLocked=false;memoryMatches=0;const cards=memoryPairs.flatMap((p,i)=>p.map(text=>({pair:i,text}))).sort(()=>.5-Math.random());const board=document.getElementById('memoryBoard');board.innerHTML='';cards.forEach(c=>{const b=document.createElement('button');b.dataset.pair=c.pair;b.dataset.text=c.text;b.innerHTML='<span>?</span>';b.addEventListener('click',()=>flipMemory(b));board.appendChild(b)});document.getElementById('memoryFeedback').textContent='0 מתוך 6 זוגות'}function flipMemory(b){if(memoryLocked||b.classList.contains('matched')||b.classList.contains('flipped'))return;b.classList.add('flipped');b.innerHTML=`<span>${b.dataset.text}</span>`;memoryOpen.push(b);if(memoryOpen.length<2)return;if(memoryOpen[0].dataset.pair===memoryOpen[1].dataset.pair){memoryOpen.forEach(x=>x.classList.add('matched'));memoryOpen=[];memoryMatches++;document.getElementById('memoryFeedback').textContent=`${memoryMatches} מתוך 6 זוגות`;if(memoryMatches===6){gameDone.add('memory');renderGamesProgress()}return}memoryLocked=true;setTimeout(()=>{memoryOpen.forEach(x=>{x.classList.remove('flipped');x.innerHTML='<span>?</span>'});memoryOpen=[];memoryLocked=false},700)}document.getElementById('resetMemory').addEventListener('click',buildMemory);buildMemory();
-const concepts=[['חוף צבירה','חוף רחב, ישר וחולי שנוצר מהצטברות משקעים'],['חוף סחיפה','חוף שבו הגלים מכרסמים בסלע ויוצרים מפרצונים'],['אקוודוקט','אמת מים המובילה מים אל עיר'],['קולומבריום','מתקן ובו גומחות לגידול יונים'],['עיר גנים','תכנון עירוני המשלב שדרות ושטחים ירוקים']];const definitions=concepts.map(x=>x[1]).sort(()=>.5-Math.random());document.getElementById('conceptGame').innerHTML=concepts.map((x,i)=>`<label><b>${x[0]}</b><select data-concept="${i}"><option value="">בחרו הסבר</option>${definitions.map(d=>`<option>${d}</option>`).join('')}</select></label>`).join('');document.getElementById('checkConcepts').addEventListener('click',()=>{const correct=concepts.filter((x,i)=>document.querySelector(`[data-concept="${i}"]`).value===x[1]).length;document.getElementById('conceptFeedback').textContent=`${correct} מתוך 5 התאמות נכונות`;if(correct===concepts.length){gameDone.add('concepts');renderGamesProgress()}});
-let puzzleOrder=[],selectedPiece=null;function buildPuzzle(){puzzleOrder=[0,1,2,3,4,5,6,7,8].sort(()=>.5-Math.random());if(puzzleOrder.every((x,i)=>x===i))[puzzleOrder[0],puzzleOrder[1]]=[puzzleOrder[1],puzzleOrder[0]];selectedPiece=null;renderPuzzle()}function renderPuzzle(){const board=document.getElementById('imagePuzzle');board.innerHTML='';puzzleOrder.forEach((piece,pos)=>{const b=document.createElement('button');b.dataset.position=pos;b.dataset.piece=piece;b.style.backgroundImage='url(https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg)';b.style.backgroundPosition=`${(piece%3)*50}% ${Math.floor(piece/3)*50}%`;b.addEventListener('click',()=>selectPuzzle(b));board.appendChild(b)});document.getElementById('puzzleFeedback').textContent='הרכיבו את ראש הנקרה'}function selectPuzzle(b){if(!selectedPiece){selectedPiece=b;b.classList.add('selected');return}const a=Number(selectedPiece.dataset.position),c=Number(b.dataset.position);[puzzleOrder[a],puzzleOrder[c]]=[puzzleOrder[c],puzzleOrder[a]];selectedPiece=null;renderPuzzle();if(puzzleOrder.every((x,i)=>x===i)){document.getElementById('puzzleFeedback').textContent='הפאזל הושלם — ראש הנקרה ✓';gameDone.add('puzzle');renderGamesProgress()}}document.getElementById('shufflePuzzle').addEventListener('click',buildPuzzle);buildPuzzle();
-const mapSites=[['ראש הנקרה',9.8,53.8,'הנקודה הצפונית ביותר במשחק'],['עכו',13.6,53.1,'מצפון לחיפה'],['חיפה',16.9,49.6,'על רכס הכרמל'],['קיסריה',23.8,46.2,'בין חיפה לתל אביב'],['תל אביב–יפו',33.7,41.5,'במרכז מישור החוף'],['אשקלון',43.6,33.5,'בדרום מישור החוף'],['בית גוברין',45,46.2,'ממזרח לאשקלון']];let mapRound=0,mapCorrect=0,mapTargets=[],mapLocked=false;function buildMap(){mapRound=0;mapCorrect=0;mapLocked=false;mapTargets=[...mapSites].sort(()=>.5-Math.random()).slice(0,5);document.getElementById('coastMap').innerHTML=mapSites.map((s,i)=>`<button style="top:${s[1]}%;left:${s[2]}%" data-map-site="${i}" aria-label="נקודה ${i+1} במפה"><i></i><span>${i+1}</span></button>`).join('');document.querySelectorAll('[data-map-site]').forEach(b=>b.addEventListener('click',()=>answerMap(Number(b.dataset.mapSite))));document.getElementById('mapFeedback').textContent='בחרו נקודה לפי מיקומה';renderMapPrompt()}function renderMapPrompt(){document.getElementById('mapPrompt').textContent=`סיבוב ${mapRound+1} מתוך 5: מצאו את ${mapTargets[mapRound][0]}`}function answerMap(index){if(mapLocked)return;mapLocked=true;const wanted=mapTargets[mapRound],chosen=mapSites[index];if(chosen[0]===wanted[0]){mapCorrect++;document.getElementById('mapFeedback').textContent=`נכון — ${wanted[3]} ✓`}else document.getElementById('mapFeedback').textContent=`לא בדיוק. ${wanted[0]}: ${wanted[3]}. בחרתם ${chosen[0]}.`;mapRound++;setTimeout(()=>{mapLocked=false;if(mapRound<5){renderMapPrompt();return}document.getElementById('mapPrompt').textContent='המסלול הסתיים';document.getElementById('mapFeedback').textContent=`${mapCorrect} מתוך 5 נכונות${mapCorrect>=4?' — מצוין! ✓':' — נסו שוב כדי להגיע ל־4'}`;if(mapCorrect>=4){gameDone.add('map');renderGamesProgress()}},650)}document.getElementById('resetMap').addEventListener('click',buildMap);buildMap();
-const streakItems=[['העיר הלבנה מזוהה עם הסגנון הבינלאומי',true,'בתל אביב יש יותר מ־4,000 מבנים בסגנון זה.'],['ראש הנקרה נמצאת מדרום לאשקלון',false,'ראש הנקרה נמצאת בקצה הצפוני של מישור החוף.'],['קיסריה נבנתה בידי הורדוס',true,'הורדוס בנה אותה לכבוד הקיסר הרומי.'],['קולומבריום שימש לגידול יונים',true,'הגומחות במתקן שימשו לגידול יונים.'],['נווה צדק נוסדה אחרי תל אביב',false,'נווה צדק נוסדה ב־1887, לפני אחוזת בית.'],['הגנים הבהאיים בנויים על 19 טרסות',true,'הטרסות יורדות על מורדות הכרמל.'],['בית גוברין מכונה ארץ אלף האגמים',false,'הכינוי הנכון הוא ארץ אלף המערות.']];let streakIndex=0,streakCount=0,streakLocked=false;function renderStreak(){document.getElementById('streakStatement').textContent=streakItems[streakIndex][0];document.getElementById('streakFeedback').textContent=`רצף נוכחי: ${streakCount} מתוך 5`}function answerStreak(value){if(streakLocked)return;streakLocked=true;const item=streakItems[streakIndex],correct=value===item[1];if(correct)streakCount++;else streakCount=0;document.getElementById('streakFeedback').textContent=`${correct?'נכון':'לא נכון'} — ${item[2]} רצף: ${streakCount}/5`;if(streakCount===5){gameDone.add('streak');renderGamesProgress();return}setTimeout(()=>{streakIndex=(streakIndex+1)%streakItems.length;streakLocked=false;renderStreak()},800)}document.querySelectorAll('[data-streak-answer]').forEach(b=>b.addEventListener('click',()=>answerStreak(b.dataset.streakAnswer==='true')));document.getElementById('resetStreak').addEventListener('click',()=>{streakIndex=0;streakCount=0;streakLocked=false;renderStreak()});renderStreak();
-const speedItems=[['איזו עיר כוללת אולמות אבירים?',['עכו','אשקלון','תל אביב'],'עכו','האולמות הם חלק מהעיר הצלבנית התת־קרקעית.'],['מהו אקוודוקט?',['אמת מים','מערת קבורה','מגדל שמירה'],'אמת מים','האקוודוקט הוביל מים אל העיר.'],['היכן נמצאת העיר הלבנה?',['תל אביב','חיפה','קיסריה'],'תל אביב','זהו מתחם מורשת עולמית בתל אביב.'],['מה נמצא בבית גוברין?',['מערות פעמון','נקרות ים','גנים תלויים'],'מערות פעמון','המערות נחצבו בסלע הקירטון.'],['מי בנה את קיסריה?',['הורדוס','רוטשילד','הטמפלרים'],'הורדוס','העיר נבנתה לכבוד הקיסר הרומי.'],['מה מאפיין חוף צבירה?',['חול ומשקעים','מצוקי גיר בלבד','מערות נטיפים'],'חול ומשקעים','החוף נוצר מהצטברות משקעים.']];let speedIndex=0,speedCorrect=0,speedLeft=45,speedClock=null,speedActive=false,speedLocked=false;function renderSpeed(){const q=speedItems[speedIndex];document.getElementById('speedQuestion').textContent=q[0];document.getElementById('speedScore').textContent=`${speedCorrect} / 6`;const box=document.getElementById('speedChoices');box.innerHTML='';[...q[1]].sort(()=>.5-Math.random()).forEach(a=>{const b=document.createElement('button');b.textContent=a;b.addEventListener('click',()=>answerSpeed(a));box.appendChild(b)})}function startSpeed(){clearInterval(speedClock);speedIndex=0;speedCorrect=0;speedLeft=45;speedActive=true;speedLocked=false;document.getElementById('startSpeed').disabled=true;document.getElementById('speedFeedback').textContent='האתגר התחיל';document.getElementById('speedTimer').textContent=speedLeft;renderSpeed();speedClock=setInterval(()=>{speedLeft--;document.getElementById('speedTimer').textContent=speedLeft;if(speedLeft<=0)finishSpeed()},1000)}function answerSpeed(answer){if(!speedActive||speedLocked)return;speedLocked=true;const q=speedItems[speedIndex],correct=answer===q[2];if(correct)speedCorrect++;document.getElementById('speedFeedback').textContent=correct?'נכון ✓':`התשובה היא ${q[2]} — ${q[3]}`;document.querySelectorAll('#speedChoices button').forEach(b=>b.disabled=true);speedIndex++;setTimeout(()=>{speedLocked=false;if(speedIndex===speedItems.length){finishSpeed();return}renderSpeed()},500)}function finishSpeed(){clearInterval(speedClock);speedActive=false;speedLocked=false;document.getElementById('startSpeed').disabled=false;document.getElementById('speedScore').textContent=`${speedCorrect} / 6`;document.getElementById('speedFeedback').textContent=speedCorrect>=5?'הצלחתם באתגר המהיר ✓':`${speedCorrect} נכונות — נסו שוב והגיעו ל־5`;if(speedCorrect>=5){gameDone.add('speed');renderGamesProgress()}}document.getElementById('startSpeed').addEventListener('click',startSpeed);
-const silentSites=[['ראש הנקרה',9.8,53.8],['עכו',13.6,53.1],['חיפה',16.9,49.6],['קיסריה',23.8,46.2],['תל אביב–יפו',33.7,41.5],['אשקלון',43.6,33.5],['בית גוברין',45,46.2]];let silentSelected=null,silentPlaced=new Map();function buildSilentMap(){silentSelected=null;silentPlaced=new Map();const bank=document.getElementById('silentMapLabels');bank.innerHTML=[...silentSites].sort(()=>.5-Math.random()).map((s,i)=>`<button draggable="true" data-silent-label="${s[0]}">${s[0]}</button>`).join('');const map=document.getElementById('silentCoastMap');map.innerHTML=silentSites.map((s,i)=>`<button class="silent-target" style="top:${s[1]}%;left:${s[2]}%" data-silent-target="${s[0]}" aria-label="נקודה ריקה ${i+1}"><i>${i+1}</i><span></span></button>`).join('');bank.querySelectorAll('[data-silent-label]').forEach(b=>{b.addEventListener('click',()=>selectSilentLabel(b));b.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',b.dataset.silentLabel))});map.querySelectorAll('[data-silent-target]').forEach(t=>{t.addEventListener('click',()=>placeSilent(t,silentSelected));t.addEventListener('dragover',e=>e.preventDefault());t.addEventListener('drop',e=>{e.preventDefault();placeSilent(t,e.dataTransfer.getData('text/plain'))})});document.getElementById('silentMapFeedback').textContent='0 מתוך 7 מקומות שובצו'}function selectSilentLabel(b){if(b.disabled)return;document.querySelectorAll('[data-silent-label]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');silentSelected=b.dataset.silentLabel;document.getElementById('silentMapFeedback').textContent=`נבחר: ${silentSelected}. כעת לחצו על נקודה במפה.`}function placeSilent(target,name){if(!name)return;if(silentPlaced.has(target.dataset.silentTarget)){document.getElementById('silentMapFeedback').textContent='הנקודה הזו כבר מלאה.';return}if(name!==target.dataset.silentTarget){target.classList.add('wrong');setTimeout(()=>target.classList.remove('wrong'),500);document.getElementById('silentMapFeedback').textContent=`${name} אינו מתאים לנקודה הזו — בדקו את המיקום על מפת ישראל.`;return}silentPlaced.set(name,true);target.classList.add('filled');target.querySelector('span').textContent=name;const label=document.querySelector(`[data-silent-label="${name}"]`);if(label){label.disabled=true;label.classList.remove('selected')}silentSelected=null;document.getElementById('silentMapFeedback').textContent=`${silentPlaced.size} מתוך 7 מקומות שובצו נכון`;if(silentPlaced.size===silentSites.length){document.getElementById('silentMapFeedback').textContent='המפה הושלמה במלואה ✓';gameDone.add('silent-map');renderGamesProgress()}}document.getElementById('resetSilentMap').addEventListener('click',buildSilentMap);buildSilentMap();renderGamesProgress();
-
-const slides=[
-['מישור החוף','חזרה לבגרות','מסע מראש הנקרה ועד הדרום: גיאוגרפיה, ארכאולוגיה, תרבות וטבע.','מתחילים מצפון'],
-['גיאוגרפיה ונוף','ראש הנקרה עד עזה','רצועה מישורית לאורך הים התיכון, באורך כ־190 ק״מ.','מפת היחידה'],
-['גיאוגרפיה','מישור החוף במספרים','רוחב 4 ק״מ בצפון ועד 40 ק״מ בדרום; נקטע בראש הנקרה ובכרמל.','שאלה 6א'],
-['גיאוגרפיה','חוף צבירה וחוף סחיפה','בדרום חוף רחב, ישר וחולי; בצפון מפרצונים ולוחות גידוד.','השוואה חשובה'],
-['החוף הצפוני','ראש הנקרה','גלי הים יצרו נקרות בסלע הגיר; באתר רכבל ומיצג אור־קולי.','שאלה 6ב'],
-['עכו','עיר מורשת עולמית','שכבה צלבנית תת־קרקעית ושכבה עות׳מאנית מעל הקרקע.','UNESCO'],
-['עכו','אולמות, מסגד וחאן','אולמות האבירים, מסגד אל־ג׳זאר וחאן אל־עומדאן.','שאלות 7א ו־9ב'],
-['עכו','מורשת ומחתרות','מוזיאון אסירי המחתרות, מנהרת הטמפלרים ובית לוחמי הגטאות.','העבר ממשיך לדבר'],
-['חיפה','הגנים הבהאיים','19 טרסות, מקדש הבב וכיפת הזהב; מרכז הדת הבהאית.','UNESCO 2008'],
-['חיפה','מערת אליהו וסטלה מאריס','המערה קדושה לארבע דתות; מעליה מרכז המסדר הכרמליתי.','קדושה וצליינות'],
-['טבע ומבצרים','אכזיב, מונפורט ויחיעם','לגונות וחוף, מבצר צלבני וסיפור מלחמת העצמאות.','שלושה סוגי ביקור'],
-['בדיקת ידע','עכו: ארכאולוגיה וקדושה','אולמות האבירים כאתר ארכאולוגי ומסגד אל־ג׳זאר כאתר קדוש.','מבנה תשובה'],
-['קיסריה והכרמל','עיר הורדוס','עיר נמל מפוארת בת כ־2,000 שנה.','עוברים למרכז'],
-['קיסריה','מוקדי הביקור','תיאטרון, היפודרום, רחוב צלבני וארמון הורדוס.','ארכאולוגיה חיה'],
-['קיסריה','האקוודוקט','אמת מים רומית באורך כ־20 ק״מ שנשמרה לצד החוף.','שאלה 8ב'],
-['זכרון יעקב','מושבה, ניל״י ויין','מושבה מ־1882: בית אהרנסון, דרך היין ורמת הנדיב.','שאלות 8ג ו־9א'],
-['הכרמל','הכפרים הדרוזיים','דלית אל־כרמל ועוספיה: שוק, מטבח, מורשת ואירוח.','תיירות תרבותית'],
-['בדיקת ידע','שני אתרים בקיסריה','התיאטרון והאקוודוקט: בכל תשובה משלבים עובדה והסבר.','תשובת בגרות'],
-['תל אביב–יפו','יפו העתיקה','נמל דייגים, סלע אנדרומדה, מגדל השעון ושוק הפשפשים.','ישן וחדש'],
-['תל אביב','נווה צדק והעיר הלבנה','נווה צדק מ־1887 ויותר מ־4,000 מבנים בסגנון הבינלאומי.','UNESCO 2003'],
-['תל אביב','אתרים ובילוי','הנמל, שרונה, שוק הכרמל, פארק הירקון ונחלת בנימין.','עיר מגוונת'],
-['תל אביב','מוזיאונים','אנו, ארץ ישראל, הפלמ״ח וההגנה.','תרבות ומורשת'],
-['בדיקת ידע','ייחוד העיר הלבנה','ריכוז מבני הסגנון הבינלאומי ותכנון עיר גנים.','תשובה מלאה'],
-['החוף הדרומי','גן לאומי תל אשקלון','שער כנעני ושילוב של ארכאולוגיה, חוף וטיילת.','שאלות 1ב ו־1ג'],
-['בית גוברין','ארץ אלף המערות','מערות פעמון, קולומבריום, קברים ומקוואות.','UNESCO'],
-['בדיקת ידע','ייחוד בית גוברין','מערכות חציבה מעשה אדם ושימושים מגוונים.','שאלה 5א'],
-['תכנון מסלול','יומיים מנהרייה','ראש הנקרה ועכו; למחרת מונפורט, יחיעם ואכזיב.','שאלה 9ג'],
-['סיכום','מצפון עד דרום','מזהים אתר, משייכים לאזור ומנסחים עובדה והסבר.','מוכנים לתרגול']
-].map(([section,title,body,accent])=>({section,title,body,accent}));
-let slideIndex=0;const stage=document.getElementById('slideStage');
-function renderSlide(){const s=slides[slideIndex];stage.innerHTML=`<div class="web-slide"><span>${s.section}</span><h3>${s.title}</h3><p>${s.body}</p><b>${s.accent}</b></div>`;document.getElementById('slideCounter').textContent=`${slideIndex+1} / ${slides.length}`;document.getElementById('prevSlide').disabled=slideIndex===0;document.getElementById('nextSlide').disabled=slideIndex===slides.length-1;if(slideIndex===slides.length-1){const f=document.getElementById('completeSlides');f.disabled=false;f.textContent='סיימתי את המצגת';}}
-document.getElementById('nextSlide').addEventListener('click',()=>{if(slideIndex<slides.length-1){slideIndex++;renderSlide()}});document.getElementById('prevSlide').addEventListener('click',()=>{if(slideIndex>0){slideIndex--;renderSlide()}});document.getElementById('fullScreenSlide').addEventListener('click',()=>document.getElementById('slidePlayer').requestFullscreen?.());document.getElementById('completeSlides').addEventListener('click',()=>completeStep('presentation'));
-
-const questions=[
-['מה מאפיין חוף צבירה?',['חוף רחב, ישר וחולי','מצוק גיר ובו נקרות','לוחות גידוד בלבד'],0,'חוף צבירה אופייני לדרום והוא רחב, ישר וחולי.'],
-['כיצד נוצרו הנקרות בראש הנקרה?',['מפעולת גלי הים בסלע הגיר','מחציבה רומית','מרעידת אדמה'],0,'הגלים פעלו לאורך זמן בסלע הגיר.'],
-['איזה אתר בעכו הוא צלבני?',['אולמות האבירים','מסגד אל־ג׳זאר','מגדל השעון'],0,'אולמות האבירים הם מתחם צלבני תת־קרקעי.'],
-['כמה טרסות יש בגנים הבהאיים?',['19','12','40'],0,'בגנים הבהאיים 19 טרסות.'],
-['מה היה תפקיד האקוודוקט?',['הובלת מים לקיסריה','הגנה על הנמל','מרוצי סוסים'],0,'האקוודוקט הוביל מים מהכרמל לקיסריה.'],
-['איזה סיפור מוצג בבית אהרנסון?',['מחתרת ניל״י','המסדר הכרמליתי','הקמת הפלמ״ח'],0,'הבית מספר את סיפורה של מחתרת ניל״י.'],
-['מה מייחד את העיר הלבנה?',['מבנים בסגנון הבינלאומי ועיר גנים','נמל עתיק','מגדל שעון'],0,'זהו ריכוז גדול של מבני הסגנון הבינלאומי.'],
-['איזה מוזיאון מספר את סיפור התפוצות?',['אנו','הפלמ״ח','בית אהרנסון'],0,'מוזיאון אנו עוסק בעם היהודי ובתפוצות.'],
-['מה מייחד את תל אשקלון?',['ארכאולוגיה, חוף וטיילת','19 טרסות','אמת מים'],0,'באתר יש שילוב ייחודי של ארכאולוגיה וחוף.'],
-['מה מכונה ארץ אלף המערות?',['בית גוברין','תל אשקלון','קיסריה'],0,'בית גוברין מוכר במערות הפעמון ובמערכות החציבה.']
-].map(([q,a,correct,explain])=>({q,a,correct,explain}));
-let questionIndex=0,correctAnswers=0;const quizResults=[];
-function renderQuestion(){const x=questions[questionIndex];document.querySelector('#quizCard .quiz-kicker').textContent=`שאלה ${questionIndex+1} מתוך ${questions.length}`;document.getElementById('questionText').textContent=x.q;const l=document.getElementById('answerList');l.innerHTML='';x.a.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a;b.addEventListener('click',()=>checkAnswer(i,b));l.appendChild(b)});document.getElementById('quizFeedback').textContent='';const n=document.getElementById('nextQuestion');n.disabled=true;n.textContent=questionIndex===questions.length-1?'לסיום ולקבלת ציון':'לשאלה הבאה';}
-function checkAnswer(i,b){const x=questions[questionIndex],buttons=document.querySelectorAll('#answerList button'),isCorrect=i===x.correct;buttons.forEach(c=>c.disabled=true);b.classList.add(isCorrect?'correct':'wrong');if(!isCorrect)buttons[x.correct].classList.add('correct');if(isCorrect)correctAnswers++;quizResults[questionIndex]={index:questionIndex,correct:isCorrect};document.getElementById('quizFeedback').textContent=x.explain;document.getElementById('nextQuestion').disabled=false;}
-document.getElementById('nextQuestion').addEventListener('click',()=>{if(questionIndex<questions.length-1){questionIndex++;renderQuestion();return}const score=Math.round(correctAnswers/questions.length*100);document.getElementById('quizCard').innerHTML=`<span class="eyebrow">התרגול הסתיים</span><h3>הציון שלך: ${score}</h3><p>${score>=60?'עברת את שלב התרגול. כל הכבוד.':'כדאי לחזור על החומר ולנסות שוב. מספר הניסיונות אינו מוגבל.'}</p><button class="button button-outline" onclick="location.reload()">ניסיון נוסף</button>`;localStorage.setItem('coastal-demo-last-score',String(score));bagrutAPI('saveBagrutQuizResult',{unit_id:BAGRUT_UNIT_ID,score:correctAnswers,total:questions.length}).catch(()=>{});bagrutAPI('updateBagrutMistakes',{unit_id:BAGRUT_UNIT_ID,results:quizResults}).catch(()=>{});if(score>=60)completeStep('practice')});
-const openPracticeData=[
-{title:'נוף ותיירות בדרום',topic:'גיאוגרפיה · אשקלון · נתניה',question:'א. תארו את הנוף האופייני למישור החוף המרכזי והדרומי. ב. ציינו שני אתרי תיירות מיוחדים בשפלת החוף והסבירו מה מייחד אותם. ג. ציינו אילו סוגי תיירות לשם הנאה מוצעים באשקלון ובנתניה, והסבירו מה מייחד את אשקלון לעומת נתניה.',model:'הנוף מישורי, קו החוף ישר וארוך והחוף רחב וחולי. תל אשקלון מיוחד בשער הכנעני ובשילוב ארכאולוגיה וחוף; בית גוברין מיוחד במערותיו. נתניה מציעה חוף, מלונות וקניות; אשקלון מוסיפה ארכאולוגיה וטיילת צוק.'},
-{title:'יפו והעיר הלבנה',topic:'תל אביב–יפו · UNESCO',question:'א. ציינו שני מוקדי תיירות מעניינים ביפו וכתבו מה מייחד כל אחד. ב. ציינו שכונה היסטורית שנוסדה מחוץ ליפו לפני תל אביב ותארו אותה. ג. הסבירו את ייחוד העיר הלבנה שזיכה אותה בהכרה של UNESCO.',model:'נמל יפו משלב נמל דייגים, היסטוריה ואווירה ים־תיכונית; שוק הפשפשים מציע יד שנייה וחוויה עממית. נווה צדק נוסדה ב־1887 ובה בתים, גלריות ומסעדות. העיר הלבנה כוללת יותר מ־4,000 מבנים בסגנון הבינלאומי ותכנון עיר גנים.'},
-{title:'ארכאולוגיה, בהאים ותל אביב',topic:'שרידים · דת · עירוניות',question:'א. ציינו שתי ערים במישור החוף המרכזי והדרומי שנמצאו בהן שרידים ארכאולוגיים; בחרו אחת ותארו שריד המושך תיירים. ב. הסבירו מיהם הבהאים וציינו שני אתרים קדושים להם בישראל. ג. ציינו שלושה מגורמי המשיכה של תל אביב לתיירים.',model:'בקיסריה ובאשקלון נמצאו שרידים; לדוגמה, השער הכנעני המקושת באשקלון. הבהאים הם בני דת שנוסדה בפרס ומקדשת את אחדות האנושות; אתריהם הקדושים הם מקדש הבב בחיפה ובהג׳י בעכו. תל אביב מושכת בזכות חופים, תרבות וחיי לילה.'},
-{title:'מוזיאונים והכפרים הדרוזיים',topic:'תרבות · גליל מערבי · כרמל',question:'א. בחרו שני מוזיאונים בתל אביב ותארו מה מייחד כל אחד. ב. ציינו שני מוזיאונים במישור החוף הצפוני ותארו מה ניתן לראות בהם. ג. ציינו את שני הכפרים הדרוזיים בכרמל ושלוש פעילויות תיירותיות המתקיימות בהם.',model:'בתל אביב אפשר לבחור במוזיאון אנו ובמוזיאון הפלמ״ח. בצפון אפשר לבחור במוזיאון אסירי המחתרות ובבית לוחמי הגטאות. הכפרים הם דלית אל־כרמל ועוספיה; הפעילויות כוללות שוק, אוכל דרוזי, בית מורשת ואירוח ביתי.'},
-{title:'בית גוברין ומוקדי משיכה',topic:'שפלת יהודה · תל אביב · הצפון',question:'א. תארו מה ניתן לראות באתר בית גוברין. ב. ציינו שני אתרי תיירות בתל אביב–יפו ותארו אותם. ג. ציינו שלושה גורמי משיכה תיירותיים במישור החוף הצפוני והביאו דוגמה לכל אחד.',model:'בבית גוברין מערות פעמון, קולומבריום, קברים ומקוואות. בתל אביב–יפו אפשר לתאר את נמל יפו ושרונה. בצפון גורמי המשיכה כוללים טבע — ראש הנקרה; ארכאולוגיה — עכו; ודת — הגנים הבהאיים או סטלה מאריס.'},
-{title:'גבולות, ראש הנקרה וחיפה',topic:'החוף הצפוני · תשתיות · מגזרי תיירות',question:'א. מהם הגבולות הגיאוגרפיים של מישור החוף הצפוני? ב. תארו מה ניתן לראות בראש הנקרה וציינו את התשתיות התיירותיות באתר. ג. ציינו שני אתרי תיירות בחיפה ואיזה מגזר תיירותי ייכלל בתכנית הביקור בכל אחד.',model:'האזור משתרע מראש הנקרה עד הכרמל. בראש הנקרה רואים מצוק ונקרות שנוצרו בגלים; במקום רכבל, מיצג, רכבת תיירותית, חניון ומסעדה. הגנים הבהאיים מתאימים לתיירות בהאית וכללית; סטלה מאריס לתיירות צליינית נוצרית.'},
-{title:'עכו, טבע ודת בחיפה',topic:'ארכאולוגיה · שמורות · דתות',question:'א. תארו שני אתרי תיירות בעכו — אחד ארכאולוגי ואחד קדוש. ב. ציינו פארק או שמורת טבע בחוף הגליל המערבי ותארו מה מושך אליו מבקרים. ג. ציינו שני אתרים בחיפה החשובים לבני דתות שונות והסבירו את חשיבותם ואת תרומתם לתיירות.',model:'אולמות האבירים הם מתחם צלבני תת־קרקעי; מסגד אל־ג׳זאר קדוש למוסלמים. אכזיב מושך בזכות לגונות, חוף וקמפינג. מערת אליהו קדושה לארבע דתות והגנים הבהאיים הם מרכז עולמי לבהאים — שניהם מושכים מאמינים ותיירים.'},
-{title:'חיפה, קיסריה ומושבות',topic:'מוזיאונים · עתיקות · עלייה ראשונה',question:'א. בחרו שני מוזיאונים בחיפה ותארו מה מייחד כל אחד. ב. ציינו שני אתרים בולטים בקיסריה וספרו עליהם. ג. ציינו שתי מושבות עלייה ראשונה בשולי הכרמל ומוקד משיכה אחד בכל אחת.',model:'בחיפה אפשר לבחור במוזיאון הימי הלאומי ובמוזיאון חיפה לאמנות. בקיסריה התיאטרון הרומי משמש למופעים והאקוודוקט הוביל מים לאורך כ־20 ק״מ. בזכרון יעקב מוקד משיכה הוא בית אהרנסון; בבנימינה — אתרי מורשת ויקבים.'},
-{title:'זכרון יעקב וסיור מנהרייה',topic:'שימור · צלבנים · תכנון מסלול',question:'א. ציינו שני אתרים בזכרון יעקב המשמרים את עברה ההיסטורי. ב. ציינו שני אתרים במישור החוף הצפוני שהם שרידים מתקופת הצלבנים. ג. תכננו סיור בן יומיים היוצא מנהרייה וכולל שישה אתרים — שלושה בכל יום; ציינו סוג אתר ומשך שהייה.',model:'בזכרון יעקב: בית אהרנסון ודרך היין או רחוב המייסדים. שרידים צלבניים: אולמות האבירים והמונפורט. יום א׳: ראש הנקרה — טבע, 90 דקות; אולמות האבירים — ארכאולוגיה, שעתיים; מסגד אל־ג׳זאר — דת, 45 דקות. יום ב׳: מונפורט — היסטוריה וטבע, שעתיים; יחיעם — היסטוריה, 90 דקות; אכזיב — טבע ונופש, שעה.'}
+const chapterOpenPassed = new Set(JSON.parse(localStorage.getItem('coastal-open-checkpoints') || '[]'));
+function evaluateAgainstRubric(answer, criteria, minWords = 12) {
+  const normalized = answer.replace(/[״׳]/g, '').toLowerCase(),
+    words = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+  const checks = criteria.map(([label, terms]) => ({
+    label,
+    met: terms.some((term) => normalized.includes(term.replace(/[״׳]/g, '').toLowerCase())),
+  }));
+  const met = checks.filter((x) => x.met).length,
+    score = Math.round((met / checks.length) * 100);
+  return { checks, words, score, passed: words >= minWords && score >= 67 };
+}
+function recordOpenAttempt(scope, id, result) {
+  const attempts = JSON.parse(localStorage.getItem('coastal-open-attempts') || '[]'),
+    previous = attempts.filter((x) => x.scope === scope && x.id === String(id)).at(-1);
+  const entry = {
+    scope,
+    id: String(id),
+    attempt: attempts.filter((x) => x.scope === scope && x.id === String(id)).length + 1,
+    score: result.score,
+    words: result.words,
+    missing: result.checks.filter((x) => !x.met).map((x) => x.label),
+    time: new Date().toISOString(),
+  };
+  attempts.push(entry);
+  localStorage.setItem('coastal-open-attempts', JSON.stringify(attempts.slice(-100)));
+  return { ...entry, improvement: previous ? entry.score - previous.score : 0 };
+}
+function renderSmartFeedback(box, result, attempt) {
+  box.className = `smart-feedback ${result.passed ? 'passed' : 'needs-work'}`;
+  box.innerHTML = `<b>${result.passed ? 'התשובה בכיוון הנכון ✓' : 'כדאי לשפר את התשובה'}</b><span>נמצאו ${result.checks.filter((x) => x.met).length} מתוך ${result.checks.length} רכיבים · ${result.words} מילים${attempt ? ` · ניסיון ${attempt.attempt}${attempt.improvement > 0 ? ` · שיפור של ${attempt.improvement}%` : ''}` : ''}</span><ul>${result.checks.map((x) => `<li class="${x.met ? 'met' : 'missing'}">${x.met ? 'נמצא' : 'חסר'}: ${x.label}</li>`).join('')}</ul><small>${result.passed ? 'אפשר להמשיך, או להעמיק ולבדוק שוב.' : 'הוסיפו את הרכיבים החסרים במילים שלכם ושלחו לבדיקה חוזרת.'}</small>`;
+}
+Object.entries(chapterOpenQuestions).forEach(([id, item]) => {
+  const section = document.getElementById(id),
+    practice = document.getElementById(`practice-${id}`);
+  if (!section || !practice) return;
+  section.querySelector('.exam-question')?.remove();
+  const saved = JSON.parse(localStorage.getItem('coastal-chapter-open-drafts') || '{}');
+  const card = document.createElement('article');
+  card.className = 'smart-open-question';
+  card.id = `open-check-${id}`;
+  card.innerHTML = `<span>שאלה פתוחה · הכנה לבדיקת הבוט</span><h3>${item.question}</h3><textarea rows="5" data-chapter-open="${id}" placeholder="כתבו תשובה מלאה במילים שלכם..."></textarea><div class="smart-question-actions"><button class="button button-primary" data-check-chapter="${id}">בדיקת התשובה</button><small>הבדיקה מבוססת רק על המחוון וחומרי היחידה</small></div><div class="smart-feedback" data-smart-feedback="${id}" aria-live="polite"></div>`;
+  const textarea = card.querySelector('textarea');
+  textarea.value = saved[id] || '';
+  textarea.addEventListener('input', () => {
+    chapterOpenPassed.delete(id);
+    localStorage.setItem('coastal-open-checkpoints', JSON.stringify([...chapterOpenPassed]));
+    card.querySelector('[data-smart-feedback]').className = 'smart-feedback';
+  });
+  practice.parentNode.insertBefore(card, practice);
+  card.querySelector('[data-check-chapter]').addEventListener('click', () => {
+    const drafts = JSON.parse(localStorage.getItem('coastal-chapter-open-drafts') || '{}');
+    drafts[id] = textarea.value;
+    localStorage.setItem('coastal-chapter-open-drafts', JSON.stringify(drafts));
+    const result = evaluateAgainstRubric(textarea.value, item.criteria),
+      attempt = recordOpenAttempt('chapter', id, result),
+      box = card.querySelector('[data-smart-feedback]');
+    renderSmartFeedback(box, result, attempt);
+    syncOpenAnswer(item.question, textarea.value, box);
+    if (result.passed) {
+      chapterOpenPassed.add(id);
+      localStorage.setItem('coastal-open-checkpoints', JSON.stringify([...chapterOpenPassed]));
+    }
+  });
+});
+function attemptCompleteChapter(id) {
+  const needed = chapterGameMap[id] || [],
+    missing = needed.filter((game) => !gameDone.has(game)),
+    feedback = document.querySelector(`[data-chapter-feedback="${id}"]`);
+  if (!chapterOpenPassed.has(id)) {
+    if (feedback) feedback.textContent = 'יש להשלים בהצלחה את השאלה הפתוחה לפני סימון היחידה.';
+    document.getElementById(`open-check-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  if (missing.length) {
+    if (feedback) feedback.textContent = `נשארו ${missing.length} פעילויות להשלמה לפני שהיחידה תסומן.`;
+    document.getElementById(`practice-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (feedback) feedback.textContent = 'השאלה והפעילויות הושלמו ✓';
+  completeStep(id);
+}
+const gameNav = document.createElement('a');
+gameNav.href = '#games';
+gameNav.dataset.step = 'games';
+gameNav.innerHTML = '<i>6</i><span>מעקב תרגול<small>10 פעילויות ביחידות</small></span><b>✓</b>';
+imageNav.parentNode.insertBefore(gameNav, imageNav);
+document
+  .querySelectorAll('[data-step="images"] i,[data-step="presentation"] i,[data-step="practice"] i')
+  .forEach((n, i) => (n.textContent = String(i + 7)));
+const gameDone = new Set(JSON.parse(localStorage.getItem('coastal-games-done') || '[]'));
+function renderGamesProgress() {
+  document
+    .querySelectorAll('[data-game-card]')
+    .forEach((c) => c.classList.toggle('game-complete', gameDone.has(c.dataset.gameCard)));
+  document.getElementById('gamesCompleted').textContent = `${gameDone.size} מתוך 10 משחקים הושלמו`;
+  document.getElementById('gamesMeter').style.width = `${Math.round((gameDone.size / 10) * 100)}%`;
+  localStorage.setItem('coastal-games-done', JSON.stringify([...gameDone]));
+  if (gameDone.size === 10) completeStep('games');
+}
+const regionItems = [
+  ['ראש הנקרה', 'צפון'],
+  ['עכו', 'צפון'],
+  ['קיסריה', 'כרמל'],
+  ['זכרון יעקב', 'כרמל'],
+  ['יפו', 'מרכז'],
+  ['בית גוברין', 'דרום'],
 ];
-const openRubrics=[
-[['תיאור הנוף',['מישורי','חוף','חולי']],['שני אתרים',['אשקלון','בית גוברין','נתניה']],['סוגי תיירות וייחוד',['ארכאולוג','טיילת','נופש','מלון']]],
-[['שני מוקדים ביפו',['נמל יפו','שוק הפשפשים','שעון']],['שכונה היסטורית',['נווה צדק','1887']],['ייחוד העיר הלבנה',['סגנון הבינלאומי','עיר גנים','4000']]],
-[['שרידים ארכאולוגיים',['קיסריה','אשקלון','שער כנעני']],['הדת והאתרים הבהאיים',['בהאי','מקדש הבב','בהג׳י']],['משיכת תל אביב',['חוף','תרבות','חיי לילה']]],
-[['מוזיאונים בתל אביב',['אנו','פלמ״ח','הגנה']],['מוזיאונים בצפון',['אסירי המחתרות','לוחמי הגטאות']],['כפרים ופעילויות דרוזיות',['דלית אל־כרמל','עוספיה','שוק','אירוח']]],
-[['בית גוברין',['מערות פעמון','קולומבריום','מקוואות']],['שני אתרים בתל אביב–יפו',['נמל יפו','שרונה','נווה צדק']],['שלושה גורמי משיכה בצפון',['ראש הנקרה','עכו','בהאי']]],
-[['גבולות הצפון',['ראש הנקרה','כרמל']],['נקרות ותשתיות',['גלי','רכבל','מיצג']],['שני אתרים בחיפה ומגזר',['בהאי','סטלה מאריס','צליינ']]],
-[['עכו — ארכאולוגיה וקדושה',['אולמות האבירים','מסגד אל־ג׳זאר']],['טבע בגליל המערבי',['אכזיב','לגונות','חוף']],['דת בחיפה',['מערת אליהו','בהאי','דת']]],
-[['שני מוזיאונים בחיפה',['מוזיאון','ימי','אמנות']],['שני אתרים בקיסריה',['תיאטרון','אקוודוקט','היפודרום']],['שתי מושבות ומוקדים',['זכרון יעקב','בנימינה','אהרנסון','יקב']]],
-[['שימור בזכרון יעקב',['אהרנסון','דרך היין','המייסדים']],['שני שרידים צלבניים',['אולמות האבירים','מונפורט']],['מסלול בן יומיים ושישה אתרים',['יום א','יום ב','ראש הנקרה','עכו','אכזיב','יחיעם']]]
+document.getElementById('regionGame').innerHTML = regionItems
+  .map(
+    (x, i) =>
+      `<label><b>${x[0]}</b><select data-region="${i}"><option value="">בחרו אזור</option><option>צפון</option><option>כרמל</option><option>מרכז</option><option>דרום</option></select></label>`
+  )
+  .join('');
+document.getElementById('checkRegions').addEventListener('click', () => {
+  const correct = regionItems.filter((x, i) => document.querySelector(`[data-region="${i}"]`).value === x[1]).length;
+  document.getElementById('regionFeedback').textContent = `${correct} מתוך ${regionItems.length} התאמות נכונות`;
+  if (correct === regionItems.length) {
+    gameDone.add('regions');
+    renderGamesProgress();
+  }
+});
+const clueItems = [
+  ['יש בי 19 טרסות וכיפת זהב', ['הגנים הבהאיים', 'רמת הנדיב', 'סטלה מאריס'], 0],
+  ['אני אמת מים רומית באורך כ־20 ק״מ', ['האקוודוקט', 'מנהרת הטמפלרים', 'נמל יפו'], 0],
+  ['מכנים אותי ארץ אלף המערות', ['בית גוברין', 'ראש הנקרה', 'קיסריה'], 0],
+  ['אני שכונה יהודית שנוסדה בשנת 1887', ['נווה צדק', 'שרונה', 'עוספיה'], 0],
+  ['אצלי נמצא שער כנעני מקושת בן כ־3,500 שנה', ['תל אשקלון', 'עכו', 'מונפורט'], 0],
 ];
-const bankOpenPassed=new Set(JSON.parse(localStorage.getItem('coastal-bank-open-passed-v2')||'[]').map(String));
-function splitQuestionParts(question){return question.split(/(?=[אבג]\.\s)/).map(x=>x.trim()).filter(Boolean)}
-const practiceSection=document.getElementById('practice');const openSection=document.createElement('section');openSection.className='learning-block open-practice';openSection.id='open-practice';openSection.dataset.trackStep='open-practice';
-openSection.innerHTML=`<div class="block-heading"><span class="number">09</span><div><span class="eyebrow">שאלות בגרות מחומרי המקור</span><h2>מאגר שאלות מישור החוף</h2></div></div><p class="practice-intro">כל סעיף נענה ונבדק בנפרד. רק כאשר כל שלושת הסעיפים עברו בדיקה, השאלה השלמה נחשבת כהושלמה.</p><aside class="answer-insight" id="answerInsight"><span>תמונת מצב אישית</span><b>עדיין אין ניסיונות שנבדקו</b><p>לאחר בדיקת תשובות יוצגו כאן הרכיבים שכדאי לחזק.</p></aside><div class="bank-progress"><b id="bankCompleted">0 מתוך 9 שאלות הושלמו</b><div class="meter"><i id="bankMeter"></i></div></div><div class="open-question-list">${openPracticeData.map((q,i)=>`<article class="open-question" data-open-card="${i}"><div class="question-label"><span>שאלה ${i+1}</span><em>${q.topic}</em></div><h3>${q.title}</h3><div class="question-parts">${splitQuestionParts(q.question).map((part,p)=>{const key=`${i}-${p}`;return`<section class="question-part" data-question-part="${key}"><div class="part-heading"><b>${String.fromCharCode(1488+p)}׳</b><p>${part.replace(/^[אבג]\.\s*/,'')}</p><i data-part-check="${key}" aria-label="מצב בדיקת הסעיף"></i></div><textarea data-open-answer="${key}" rows="5" placeholder="כתבו תשובה לסעיף ${String.fromCharCode(1488+p)}׳..."></textarea><div class="answer-meta"><small data-word-count="${key}">0 מילים</small><small data-answer-state="${key}">טרם נבדק</small></div><div class="smart-question-actions"><button class="button button-primary" data-check-open="${key}">בדיקת סעיף ${String.fromCharCode(1488+p)}׳</button><small>אפשר לתקן ולבדוק שוב</small></div><div class="smart-feedback" data-open-feedback="${key}" aria-live="polite"></div></section>`}).join('')}</div></article>`).join('')}</div><div class="open-actions"><button class="button button-primary" id="saveOpenPractice">שמירת כל הטיוטות</button><p id="openPracticeFeedback" class="quiz-feedback"></p></div>`;
-practiceSection.parentNode.insertBefore(openSection,practiceSection.nextSibling);const practiceNav=document.querySelector('[data-step="practice"]');const openNav=document.createElement('a');openNav.href='#open-practice';openNav.dataset.step='open-practice';openNav.innerHTML='<i>10</i><span>מאגר בגרות<small>כתיבה פתוחה</small></span><b>✓</b>';practiceNav.parentNode.appendChild(openNav);
-function renderAnswerInsight(){const attempts=JSON.parse(localStorage.getItem('coastal-open-attempts')||'[]').filter(x=>x.scope==='bank'),box=document.getElementById('answerInsight');if(!attempts.length)return;const latest=new Map;attempts.forEach(x=>latest.set(x.id,x));const current=[...latest.values()],missing=current.flatMap(x=>x.missing),counts=missing.reduce((all,label)=>(all[label]=(all[label]||0)+1,all),{}),focus=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]),average=Math.round(current.reduce((sum,x)=>sum+x.score,0)/current.length);box.innerHTML=`<span>תמונת מצב אישית</span><b>ממוצע בדיקה: ${average}% · ${current.length} שאלות נבדקו</b><p>${focus.length?`כדאי לחזק: ${focus.join(' · ')}`:'כל הרכיבים המרכזיים הופיעו בתשובות שנבדקו.'}</p>`}
-const openDrafts=JSON.parse(localStorage.getItem('coastal-open-drafts-v2')||'{}');function updateBankProgress(){document.querySelectorAll('[data-open-answer]').forEach(t=>{const key=t.dataset.openAnswer,words=t.value.trim()?t.value.trim().split(/\s+/).length:0,isDone=bankOpenPassed.has(key);document.querySelector(`[data-word-count="${key}"]`).textContent=`${words} מילים`;document.querySelector(`[data-answer-state="${key}"]`).textContent=isDone?'הסעיף עבר ✓':words>=8?'מוכן לבדיקה':'טרם הושלם';document.querySelector(`[data-question-part="${key}"]`).classList.toggle('part-complete',isDone);document.querySelector(`[data-part-check="${key}"]`).textContent=isDone?'✓':''});let done=0;openPracticeData.forEach((q,i)=>{const complete=splitQuestionParts(q.question).every((_,p)=>bankOpenPassed.has(`${i}-${p}`));document.querySelector(`[data-open-card="${i}"]`).classList.toggle('answer-complete',complete);if(complete)done++});document.getElementById('bankCompleted').textContent=`${done} מתוך ${openPracticeData.length} שאלות הושלמו`;document.getElementById('bankMeter').style.width=`${Math.round(done/openPracticeData.length*100)}%`;renderAnswerInsight();return done}
-document.querySelectorAll('[data-open-answer]').forEach(t=>{const key=t.dataset.openAnswer;t.value=openDrafts[key]||'';t.addEventListener('input',()=>{bankOpenPassed.delete(key);localStorage.setItem('coastal-bank-open-passed-v2',JSON.stringify([...bankOpenPassed]));document.querySelector(`[data-open-feedback="${key}"]`).className='smart-feedback';updateBankProgress()})});updateBankProgress();
-document.querySelectorAll('[data-check-open]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.checkOpen,[questionIndex,partIndex]=key.split('-').map(Number),textarea=document.querySelector(`[data-open-answer="${key}"]`),result=evaluateAgainstRubric(textarea.value,[openRubrics[questionIndex][partIndex]],8),attempt=recordOpenAttempt('bank',key,result),box=document.querySelector(`[data-open-feedback="${key}"]`);renderSmartFeedback(box,result,attempt);syncOpenAnswer(splitQuestionParts(openPracticeData[questionIndex].question)[partIndex],textarea.value,box);if(result.passed)bankOpenPassed.add(key);else bankOpenPassed.delete(key);localStorage.setItem('coastal-bank-open-passed-v2',JSON.stringify([...bankOpenPassed]));const saved=JSON.parse(localStorage.getItem('coastal-open-drafts-v2')||'{}');saved[key]=textarea.value;localStorage.setItem('coastal-open-drafts-v2',JSON.stringify(saved));updateBankProgress()}));
-document.getElementById('saveOpenPractice').addEventListener('click',()=>{const saved={};document.querySelectorAll('[data-open-answer]').forEach(t=>saved[t.dataset.openAnswer]=t.value.trim());localStorage.setItem('coastal-open-drafts-v2',JSON.stringify(saved));const done=updateBankProgress(),ready=done===openPracticeData.length;document.getElementById('openPracticeFeedback').textContent=ready?'כל הסעיפים נשמרו וכל תשע השאלות הושלמו.':'הטיוטות נשמרו. השלמתם '+done+' מתוך '+openPracticeData.length+' שאלות.';if(ready)completeStep('open-practice')});
+let clueIndex = 0,
+  clueScore = 0;
+function renderClue() {
+  const c = clueItems[clueIndex];
+  document.getElementById('clueText').textContent = c[0];
+  document.getElementById('clueFeedback').textContent = `רמז ${clueIndex + 1} מתוך ${clueItems.length}`;
+  document.getElementById('clueChoices').innerHTML = '';
+  [...c[1]]
+    .sort(() => 0.5 - Math.random())
+    .forEach((name) => {
+      const b = document.createElement('button');
+      b.textContent = name;
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#clueChoices button').forEach((x) => (x.disabled = true));
+        if (name === c[1][c[2]]) {
+          b.classList.add('correct');
+          clueScore++;
+        } else {
+          b.classList.add('wrong');
+          [...document.querySelectorAll('#clueChoices button')]
+            .find((x) => x.textContent === c[1][c[2]])
+            ?.classList.add('correct');
+        }
+        document.getElementById('nextClue').disabled = false;
+      });
+      document.getElementById('clueChoices').appendChild(b);
+    });
+}
+document.getElementById('nextClue').addEventListener('click', () => {
+  if (clueIndex < clueItems.length - 1) {
+    clueIndex++;
+    document.getElementById('nextClue').disabled = true;
+    renderClue();
+    return;
+  }
+  document.getElementById('clueFeedback').textContent = `סיימתם עם ${clueScore} מתוך ${clueItems.length}`;
+  if (clueScore >= 4) {
+    gameDone.add('clues');
+    renderGamesProgress();
+  } else {
+    clueIndex = 0;
+    clueScore = 0;
+    document.getElementById('nextClue').disabled = true;
+    renderClue();
+  }
+});
+renderClue();
+const routeStops = ['בחרו תחנה', 'ראש הנקרה', 'עכו', 'חיפה'];
+['route1', 'route2', 'route3'].forEach(
+  (id) => (document.getElementById(id).innerHTML = routeStops.map((x) => `<option>${x}</option>`).join(''))
+);
+document.getElementById('checkRoute').addEventListener('click', () => {
+  const route = ['route1', 'route2', 'route3'].map((id) => document.getElementById(id).value),
+    ok = route.join('|') === 'ראש הנקרה|עכו|חיפה';
+  document.getElementById('routeFeedback').textContent = ok
+    ? 'מסלול נכון: מצפון לדרום ✓'
+    : 'בדקו שוב את המיקום הגיאוגרפי של התחנות.';
+  if (ok) {
+    gameDone.add('route');
+    renderGamesProgress();
+  }
+});
+renderGamesProgress();
+const memoryPairs = [
+  ['ראש הנקרה', 'נקרות בסלע הגיר'],
+  ['עכו', 'אולמות אבירים תת־קרקעיים'],
+  ['חיפה', '19 טרסות בהאיות'],
+  ['קיסריה', 'אמת מים רומית'],
+  ['תל אביב', 'העיר הלבנה'],
+  ['בית גוברין', 'ארץ אלף המערות'],
+];
+let memoryOpen = [],
+  memoryLocked = false,
+  memoryMatches = 0;
+function buildMemory() {
+  memoryOpen = [];
+  memoryLocked = false;
+  memoryMatches = 0;
+  const cards = memoryPairs.flatMap((p, i) => p.map((text) => ({ pair: i, text }))).sort(() => 0.5 - Math.random());
+  const board = document.getElementById('memoryBoard');
+  board.innerHTML = '';
+  cards.forEach((c) => {
+    const b = document.createElement('button');
+    b.dataset.pair = c.pair;
+    b.dataset.text = c.text;
+    b.innerHTML = '<span>?</span>';
+    b.addEventListener('click', () => flipMemory(b));
+    board.appendChild(b);
+  });
+  document.getElementById('memoryFeedback').textContent = '0 מתוך 6 זוגות';
+}
+function flipMemory(b) {
+  if (memoryLocked || b.classList.contains('matched') || b.classList.contains('flipped')) return;
+  b.classList.add('flipped');
+  b.innerHTML = `<span>${b.dataset.text}</span>`;
+  memoryOpen.push(b);
+  if (memoryOpen.length < 2) return;
+  if (memoryOpen[0].dataset.pair === memoryOpen[1].dataset.pair) {
+    memoryOpen.forEach((x) => x.classList.add('matched'));
+    memoryOpen = [];
+    memoryMatches++;
+    document.getElementById('memoryFeedback').textContent = `${memoryMatches} מתוך 6 זוגות`;
+    if (memoryMatches === 6) {
+      gameDone.add('memory');
+      renderGamesProgress();
+    }
+    return;
+  }
+  memoryLocked = true;
+  setTimeout(() => {
+    memoryOpen.forEach((x) => {
+      x.classList.remove('flipped');
+      x.innerHTML = '<span>?</span>';
+    });
+    memoryOpen = [];
+    memoryLocked = false;
+  }, 700);
+}
+document.getElementById('resetMemory').addEventListener('click', buildMemory);
+buildMemory();
+const concepts = [
+  ['חוף צבירה', 'חוף רחב, ישר וחולי שנוצר מהצטברות משקעים'],
+  ['חוף סחיפה', 'חוף שבו הגלים מכרסמים בסלע ויוצרים מפרצונים'],
+  ['אקוודוקט', 'אמת מים המובילה מים אל עיר'],
+  ['קולומבריום', 'מתקן ובו גומחות לגידול יונים'],
+  ['עיר גנים', 'תכנון עירוני המשלב שדרות ושטחים ירוקים'],
+];
+const definitions = concepts.map((x) => x[1]).sort(() => 0.5 - Math.random());
+document.getElementById('conceptGame').innerHTML = concepts
+  .map(
+    (x, i) =>
+      `<label><b>${x[0]}</b><select data-concept="${i}"><option value="">בחרו הסבר</option>${definitions.map((d) => `<option>${d}</option>`).join('')}</select></label>`
+  )
+  .join('');
+document.getElementById('checkConcepts').addEventListener('click', () => {
+  const correct = concepts.filter((x, i) => document.querySelector(`[data-concept="${i}"]`).value === x[1]).length;
+  document.getElementById('conceptFeedback').textContent = `${correct} מתוך 5 התאמות נכונות`;
+  if (correct === concepts.length) {
+    gameDone.add('concepts');
+    renderGamesProgress();
+  }
+});
+let puzzleOrder = [],
+  selectedPiece = null;
+function buildPuzzle() {
+  puzzleOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => 0.5 - Math.random());
+  if (puzzleOrder.every((x, i) => x === i)) [puzzleOrder[0], puzzleOrder[1]] = [puzzleOrder[1], puzzleOrder[0]];
+  selectedPiece = null;
+  renderPuzzle();
+}
+function renderPuzzle() {
+  const board = document.getElementById('imagePuzzle');
+  board.innerHTML = '';
+  puzzleOrder.forEach((piece, pos) => {
+    const b = document.createElement('button');
+    b.dataset.position = pos;
+    b.dataset.piece = piece;
+    b.style.backgroundImage = 'url(https://nisan1234-afk.github.io/jerusalem-tour/images/image100.jpg)';
+    b.style.backgroundPosition = `${(piece % 3) * 50}% ${Math.floor(piece / 3) * 50}%`;
+    b.addEventListener('click', () => selectPuzzle(b));
+    board.appendChild(b);
+  });
+  document.getElementById('puzzleFeedback').textContent = 'הרכיבו את ראש הנקרה';
+}
+function selectPuzzle(b) {
+  if (!selectedPiece) {
+    selectedPiece = b;
+    b.classList.add('selected');
+    return;
+  }
+  const a = Number(selectedPiece.dataset.position),
+    c = Number(b.dataset.position);
+  [puzzleOrder[a], puzzleOrder[c]] = [puzzleOrder[c], puzzleOrder[a]];
+  selectedPiece = null;
+  renderPuzzle();
+  if (puzzleOrder.every((x, i) => x === i)) {
+    document.getElementById('puzzleFeedback').textContent = 'הפאזל הושלם — ראש הנקרה ✓';
+    gameDone.add('puzzle');
+    renderGamesProgress();
+  }
+}
+document.getElementById('shufflePuzzle').addEventListener('click', buildPuzzle);
+buildPuzzle();
+const mapSites = [
+  ['ראש הנקרה', 9.8, 53.8, 'הנקודה הצפונית ביותר במשחק'],
+  ['עכו', 13.6, 53.1, 'מצפון לחיפה'],
+  ['חיפה', 16.9, 49.6, 'על רכס הכרמל'],
+  ['קיסריה', 23.8, 46.2, 'בין חיפה לתל אביב'],
+  ['תל אביב–יפו', 33.7, 41.5, 'במרכז מישור החוף'],
+  ['אשקלון', 43.6, 33.5, 'בדרום מישור החוף'],
+  ['בית גוברין', 45, 46.2, 'ממזרח לאשקלון'],
+];
+let mapRound = 0,
+  mapCorrect = 0,
+  mapTargets = [],
+  mapLocked = false;
+function buildMap() {
+  mapRound = 0;
+  mapCorrect = 0;
+  mapLocked = false;
+  mapTargets = [...mapSites].sort(() => 0.5 - Math.random()).slice(0, 5);
+  document.getElementById('coastMap').innerHTML = mapSites
+    .map(
+      (s, i) =>
+        `<button style="top:${s[1]}%;left:${s[2]}%" data-map-site="${i}" aria-label="נקודה ${i + 1} במפה"><i></i><span>${i + 1}</span></button>`
+    )
+    .join('');
+  document
+    .querySelectorAll('[data-map-site]')
+    .forEach((b) => b.addEventListener('click', () => answerMap(Number(b.dataset.mapSite))));
+  document.getElementById('mapFeedback').textContent = 'בחרו נקודה לפי מיקומה';
+  renderMapPrompt();
+}
+function renderMapPrompt() {
+  document.getElementById('mapPrompt').textContent = `סיבוב ${mapRound + 1} מתוך 5: מצאו את ${mapTargets[mapRound][0]}`;
+}
+function answerMap(index) {
+  if (mapLocked) return;
+  mapLocked = true;
+  const wanted = mapTargets[mapRound],
+    chosen = mapSites[index];
+  if (chosen[0] === wanted[0]) {
+    mapCorrect++;
+    document.getElementById('mapFeedback').textContent = `נכון — ${wanted[3]} ✓`;
+  } else
+    document.getElementById('mapFeedback').textContent = `לא בדיוק. ${wanted[0]}: ${wanted[3]}. בחרתם ${chosen[0]}.`;
+  mapRound++;
+  setTimeout(() => {
+    mapLocked = false;
+    if (mapRound < 5) {
+      renderMapPrompt();
+      return;
+    }
+    document.getElementById('mapPrompt').textContent = 'המסלול הסתיים';
+    document.getElementById('mapFeedback').textContent =
+      `${mapCorrect} מתוך 5 נכונות${mapCorrect >= 4 ? ' — מצוין! ✓' : ' — נסו שוב כדי להגיע ל־4'}`;
+    if (mapCorrect >= 4) {
+      gameDone.add('map');
+      renderGamesProgress();
+    }
+  }, 650);
+}
+document.getElementById('resetMap').addEventListener('click', buildMap);
+buildMap();
+const streakItems = [
+  ['העיר הלבנה מזוהה עם הסגנון הבינלאומי', true, 'בתל אביב יש יותר מ־4,000 מבנים בסגנון זה.'],
+  ['ראש הנקרה נמצאת מדרום לאשקלון', false, 'ראש הנקרה נמצאת בקצה הצפוני של מישור החוף.'],
+  ['קיסריה נבנתה בידי הורדוס', true, 'הורדוס בנה אותה לכבוד הקיסר הרומי.'],
+  ['קולומבריום שימש לגידול יונים', true, 'הגומחות במתקן שימשו לגידול יונים.'],
+  ['נווה צדק נוסדה אחרי תל אביב', false, 'נווה צדק נוסדה ב־1887, לפני אחוזת בית.'],
+  ['הגנים הבהאיים בנויים על 19 טרסות', true, 'הטרסות יורדות על מורדות הכרמל.'],
+  ['בית גוברין מכונה ארץ אלף האגמים', false, 'הכינוי הנכון הוא ארץ אלף המערות.'],
+];
+let streakIndex = 0,
+  streakCount = 0,
+  streakLocked = false;
+function renderStreak() {
+  document.getElementById('streakStatement').textContent = streakItems[streakIndex][0];
+  document.getElementById('streakFeedback').textContent = `רצף נוכחי: ${streakCount} מתוך 5`;
+}
+function answerStreak(value) {
+  if (streakLocked) return;
+  streakLocked = true;
+  const item = streakItems[streakIndex],
+    correct = value === item[1];
+  if (correct) streakCount++;
+  else streakCount = 0;
+  document.getElementById('streakFeedback').textContent =
+    `${correct ? 'נכון' : 'לא נכון'} — ${item[2]} רצף: ${streakCount}/5`;
+  if (streakCount === 5) {
+    gameDone.add('streak');
+    renderGamesProgress();
+    return;
+  }
+  setTimeout(() => {
+    streakIndex = (streakIndex + 1) % streakItems.length;
+    streakLocked = false;
+    renderStreak();
+  }, 800);
+}
+document
+  .querySelectorAll('[data-streak-answer]')
+  .forEach((b) => b.addEventListener('click', () => answerStreak(b.dataset.streakAnswer === 'true')));
+document.getElementById('resetStreak').addEventListener('click', () => {
+  streakIndex = 0;
+  streakCount = 0;
+  streakLocked = false;
+  renderStreak();
+});
+renderStreak();
+const speedItems = [
+  ['איזו עיר כוללת אולמות אבירים?', ['עכו', 'אשקלון', 'תל אביב'], 'עכו', 'האולמות הם חלק מהעיר הצלבנית התת־קרקעית.'],
+  ['מהו אקוודוקט?', ['אמת מים', 'מערת קבורה', 'מגדל שמירה'], 'אמת מים', 'האקוודוקט הוביל מים אל העיר.'],
+  ['היכן נמצאת העיר הלבנה?', ['תל אביב', 'חיפה', 'קיסריה'], 'תל אביב', 'זהו מתחם מורשת עולמית בתל אביב.'],
+  ['מה נמצא בבית גוברין?', ['מערות פעמון', 'נקרות ים', 'גנים תלויים'], 'מערות פעמון', 'המערות נחצבו בסלע הקירטון.'],
+  ['מי בנה את קיסריה?', ['הורדוס', 'רוטשילד', 'הטמפלרים'], 'הורדוס', 'העיר נבנתה לכבוד הקיסר הרומי.'],
+  [
+    'מה מאפיין חוף צבירה?',
+    ['חול ומשקעים', 'מצוקי גיר בלבד', 'מערות נטיפים'],
+    'חול ומשקעים',
+    'החוף נוצר מהצטברות משקעים.',
+  ],
+];
+let speedIndex = 0,
+  speedCorrect = 0,
+  speedLeft = 45,
+  speedClock = null,
+  speedActive = false,
+  speedLocked = false;
+function renderSpeed() {
+  const q = speedItems[speedIndex];
+  document.getElementById('speedQuestion').textContent = q[0];
+  document.getElementById('speedScore').textContent = `${speedCorrect} / 6`;
+  const box = document.getElementById('speedChoices');
+  box.innerHTML = '';
+  [...q[1]]
+    .sort(() => 0.5 - Math.random())
+    .forEach((a) => {
+      const b = document.createElement('button');
+      b.textContent = a;
+      b.addEventListener('click', () => answerSpeed(a));
+      box.appendChild(b);
+    });
+}
+function startSpeed() {
+  clearInterval(speedClock);
+  speedIndex = 0;
+  speedCorrect = 0;
+  speedLeft = 45;
+  speedActive = true;
+  speedLocked = false;
+  document.getElementById('startSpeed').disabled = true;
+  document.getElementById('speedFeedback').textContent = 'האתגר התחיל';
+  document.getElementById('speedTimer').textContent = speedLeft;
+  renderSpeed();
+  speedClock = setInterval(() => {
+    speedLeft--;
+    document.getElementById('speedTimer').textContent = speedLeft;
+    if (speedLeft <= 0) finishSpeed();
+  }, 1000);
+}
+function answerSpeed(answer) {
+  if (!speedActive || speedLocked) return;
+  speedLocked = true;
+  const q = speedItems[speedIndex],
+    correct = answer === q[2];
+  if (correct) speedCorrect++;
+  document.getElementById('speedFeedback').textContent = correct ? 'נכון ✓' : `התשובה היא ${q[2]} — ${q[3]}`;
+  document.querySelectorAll('#speedChoices button').forEach((b) => (b.disabled = true));
+  speedIndex++;
+  setTimeout(() => {
+    speedLocked = false;
+    if (speedIndex === speedItems.length) {
+      finishSpeed();
+      return;
+    }
+    renderSpeed();
+  }, 500);
+}
+function finishSpeed() {
+  clearInterval(speedClock);
+  speedActive = false;
+  speedLocked = false;
+  document.getElementById('startSpeed').disabled = false;
+  document.getElementById('speedScore').textContent = `${speedCorrect} / 6`;
+  document.getElementById('speedFeedback').textContent =
+    speedCorrect >= 5 ? 'הצלחתם באתגר המהיר ✓' : `${speedCorrect} נכונות — נסו שוב והגיעו ל־5`;
+  if (speedCorrect >= 5) {
+    gameDone.add('speed');
+    renderGamesProgress();
+  }
+}
+document.getElementById('startSpeed').addEventListener('click', startSpeed);
+const silentSites = [
+  ['ראש הנקרה', 9.8, 53.8],
+  ['עכו', 13.6, 53.1],
+  ['חיפה', 16.9, 49.6],
+  ['קיסריה', 23.8, 46.2],
+  ['תל אביב–יפו', 33.7, 41.5],
+  ['אשקלון', 43.6, 33.5],
+  ['בית גוברין', 45, 46.2],
+];
+let silentSelected = null,
+  silentPlaced = new Map();
+function buildSilentMap() {
+  silentSelected = null;
+  silentPlaced = new Map();
+  const bank = document.getElementById('silentMapLabels');
+  bank.innerHTML = [...silentSites]
+    .sort(() => 0.5 - Math.random())
+    .map((s, i) => `<button draggable="true" data-silent-label="${s[0]}">${s[0]}</button>`)
+    .join('');
+  const map = document.getElementById('silentCoastMap');
+  map.innerHTML = silentSites
+    .map(
+      (s, i) =>
+        `<button class="silent-target" style="top:${s[1]}%;left:${s[2]}%" data-silent-target="${s[0]}" aria-label="נקודה ריקה ${i + 1}"><i>${i + 1}</i><span></span></button>`
+    )
+    .join('');
+  bank.querySelectorAll('[data-silent-label]').forEach((b) => {
+    b.addEventListener('click', () => selectSilentLabel(b));
+    b.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', b.dataset.silentLabel));
+  });
+  map.querySelectorAll('[data-silent-target]').forEach((t) => {
+    t.addEventListener('click', () => placeSilent(t, silentSelected));
+    t.addEventListener('dragover', (e) => e.preventDefault());
+    t.addEventListener('drop', (e) => {
+      e.preventDefault();
+      placeSilent(t, e.dataTransfer.getData('text/plain'));
+    });
+  });
+  document.getElementById('silentMapFeedback').textContent = '0 מתוך 7 מקומות שובצו';
+}
+function selectSilentLabel(b) {
+  if (b.disabled) return;
+  document.querySelectorAll('[data-silent-label]').forEach((x) => x.classList.remove('selected'));
+  b.classList.add('selected');
+  silentSelected = b.dataset.silentLabel;
+  document.getElementById('silentMapFeedback').textContent = `נבחר: ${silentSelected}. כעת לחצו על נקודה במפה.`;
+}
+function placeSilent(target, name) {
+  if (!name) return;
+  if (silentPlaced.has(target.dataset.silentTarget)) {
+    document.getElementById('silentMapFeedback').textContent = 'הנקודה הזו כבר מלאה.';
+    return;
+  }
+  if (name !== target.dataset.silentTarget) {
+    target.classList.add('wrong');
+    setTimeout(() => target.classList.remove('wrong'), 500);
+    document.getElementById('silentMapFeedback').textContent =
+      `${name} אינו מתאים לנקודה הזו — בדקו את המיקום על מפת ישראל.`;
+    return;
+  }
+  silentPlaced.set(name, true);
+  target.classList.add('filled');
+  target.querySelector('span').textContent = name;
+  const label = document.querySelector(`[data-silent-label="${name}"]`);
+  if (label) {
+    label.disabled = true;
+    label.classList.remove('selected');
+  }
+  silentSelected = null;
+  document.getElementById('silentMapFeedback').textContent = `${silentPlaced.size} מתוך 7 מקומות שובצו נכון`;
+  if (silentPlaced.size === silentSites.length) {
+    document.getElementById('silentMapFeedback').textContent = 'המפה הושלמה במלואה ✓';
+    gameDone.add('silent-map');
+    renderGamesProgress();
+  }
+}
+document.getElementById('resetSilentMap').addEventListener('click', buildSilentMap);
+buildSilentMap();
+renderGamesProgress();
+
+const slides = [
+  ['מישור החוף', 'חזרה לבגרות', 'מסע מראש הנקרה ועד הדרום: גיאוגרפיה, ארכאולוגיה, תרבות וטבע.', 'מתחילים מצפון'],
+  ['גיאוגרפיה ונוף', 'ראש הנקרה עד עזה', 'רצועה מישורית לאורך הים התיכון, באורך כ־190 ק״מ.', 'מפת היחידה'],
+  ['גיאוגרפיה', 'מישור החוף במספרים', 'רוחב 4 ק״מ בצפון ועד 40 ק״מ בדרום; נקטע בראש הנקרה ובכרמל.', 'שאלה 6א'],
+  ['גיאוגרפיה', 'חוף צבירה וחוף סחיפה', 'בדרום חוף רחב, ישר וחולי; בצפון מפרצונים ולוחות גידוד.', 'השוואה חשובה'],
+  ['החוף הצפוני', 'ראש הנקרה', 'גלי הים יצרו נקרות בסלע הגיר; באתר רכבל ומיצג אור־קולי.', 'שאלה 6ב'],
+  ['עכו', 'עיר מורשת עולמית', 'שכבה צלבנית תת־קרקעית ושכבה עות׳מאנית מעל הקרקע.', 'UNESCO'],
+  ['עכו', 'אולמות, מסגד וחאן', 'אולמות האבירים, מסגד אל־ג׳זאר וחאן אל־עומדאן.', 'שאלות 7א ו־9ב'],
+  ['עכו', 'מורשת ומחתרות', 'מוזיאון אסירי המחתרות, מנהרת הטמפלרים ובית לוחמי הגטאות.', 'העבר ממשיך לדבר'],
+  ['חיפה', 'הגנים הבהאיים', '19 טרסות, מקדש הבב וכיפת הזהב; מרכז הדת הבהאית.', 'UNESCO 2008'],
+  ['חיפה', 'מערת אליהו וסטלה מאריס', 'המערה קדושה לארבע דתות; מעליה מרכז המסדר הכרמליתי.', 'קדושה וצליינות'],
+  ['טבע ומבצרים', 'אכזיב, מונפורט ויחיעם', 'לגונות וחוף, מבצר צלבני וסיפור מלחמת העצמאות.', 'שלושה סוגי ביקור'],
+  ['בדיקת ידע', 'עכו: ארכאולוגיה וקדושה', 'אולמות האבירים כאתר ארכאולוגי ומסגד אל־ג׳זאר כאתר קדוש.', 'מבנה תשובה'],
+  ['קיסריה והכרמל', 'עיר הורדוס', 'עיר נמל מפוארת בת כ־2,000 שנה.', 'עוברים למרכז'],
+  ['קיסריה', 'מוקדי הביקור', 'תיאטרון, היפודרום, רחוב צלבני וארמון הורדוס.', 'ארכאולוגיה חיה'],
+  ['קיסריה', 'האקוודוקט', 'אמת מים רומית באורך כ־20 ק״מ שנשמרה לצד החוף.', 'שאלה 8ב'],
+  ['זכרון יעקב', 'מושבה, ניל״י ויין', 'מושבה מ־1882: בית אהרנסון, דרך היין ורמת הנדיב.', 'שאלות 8ג ו־9א'],
+  ['הכרמל', 'הכפרים הדרוזיים', 'דלית אל־כרמל ועוספיה: שוק, מטבח, מורשת ואירוח.', 'תיירות תרבותית'],
+  ['בדיקת ידע', 'שני אתרים בקיסריה', 'התיאטרון והאקוודוקט: בכל תשובה משלבים עובדה והסבר.', 'תשובת בגרות'],
+  ['תל אביב–יפו', 'יפו העתיקה', 'נמל דייגים, סלע אנדרומדה, מגדל השעון ושוק הפשפשים.', 'ישן וחדש'],
+  ['תל אביב', 'נווה צדק והעיר הלבנה', 'נווה צדק מ־1887 ויותר מ־4,000 מבנים בסגנון הבינלאומי.', 'UNESCO 2003'],
+  ['תל אביב', 'אתרים ובילוי', 'הנמל, שרונה, שוק הכרמל, פארק הירקון ונחלת בנימין.', 'עיר מגוונת'],
+  ['תל אביב', 'מוזיאונים', 'אנו, ארץ ישראל, הפלמ״ח וההגנה.', 'תרבות ומורשת'],
+  ['בדיקת ידע', 'ייחוד העיר הלבנה', 'ריכוז מבני הסגנון הבינלאומי ותכנון עיר גנים.', 'תשובה מלאה'],
+  ['החוף הדרומי', 'גן לאומי תל אשקלון', 'שער כנעני ושילוב של ארכאולוגיה, חוף וטיילת.', 'שאלות 1ב ו־1ג'],
+  ['בית גוברין', 'ארץ אלף המערות', 'מערות פעמון, קולומבריום, קברים ומקוואות.', 'UNESCO'],
+  ['בדיקת ידע', 'ייחוד בית גוברין', 'מערכות חציבה מעשה אדם ושימושים מגוונים.', 'שאלה 5א'],
+  ['תכנון מסלול', 'יומיים מנהרייה', 'ראש הנקרה ועכו; למחרת מונפורט, יחיעם ואכזיב.', 'שאלה 9ג'],
+  ['סיכום', 'מצפון עד דרום', 'מזהים אתר, משייכים לאזור ומנסחים עובדה והסבר.', 'מוכנים לתרגול'],
+].map(([section, title, body, accent]) => ({ section, title, body, accent }));
+let slideIndex = 0;
+const stage = document.getElementById('slideStage');
+function renderSlide() {
+  const s = slides[slideIndex];
+  stage.innerHTML = `<div class="web-slide"><span>${s.section}</span><h3>${s.title}</h3><p>${s.body}</p><b>${s.accent}</b></div>`;
+  document.getElementById('slideCounter').textContent = `${slideIndex + 1} / ${slides.length}`;
+  document.getElementById('prevSlide').disabled = slideIndex === 0;
+  document.getElementById('nextSlide').disabled = slideIndex === slides.length - 1;
+  if (slideIndex === slides.length - 1) {
+    const f = document.getElementById('completeSlides');
+    f.disabled = false;
+    f.textContent = 'סיימתי את המצגת';
+  }
+}
+document.getElementById('nextSlide').addEventListener('click', () => {
+  if (slideIndex < slides.length - 1) {
+    slideIndex++;
+    renderSlide();
+  }
+});
+document.getElementById('prevSlide').addEventListener('click', () => {
+  if (slideIndex > 0) {
+    slideIndex--;
+    renderSlide();
+  }
+});
+document
+  .getElementById('fullScreenSlide')
+  .addEventListener('click', () => document.getElementById('slidePlayer').requestFullscreen?.());
+document.getElementById('completeSlides').addEventListener('click', () => completeStep('presentation'));
+
+const questions = [
+  [
+    'מה מאפיין חוף צבירה?',
+    ['חוף רחב, ישר וחולי', 'מצוק גיר ובו נקרות', 'לוחות גידוד בלבד'],
+    0,
+    'חוף צבירה אופייני לדרום והוא רחב, ישר וחולי.',
+  ],
+  [
+    'כיצד נוצרו הנקרות בראש הנקרה?',
+    ['מפעולת גלי הים בסלע הגיר', 'מחציבה רומית', 'מרעידת אדמה'],
+    0,
+    'הגלים פעלו לאורך זמן בסלע הגיר.',
+  ],
+  [
+    'איזה אתר בעכו הוא צלבני?',
+    ['אולמות האבירים', 'מסגד אל־ג׳זאר', 'מגדל השעון'],
+    0,
+    'אולמות האבירים הם מתחם צלבני תת־קרקעי.',
+  ],
+  ['כמה טרסות יש בגנים הבהאיים?', ['19', '12', '40'], 0, 'בגנים הבהאיים 19 טרסות.'],
+  [
+    'מה היה תפקיד האקוודוקט?',
+    ['הובלת מים לקיסריה', 'הגנה על הנמל', 'מרוצי סוסים'],
+    0,
+    'האקוודוקט הוביל מים מהכרמל לקיסריה.',
+  ],
+  [
+    'איזה סיפור מוצג בבית אהרנסון?',
+    ['מחתרת ניל״י', 'המסדר הכרמליתי', 'הקמת הפלמ״ח'],
+    0,
+    'הבית מספר את סיפורה של מחתרת ניל״י.',
+  ],
+  [
+    'מה מייחד את העיר הלבנה?',
+    ['מבנים בסגנון הבינלאומי ועיר גנים', 'נמל עתיק', 'מגדל שעון'],
+    0,
+    'זהו ריכוז גדול של מבני הסגנון הבינלאומי.',
+  ],
+  ['איזה מוזיאון מספר את סיפור התפוצות?', ['אנו', 'הפלמ״ח', 'בית אהרנסון'], 0, 'מוזיאון אנו עוסק בעם היהודי ובתפוצות.'],
+  [
+    'מה מייחד את תל אשקלון?',
+    ['ארכאולוגיה, חוף וטיילת', '19 טרסות', 'אמת מים'],
+    0,
+    'באתר יש שילוב ייחודי של ארכאולוגיה וחוף.',
+  ],
+  [
+    'מה מכונה ארץ אלף המערות?',
+    ['בית גוברין', 'תל אשקלון', 'קיסריה'],
+    0,
+    'בית גוברין מוכר במערות הפעמון ובמערכות החציבה.',
+  ],
+].map(([q, a, correct, explain]) => ({ q, a, correct, explain }));
+let questionIndex = 0,
+  correctAnswers = 0;
+const quizResults = [];
+function renderQuestion() {
+  const x = questions[questionIndex];
+  document.querySelector('#quizCard .quiz-kicker').textContent = `שאלה ${questionIndex + 1} מתוך ${questions.length}`;
+  document.getElementById('questionText').textContent = x.q;
+  const l = document.getElementById('answerList');
+  l.innerHTML = '';
+  x.a.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.textContent = a;
+    b.addEventListener('click', () => checkAnswer(i, b));
+    l.appendChild(b);
+  });
+  document.getElementById('quizFeedback').textContent = '';
+  const n = document.getElementById('nextQuestion');
+  n.disabled = true;
+  n.textContent = questionIndex === questions.length - 1 ? 'לסיום ולקבלת ציון' : 'לשאלה הבאה';
+}
+function checkAnswer(i, b) {
+  const x = questions[questionIndex],
+    buttons = document.querySelectorAll('#answerList button'),
+    isCorrect = i === x.correct;
+  buttons.forEach((c) => (c.disabled = true));
+  b.classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) buttons[x.correct].classList.add('correct');
+  if (isCorrect) correctAnswers++;
+  quizResults[questionIndex] = { index: questionIndex, correct: isCorrect };
+  document.getElementById('quizFeedback').textContent = x.explain;
+  document.getElementById('nextQuestion').disabled = false;
+}
+document.getElementById('nextQuestion').addEventListener('click', () => {
+  if (questionIndex < questions.length - 1) {
+    questionIndex++;
+    renderQuestion();
+    return;
+  }
+  const score = Math.round((correctAnswers / questions.length) * 100);
+  document.getElementById('quizCard').innerHTML =
+    `<span class="eyebrow">התרגול הסתיים</span><h3>הציון שלך: ${score}</h3><p>${score >= 60 ? 'עברת את שלב התרגול. כל הכבוד.' : 'כדאי לחזור על החומר ולנסות שוב. מספר הניסיונות אינו מוגבל.'}</p><button class="button button-outline" onclick="location.reload()">ניסיון נוסף</button>`;
+  localStorage.setItem('coastal-demo-last-score', String(score));
+  bagrutAPI('saveBagrutQuizResult', { unit_id: BAGRUT_UNIT_ID, score: correctAnswers, total: questions.length }).catch(
+    () => {}
+  );
+  bagrutAPI('updateBagrutMistakes', { unit_id: BAGRUT_UNIT_ID, results: quizResults }).catch(() => {});
+  if (score >= 60) completeStep('practice');
+});
+const openPracticeData = [
+  {
+    title: 'נוף ותיירות בדרום',
+    topic: 'גיאוגרפיה · אשקלון · נתניה',
+    question:
+      'א. תארו את הנוף האופייני למישור החוף המרכזי והדרומי. ב. ציינו שני אתרי תיירות מיוחדים בשפלת החוף והסבירו מה מייחד אותם. ג. ציינו אילו סוגי תיירות לשם הנאה מוצעים באשקלון ובנתניה, והסבירו מה מייחד את אשקלון לעומת נתניה.',
+    model:
+      'הנוף מישורי, קו החוף ישר וארוך והחוף רחב וחולי. תל אשקלון מיוחד בשער הכנעני ובשילוב ארכאולוגיה וחוף; בית גוברין מיוחד במערותיו. נתניה מציעה חוף, מלונות וקניות; אשקלון מוסיפה ארכאולוגיה וטיילת צוק.',
+  },
+  {
+    title: 'יפו והעיר הלבנה',
+    topic: 'תל אביב–יפו · UNESCO',
+    question:
+      'א. ציינו שני מוקדי תיירות מעניינים ביפו וכתבו מה מייחד כל אחד. ב. ציינו שכונה היסטורית שנוסדה מחוץ ליפו לפני תל אביב ותארו אותה. ג. הסבירו את ייחוד העיר הלבנה שזיכה אותה בהכרה של UNESCO.',
+    model:
+      'נמל יפו משלב נמל דייגים, היסטוריה ואווירה ים־תיכונית; שוק הפשפשים מציע יד שנייה וחוויה עממית. נווה צדק נוסדה ב־1887 ובה בתים, גלריות ומסעדות. העיר הלבנה כוללת יותר מ־4,000 מבנים בסגנון הבינלאומי ותכנון עיר גנים.',
+  },
+  {
+    title: 'ארכאולוגיה, בהאים ותל אביב',
+    topic: 'שרידים · דת · עירוניות',
+    question:
+      'א. ציינו שתי ערים במישור החוף המרכזי והדרומי שנמצאו בהן שרידים ארכאולוגיים; בחרו אחת ותארו שריד המושך תיירים. ב. הסבירו מיהם הבהאים וציינו שני אתרים קדושים להם בישראל. ג. ציינו שלושה מגורמי המשיכה של תל אביב לתיירים.',
+    model:
+      'בקיסריה ובאשקלון נמצאו שרידים; לדוגמה, השער הכנעני המקושת באשקלון. הבהאים הם בני דת שנוסדה בפרס ומקדשת את אחדות האנושות; אתריהם הקדושים הם מקדש הבב בחיפה ובהג׳י בעכו. תל אביב מושכת בזכות חופים, תרבות וחיי לילה.',
+  },
+  {
+    title: 'מוזיאונים והכפרים הדרוזיים',
+    topic: 'תרבות · גליל מערבי · כרמל',
+    question:
+      'א. בחרו שני מוזיאונים בתל אביב ותארו מה מייחד כל אחד. ב. ציינו שני מוזיאונים במישור החוף הצפוני ותארו מה ניתן לראות בהם. ג. ציינו את שני הכפרים הדרוזיים בכרמל ושלוש פעילויות תיירותיות המתקיימות בהם.',
+    model:
+      'בתל אביב אפשר לבחור במוזיאון אנו ובמוזיאון הפלמ״ח. בצפון אפשר לבחור במוזיאון אסירי המחתרות ובבית לוחמי הגטאות. הכפרים הם דלית אל־כרמל ועוספיה; הפעילויות כוללות שוק, אוכל דרוזי, בית מורשת ואירוח ביתי.',
+  },
+  {
+    title: 'בית גוברין ומוקדי משיכה',
+    topic: 'שפלת יהודה · תל אביב · הצפון',
+    question:
+      'א. תארו מה ניתן לראות באתר בית גוברין. ב. ציינו שני אתרי תיירות בתל אביב–יפו ותארו אותם. ג. ציינו שלושה גורמי משיכה תיירותיים במישור החוף הצפוני והביאו דוגמה לכל אחד.',
+    model:
+      'בבית גוברין מערות פעמון, קולומבריום, קברים ומקוואות. בתל אביב–יפו אפשר לתאר את נמל יפו ושרונה. בצפון גורמי המשיכה כוללים טבע — ראש הנקרה; ארכאולוגיה — עכו; ודת — הגנים הבהאיים או סטלה מאריס.',
+  },
+  {
+    title: 'גבולות, ראש הנקרה וחיפה',
+    topic: 'החוף הצפוני · תשתיות · מגזרי תיירות',
+    question:
+      'א. מהם הגבולות הגיאוגרפיים של מישור החוף הצפוני? ב. תארו מה ניתן לראות בראש הנקרה וציינו את התשתיות התיירותיות באתר. ג. ציינו שני אתרי תיירות בחיפה ואיזה מגזר תיירותי ייכלל בתכנית הביקור בכל אחד.',
+    model:
+      'האזור משתרע מראש הנקרה עד הכרמל. בראש הנקרה רואים מצוק ונקרות שנוצרו בגלים; במקום רכבל, מיצג, רכבת תיירותית, חניון ומסעדה. הגנים הבהאיים מתאימים לתיירות בהאית וכללית; סטלה מאריס לתיירות צליינית נוצרית.',
+  },
+  {
+    title: 'עכו, טבע ודת בחיפה',
+    topic: 'ארכאולוגיה · שמורות · דתות',
+    question:
+      'א. תארו שני אתרי תיירות בעכו — אחד ארכאולוגי ואחד קדוש. ב. ציינו פארק או שמורת טבע בחוף הגליל המערבי ותארו מה מושך אליו מבקרים. ג. ציינו שני אתרים בחיפה החשובים לבני דתות שונות והסבירו את חשיבותם ואת תרומתם לתיירות.',
+    model:
+      'אולמות האבירים הם מתחם צלבני תת־קרקעי; מסגד אל־ג׳זאר קדוש למוסלמים. אכזיב מושך בזכות לגונות, חוף וקמפינג. מערת אליהו קדושה לארבע דתות והגנים הבהאיים הם מרכז עולמי לבהאים — שניהם מושכים מאמינים ותיירים.',
+  },
+  {
+    title: 'חיפה, קיסריה ומושבות',
+    topic: 'מוזיאונים · עתיקות · עלייה ראשונה',
+    question:
+      'א. בחרו שני מוזיאונים בחיפה ותארו מה מייחד כל אחד. ב. ציינו שני אתרים בולטים בקיסריה וספרו עליהם. ג. ציינו שתי מושבות עלייה ראשונה בשולי הכרמל ומוקד משיכה אחד בכל אחת.',
+    model:
+      'בחיפה אפשר לבחור במוזיאון הימי הלאומי ובמוזיאון חיפה לאמנות. בקיסריה התיאטרון הרומי משמש למופעים והאקוודוקט הוביל מים לאורך כ־20 ק״מ. בזכרון יעקב מוקד משיכה הוא בית אהרנסון; בבנימינה — אתרי מורשת ויקבים.',
+  },
+  {
+    title: 'זכרון יעקב וסיור מנהרייה',
+    topic: 'שימור · צלבנים · תכנון מסלול',
+    question:
+      'א. ציינו שני אתרים בזכרון יעקב המשמרים את עברה ההיסטורי. ב. ציינו שני אתרים במישור החוף הצפוני שהם שרידים מתקופת הצלבנים. ג. תכננו סיור בן יומיים היוצא מנהרייה וכולל שישה אתרים — שלושה בכל יום; ציינו סוג אתר ומשך שהייה.',
+    model:
+      'בזכרון יעקב: בית אהרנסון ודרך היין או רחוב המייסדים. שרידים צלבניים: אולמות האבירים והמונפורט. יום א׳: ראש הנקרה — טבע, 90 דקות; אולמות האבירים — ארכאולוגיה, שעתיים; מסגד אל־ג׳זאר — דת, 45 דקות. יום ב׳: מונפורט — היסטוריה וטבע, שעתיים; יחיעם — היסטוריה, 90 דקות; אכזיב — טבע ונופש, שעה.',
+  },
+];
+const openRubrics = [
+  [
+    ['תיאור הנוף', ['מישורי', 'חוף', 'חולי']],
+    ['שני אתרים', ['אשקלון', 'בית גוברין', 'נתניה']],
+    ['סוגי תיירות וייחוד', ['ארכאולוג', 'טיילת', 'נופש', 'מלון']],
+  ],
+  [
+    ['שני מוקדים ביפו', ['נמל יפו', 'שוק הפשפשים', 'שעון']],
+    ['שכונה היסטורית', ['נווה צדק', '1887']],
+    ['ייחוד העיר הלבנה', ['סגנון הבינלאומי', 'עיר גנים', '4000']],
+  ],
+  [
+    ['שרידים ארכאולוגיים', ['קיסריה', 'אשקלון', 'שער כנעני']],
+    ['הדת והאתרים הבהאיים', ['בהאי', 'מקדש הבב', 'בהג׳י']],
+    ['משיכת תל אביב', ['חוף', 'תרבות', 'חיי לילה']],
+  ],
+  [
+    ['מוזיאונים בתל אביב', ['אנו', 'פלמ״ח', 'הגנה']],
+    ['מוזיאונים בצפון', ['אסירי המחתרות', 'לוחמי הגטאות']],
+    ['כפרים ופעילויות דרוזיות', ['דלית אל־כרמל', 'עוספיה', 'שוק', 'אירוח']],
+  ],
+  [
+    ['בית גוברין', ['מערות פעמון', 'קולומבריום', 'מקוואות']],
+    ['שני אתרים בתל אביב–יפו', ['נמל יפו', 'שרונה', 'נווה צדק']],
+    ['שלושה גורמי משיכה בצפון', ['ראש הנקרה', 'עכו', 'בהאי']],
+  ],
+  [
+    ['גבולות הצפון', ['ראש הנקרה', 'כרמל']],
+    ['נקרות ותשתיות', ['גלי', 'רכבל', 'מיצג']],
+    ['שני אתרים בחיפה ומגזר', ['בהאי', 'סטלה מאריס', 'צליינ']],
+  ],
+  [
+    ['עכו — ארכאולוגיה וקדושה', ['אולמות האבירים', 'מסגד אל־ג׳זאר']],
+    ['טבע בגליל המערבי', ['אכזיב', 'לגונות', 'חוף']],
+    ['דת בחיפה', ['מערת אליהו', 'בהאי', 'דת']],
+  ],
+  [
+    ['שני מוזיאונים בחיפה', ['מוזיאון', 'ימי', 'אמנות']],
+    ['שני אתרים בקיסריה', ['תיאטרון', 'אקוודוקט', 'היפודרום']],
+    ['שתי מושבות ומוקדים', ['זכרון יעקב', 'בנימינה', 'אהרנסון', 'יקב']],
+  ],
+  [
+    ['שימור בזכרון יעקב', ['אהרנסון', 'דרך היין', 'המייסדים']],
+    ['שני שרידים צלבניים', ['אולמות האבירים', 'מונפורט']],
+    ['מסלול בן יומיים ושישה אתרים', ['יום א', 'יום ב', 'ראש הנקרה', 'עכו', 'אכזיב', 'יחיעם']],
+  ],
+];
+const bankOpenPassed = new Set(JSON.parse(localStorage.getItem('coastal-bank-open-passed-v2') || '[]').map(String));
+function splitQuestionParts(question) {
+  return question
+    .split(/(?=[אבג]\.\s)/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+const practiceSection = document.getElementById('practice');
+const openSection = document.createElement('section');
+openSection.className = 'learning-block open-practice';
+openSection.id = 'open-practice';
+openSection.dataset.trackStep = 'open-practice';
+openSection.innerHTML = `<div class="block-heading"><span class="number">09</span><div><span class="eyebrow">שאלות בגרות מחומרי המקור</span><h2>מאגר שאלות מישור החוף</h2></div></div><p class="practice-intro">כל סעיף נענה ונבדק בנפרד. רק כאשר כל שלושת הסעיפים עברו בדיקה, השאלה השלמה נחשבת כהושלמה.</p><aside class="answer-insight" id="answerInsight"><span>תמונת מצב אישית</span><b>עדיין אין ניסיונות שנבדקו</b><p>לאחר בדיקת תשובות יוצגו כאן הרכיבים שכדאי לחזק.</p></aside><div class="bank-progress"><b id="bankCompleted">0 מתוך 9 שאלות הושלמו</b><div class="meter"><i id="bankMeter"></i></div></div><div class="open-question-list">${openPracticeData
+  .map(
+    (q, i) =>
+      `<article class="open-question" data-open-card="${i}"><div class="question-label"><span>שאלה ${i + 1}</span><em>${q.topic}</em></div><h3>${q.title}</h3><div class="question-parts">${splitQuestionParts(
+        q.question
+      )
+        .map((part, p) => {
+          const key = `${i}-${p}`;
+          return `<section class="question-part" data-question-part="${key}"><div class="part-heading"><b>${String.fromCharCode(1488 + p)}׳</b><p>${part.replace(/^[אבג]\.\s*/, '')}</p><i data-part-check="${key}" aria-label="מצב בדיקת הסעיף"></i></div><textarea data-open-answer="${key}" rows="5" placeholder="כתבו תשובה לסעיף ${String.fromCharCode(1488 + p)}׳..."></textarea><div class="answer-meta"><small data-word-count="${key}">0 מילים</small><small data-answer-state="${key}">טרם נבדק</small></div><div class="smart-question-actions"><button class="button button-primary" data-check-open="${key}">בדיקת סעיף ${String.fromCharCode(1488 + p)}׳</button><small>אפשר לתקן ולבדוק שוב</small></div><div class="smart-feedback" data-open-feedback="${key}" aria-live="polite"></div></section>`;
+        })
+        .join('')}</div></article>`
+  )
+  .join(
+    ''
+  )}</div><div class="open-actions"><button class="button button-primary" id="saveOpenPractice">שמירת כל הטיוטות</button><p id="openPracticeFeedback" class="quiz-feedback"></p></div>`;
+practiceSection.parentNode.insertBefore(openSection, practiceSection.nextSibling);
+const practiceNav = document.querySelector('[data-step="practice"]');
+const openNav = document.createElement('a');
+openNav.href = '#open-practice';
+openNav.dataset.step = 'open-practice';
+openNav.innerHTML = '<i>10</i><span>מאגר בגרות<small>כתיבה פתוחה</small></span><b>✓</b>';
+practiceNav.parentNode.appendChild(openNav);
+function renderAnswerInsight() {
+  const attempts = JSON.parse(localStorage.getItem('coastal-open-attempts') || '[]').filter((x) => x.scope === 'bank'),
+    box = document.getElementById('answerInsight');
+  if (!attempts.length) return;
+  const latest = new Map();
+  attempts.forEach((x) => latest.set(x.id, x));
+  const current = [...latest.values()],
+    missing = current.flatMap((x) => x.missing),
+    counts = missing.reduce((all, label) => ((all[label] = (all[label] || 0) + 1), all), {}),
+    focus = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map((x) => x[0]),
+    average = Math.round(current.reduce((sum, x) => sum + x.score, 0) / current.length);
+  box.innerHTML = `<span>תמונת מצב אישית</span><b>ממוצע בדיקה: ${average}% · ${current.length} שאלות נבדקו</b><p>${focus.length ? `כדאי לחזק: ${focus.join(' · ')}` : 'כל הרכיבים המרכזיים הופיעו בתשובות שנבדקו.'}</p>`;
+}
+const openDrafts = JSON.parse(localStorage.getItem('coastal-open-drafts-v2') || '{}');
+function updateBankProgress() {
+  document.querySelectorAll('[data-open-answer]').forEach((t) => {
+    const key = t.dataset.openAnswer,
+      words = t.value.trim() ? t.value.trim().split(/\s+/).length : 0,
+      isDone = bankOpenPassed.has(key);
+    document.querySelector(`[data-word-count="${key}"]`).textContent = `${words} מילים`;
+    document.querySelector(`[data-answer-state="${key}"]`).textContent = isDone
+      ? 'הסעיף עבר ✓'
+      : words >= 8
+        ? 'מוכן לבדיקה'
+        : 'טרם הושלם';
+    document.querySelector(`[data-question-part="${key}"]`).classList.toggle('part-complete', isDone);
+    document.querySelector(`[data-part-check="${key}"]`).textContent = isDone ? '✓' : '';
+  });
+  let done = 0;
+  openPracticeData.forEach((q, i) => {
+    const complete = splitQuestionParts(q.question).every((_, p) => bankOpenPassed.has(`${i}-${p}`));
+    document.querySelector(`[data-open-card="${i}"]`).classList.toggle('answer-complete', complete);
+    if (complete) done++;
+  });
+  document.getElementById('bankCompleted').textContent = `${done} מתוך ${openPracticeData.length} שאלות הושלמו`;
+  document.getElementById('bankMeter').style.width = `${Math.round((done / openPracticeData.length) * 100)}%`;
+  renderAnswerInsight();
+  return done;
+}
+document.querySelectorAll('[data-open-answer]').forEach((t) => {
+  const key = t.dataset.openAnswer;
+  t.value = openDrafts[key] || '';
+  t.addEventListener('input', () => {
+    bankOpenPassed.delete(key);
+    localStorage.setItem('coastal-bank-open-passed-v2', JSON.stringify([...bankOpenPassed]));
+    document.querySelector(`[data-open-feedback="${key}"]`).className = 'smart-feedback';
+    updateBankProgress();
+  });
+});
+updateBankProgress();
+document.querySelectorAll('[data-check-open]').forEach((button) =>
+  button.addEventListener('click', () => {
+    const key = button.dataset.checkOpen,
+      [questionIndex, partIndex] = key.split('-').map(Number),
+      textarea = document.querySelector(`[data-open-answer="${key}"]`),
+      result = evaluateAgainstRubric(textarea.value, [openRubrics[questionIndex][partIndex]], 8),
+      attempt = recordOpenAttempt('bank', key, result),
+      box = document.querySelector(`[data-open-feedback="${key}"]`);
+    renderSmartFeedback(box, result, attempt);
+    syncOpenAnswer(splitQuestionParts(openPracticeData[questionIndex].question)[partIndex], textarea.value, box);
+    if (result.passed) bankOpenPassed.add(key);
+    else bankOpenPassed.delete(key);
+    localStorage.setItem('coastal-bank-open-passed-v2', JSON.stringify([...bankOpenPassed]));
+    const saved = JSON.parse(localStorage.getItem('coastal-open-drafts-v2') || '{}');
+    saved[key] = textarea.value;
+    localStorage.setItem('coastal-open-drafts-v2', JSON.stringify(saved));
+    updateBankProgress();
+  })
+);
+document.getElementById('saveOpenPractice').addEventListener('click', () => {
+  const saved = {};
+  document.querySelectorAll('[data-open-answer]').forEach((t) => (saved[t.dataset.openAnswer] = t.value.trim()));
+  localStorage.setItem('coastal-open-drafts-v2', JSON.stringify(saved));
+  const done = updateBankProgress(),
+    ready = done === openPracticeData.length;
+  document.getElementById('openPracticeFeedback').textContent = ready
+    ? 'כל הסעיפים נשמרו וכל תשע השאלות הושלמו.'
+    : 'הטיוטות נשמרו. השלמתם ' + done + ' מתוך ' + openPracticeData.length + ' שאלות.';
+  if (ready) completeStep('open-practice');
+});
 
 // Page-by-page lesson navigation: only one learning page is visible at a time.
-const lessonPages=steps.map(id=>document.getElementById(id)).filter(Boolean);
-const pageLabels={overview:'קוראים את המרחב',north:'טבע, מורשת ודת בצפון',carmel:'קיסריה והכרמל',telaviv:'תל אביב–יפו: עבר והווה',south:'אשקלון ושפלת יהודה',games:'סיכום התרגולים',images:'זיהוי אתרים בתמונות',presentation:'המצגת המלווה',practice:'תרגול מסכם', 'open-practice':'מאגר שאלות בגרות'};
-const pageNavigator=document.createElement('nav');
-pageNavigator.className='lesson-page-controls';
-pageNavigator.setAttribute('aria-label','מעבר בין דפי הלימוד');
-pageNavigator.innerHTML='<a class="page-prev" href="#"><span>הדף הקודם</span><b></b></a><div><small id="lessonPageCount"></small><strong id="lessonPageTitle"></strong></div><a class="page-next" href="#"><span>הדף הבא</span><b></b></a>';
+const lessonPages = steps.map((id) => document.getElementById(id)).filter(Boolean);
+const pageLabels = {
+  overview: 'קוראים את המרחב',
+  north: 'טבע, מורשת ודת בצפון',
+  carmel: 'קיסריה והכרמל',
+  telaviv: 'תל אביב–יפו: עבר והווה',
+  south: 'אשקלון ושפלת יהודה',
+  games: 'סיכום התרגולים',
+  images: 'זיהוי אתרים בתמונות',
+  presentation: 'המצגת המלווה',
+  practice: 'תרגול מסכם',
+  'open-practice': 'מאגר שאלות בגרות',
+};
+const pageNavigator = document.createElement('nav');
+pageNavigator.className = 'lesson-page-controls';
+pageNavigator.setAttribute('aria-label', 'מעבר בין דפי הלימוד');
+pageNavigator.innerHTML =
+  '<a class="page-prev" href="#"><span>הדף הקודם</span><b></b></a><div><small id="lessonPageCount"></small><strong id="lessonPageTitle"></strong></div><a class="page-next" href="#"><span>הדף הבא</span><b></b></a>';
 document.querySelector('.lesson-content').appendChild(pageNavigator);
 
-function showLessonPage(id,updateHash=true){
-  const safeId=lessonPages.some(page=>page.id===id)?id:'overview';
-  const index=lessonPages.findIndex(page=>page.id===safeId);
+function showLessonPage(id, updateHash = true) {
+  const safeId = lessonPages.some((page) => page.id === id) ? id : 'overview';
+  const index = lessonPages.findIndex((page) => page.id === safeId);
   document.body.classList.add('paged-lesson');
-  document.querySelector('.lesson-hero')?.setAttribute('aria-hidden','true');
-  lessonPages.forEach(page=>{const active=page.id===safeId;page.classList.toggle('active-lesson-page',active);page.hidden=!active});
-  document.querySelectorAll('.lesson-nav a').forEach(link=>{const active=link.dataset.step===safeId;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')});
-  const previous=lessonPages[index-1],next=lessonPages[index+1];
-  const prevLink=pageNavigator.querySelector('.page-prev'),nextLink=pageNavigator.querySelector('.page-next');
-  prevLink.hidden=!previous;nextLink.hidden=!next;
-  if(previous){prevLink.href=`#${previous.id}`;prevLink.querySelector('b').textContent=pageLabels[previous.id]||previous.id}
-  if(next){nextLink.href=`#${next.id}`;nextLink.querySelector('b').textContent=pageLabels[next.id]||next.id}
-  document.getElementById('lessonPageCount').textContent=`דף ${index+1} מתוך ${lessonPages.length}`;
-  document.getElementById('lessonPageTitle').textContent=pageLabels[safeId]||safeId;
-  if(updateHash&&location.hash!==`#${safeId}`)history.pushState(null,'',`#${safeId}`);
-  localStorage.setItem('coastal-last-page',safeId);
-  try{localStorage.setItem('tourismLastVisit',JSON.stringify({unitId:BAGRUT_UNIT_ID,label:'מישור החוף',file:'coastal-plain.html',hash:safeId,pageIndex:index,pageTotal:lessonPages.length,pageLabel:pageLabels[safeId]||safeId,ts:Date.now()}));const tuMap=JSON.parse(localStorage.getItem('tourismUnitProgress')||'{}');tuMap[BAGRUT_UNIT_ID]={pageIndex:index,pageTotal:lessonPages.length,ts:Date.now()};localStorage.setItem('tourismUnitProgress',JSON.stringify(tuMap))}catch(_){}
-  window.scrollTo({top:0,behavior:'smooth'});
+  document.querySelector('.lesson-hero')?.setAttribute('aria-hidden', 'true');
+  lessonPages.forEach((page) => {
+    const active = page.id === safeId;
+    page.classList.toggle('active-lesson-page', active);
+    page.hidden = !active;
+  });
+  document.querySelectorAll('.lesson-nav a').forEach((link) => {
+    const active = link.dataset.step === safeId;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+  const previous = lessonPages[index - 1],
+    next = lessonPages[index + 1];
+  const prevLink = pageNavigator.querySelector('.page-prev'),
+    nextLink = pageNavigator.querySelector('.page-next');
+  prevLink.hidden = !previous;
+  nextLink.hidden = !next;
+  if (previous) {
+    prevLink.href = `#${previous.id}`;
+    prevLink.querySelector('b').textContent = pageLabels[previous.id] || previous.id;
+  }
+  if (next) {
+    nextLink.href = `#${next.id}`;
+    nextLink.querySelector('b').textContent = pageLabels[next.id] || next.id;
+  }
+  document.getElementById('lessonPageCount').textContent = `דף ${index + 1} מתוך ${lessonPages.length}`;
+  document.getElementById('lessonPageTitle').textContent = pageLabels[safeId] || safeId;
+  if (updateHash && location.hash !== `#${safeId}`) history.pushState(null, '', `#${safeId}`);
+  localStorage.setItem('coastal-last-page', safeId);
+  try {
+    localStorage.setItem(
+      'tourismLastVisit',
+      JSON.stringify({
+        unitId: BAGRUT_UNIT_ID,
+        label: 'מישור החוף',
+        file: 'coastal-plain.html',
+        hash: safeId,
+        pageIndex: index,
+        pageTotal: lessonPages.length,
+        pageLabel: pageLabels[safeId] || safeId,
+        ts: Date.now(),
+      })
+    );
+    const tuMap = JSON.parse(localStorage.getItem('tourismUnitProgress') || '{}');
+    tuMap[BAGRUT_UNIT_ID] = { pageIndex: index, pageTotal: lessonPages.length, ts: Date.now() };
+    localStorage.setItem('tourismUnitProgress', JSON.stringify(tuMap));
+  } catch (_) {}
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   document.getElementById('lessonRail')?.classList.remove('open');
 }
 
-function pageForAnchor(id){const target=document.getElementById(id);return lessonPages.find(page=>page.id===id||page.contains(target))}
-document.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');if(!link)return;const id=link.getAttribute('href').slice(1),page=pageForAnchor(id);if(!page)return;event.preventDefault();showLessonPage(page.id);if(id!==page.id)requestAnimationFrame(()=>document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}))});
-window.addEventListener('popstate',()=>showLessonPage(location.hash.slice(1)||'overview',false));
-const requestedPage=location.hash.slice(1);
-showLessonPage(pageForAnchor(requestedPage)?.id||(localStorage.getItem('coastal-last-page')||'overview'),false);
-const rail=document.getElementById('lessonRail');document.getElementById('railButton').addEventListener('click',()=>rail.classList.toggle('open'));renderProgress();renderSlide();renderQuestion();
+function pageForAnchor(id) {
+  const target = document.getElementById(id);
+  return lessonPages.find((page) => page.id === id || page.contains(target));
+}
+document.addEventListener('click', (event) => {
+  const link = event.target.closest('a[href^="#"]');
+  if (!link) return;
+  const id = link.getAttribute('href').slice(1),
+    page = pageForAnchor(id);
+  if (!page) return;
+  event.preventDefault();
+  showLessonPage(page.id);
+  if (id !== page.id)
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+});
+window.addEventListener('popstate', () => showLessonPage(location.hash.slice(1) || 'overview', false));
+const requestedPage = location.hash.slice(1);
+showLessonPage(pageForAnchor(requestedPage)?.id || localStorage.getItem('coastal-last-page') || 'overview', false);
+const rail = document.getElementById('lessonRail');
+document.getElementById('railButton').addEventListener('click', () => rail.classList.toggle('open'));
+renderProgress();
+renderSlide();
+renderQuestion();
 
 /* ===== "המאמן שלי לבגרות" — צ'אט עזרה, עונה אך ורק מתוך חומר הלימוד (askBagrutBot, endpoint פתוח בלי login) ===== */
-async function callBagrutBot(question,mode,bagrutQuestion){
-  let res,data;try{res=await fetch(BAGRUT_API,{method:'POST',body:JSON.stringify({action:'askBagrutBot',question,mode:mode||'qa',bagrut_question:bagrutQuestion||''})});data=await res.json();}catch(netErr){throw new Error('אין חיבור לשרת כרגע, נסו שוב בעוד רגע');}
-  if(!data.ok)throw new Error(data.error||'שגיאה');
+async function callBagrutBot(question, mode, bagrutQuestion) {
+  let res, data;
+  try {
+    res = await fetch(BAGRUT_API, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'askBagrutBot',
+        question,
+        mode: mode || 'qa',
+        bagrut_question: bagrutQuestion || '',
+      }),
+    });
+    data = await res.json();
+  } catch (netErr) {
+    throw new Error('אין חיבור לשרת כרגע, נסו שוב בעוד רגע');
+  }
+  if (!data.ok) throw new Error(data.error || 'שגיאה');
   return data.data.reply;
 }
-function toggleCoachWidget(open){document.getElementById('coachWidget')?.classList.toggle('open',open)}
-function appendCoachMsg(role,text){const log=document.getElementById('coachLog');if(!log)return null;const div=document.createElement('div');div.className='coach-msg coach-msg-'+role;div.textContent=text;log.appendChild(div);log.scrollTop=log.scrollHeight;return div}
-async function sendCoachQuestion(e){if(e)e.preventDefault();const input=document.getElementById('coachInput'),q=input.value.trim();if(!q)return;input.value='';appendCoachMsg('user',q);const pending=appendCoachMsg('bot','...חושב, רגע');try{pending.textContent=await callBagrutBot(q,'qa','')}catch(err){pending.textContent='שגיאה: '+err.message}}
-
+function toggleCoachWidget(open) {
+  document.getElementById('coachWidget')?.classList.toggle('open', open);
+}
+function appendCoachMsg(role, text) {
+  const log = document.getElementById('coachLog');
+  if (!log) return null;
+  const div = document.createElement('div');
+  div.className = 'coach-msg coach-msg-' + role;
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+async function sendCoachQuestion(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('coachInput'),
+    q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  appendCoachMsg('user', q);
+  const pending = appendCoachMsg('bot', '...חושב, רגע');
+  try {
+    pending.textContent = await callBagrutBot(q, 'qa', '');
+  } catch (err) {
+    pending.textContent = 'שגיאה: ' + err.message;
+  }
+}
