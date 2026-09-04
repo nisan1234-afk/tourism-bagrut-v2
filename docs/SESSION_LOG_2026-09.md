@@ -9,7 +9,7 @@ https://claude.ai/code/artifact/1014dad3-4ad3-4584-84c7-0ccbf0a9c8f0
 | ריפו | ענף | מה יש בו | מצב |
 |---|---|---|---|
 | `tourism-bagrut-v2` | `main` (= `claude/stability`) | כל עבודת הפרונט: כלים, פורמט, תיקוני תלמיד, המנוע המשותף, בדיקות, המשימה להיום | **חי** מ-04.09 ~14:45 (Pages build ירוק) |
-| `tourism-bagrut-v2` | `main` | `backend/` + פריסה אוטומטית (clasp) | **פרוס וחי** מ-04.09 14:20: גרסאות 68 ו-69 על ה-deployment הקיים, `doGet` מחזיר version, צינור ירוק |
+| `tourism-bagrut-v2` | `main` | `backend/` + פריסה אוטומטית (clasp) | **פרוס וחי.** 4 פריסות אוטומטיות ב-04.09 (גרסאות 68–72 על אותו deployment), האחרונה `stability-3 (my-progress)` ב-17:45 UTC. כל אחת עברה אימות חי |
 | `nisan1234-afk.github.io` | `main` | הדוח, `?return=` בכניסה, תיקוני C1/C4/C5 | **חי** מ-04.09 |
 
 ## 04.09 — מה נעשה
@@ -73,6 +73,12 @@ E1 כניסה לתלמידי בגרות · E2 `best_score`/`last_active` בדש�
 E4 `saveBagrutUnitProgress` (יחידות בלי בוחן מדווחות) · E5 `total_questions` מהשורה ·
 E6 הגדרה כפולה הוסרה · E8 מכסה אישית לבוט · retry ב-`submitOpenAnswer` · `doGet` מחזיר version.
 תואם לאחור. **פרוס:** נסים הוסיף את ה-secret `CLASPRC`, main קודם לענף, ה-Action פרסם גרסה 68 (ואחרי תיקון צעד האימות, 69) על ה-deployment הקיים. נסים אימת בדפדפן: `"version":"2026-09-04 stability-1 (manual)"`. שני כשלים בדרך: clasp 2 מול קובץ אישור של clasp 3 (תוקן ל-`@google/clasp@3`), ו-curl עם `-X POST` שלא עקב אחרי ההפניה כמו דפדפן (תוקן). מעכשיו כל commit ל-main שנוגע ב-`backend/` נפרס לבד.
+
+### מצב בסוף 04.09 (20:50 שעון ישראל)
+- **חי לתלמידים ולמורה:** מנוע משותף ב-4 יחידות, 20 שאלות בוחן בכל 4 החבלים (כולל מישור החוף),
+  ערבוב תשובות, פקיעת טוקן, "המשימה להיום", "ההתקדמות שלי", דשבורד מורה עם תובנות אמיתיות ו"מי לא נראה היום".
+- **בקאנד:** E1–E8, assignments, getBagrutMyProgress מורחב. הכול נפרס אוטומטית ואומת (`doGet` → version).
+- **CI:** ירוק על כל commit (check, standard, smoke, behavior).
 
 ## מה נבדק ואיך
 - `npm test` ירוק על `claude/stability` (check, standard, smoke, behavior). behavior מריץ את
