@@ -15,16 +15,66 @@ const BAGRUT_UNITS = [
   { unit_id: 'haamakim', name: 'העמקים', total_questions: 20 },
   { unit_id: 'yam_hamelach', name: 'ים המלח ומדבר יהודה', total_questions: 20 },
   { unit_id: 'yerushalayim', name: 'ירושלים', total_questions: 20 },
-  { unit_id: 'hashivut', name: 'חשיבותה של התיירות לישראל', total_questions: 20 },
+  // נושא-על, קיים רק ב-tourism11; לא נספר באחוז ההתקדמות כדי שתלמיד/ה ב-v2 יוכל/תוכל להגיע ל-100%
+  { unit_id: 'hashivut', name: 'חשיבותה של התיירות לישראל', total_questions: 20, counts_for_percent: false },
   { unit_id: 'galil', name: 'הגליל', total_questions: 6 }
 ];
+const BAGRUT_PASS_RATIO = 0.6; // ציון עובר בבוחן (60), לפי UNIT_STANDARD_SPEC_HE.md
 
 function ensureBagrutStudentsSheet_(ss) {
   return ensureSheetWithHeaders(ss, 'students', ['email', 'name', 'class_name', 'teacher_email', 'added_date']);
 }
 
 function ensureBagrutProgressSheet_(ss) {
-  return ensureSheetWithHeaders(ss, 'progress', ['email', 'unit_id', 'best_score', 'total_questions', 'attempts', 'completed', 'last_activity']);
+  return ensureSheetWithHeaders(ss, 'progress', ['email', 'unit_id', 'best_score', 'total_questions', 'attempts', 'completed', 'last_activity', 'pages_done', 'page_total']);
+}
+
+/** אחוז ההתקדמות ביחידה אחת: דפים שהושלמו מתוך כל הדפים; בוחן שעבר = 100. */
+function bagrutUnitPercent_(p) {
+  if (!p) return 0;
+  if (String(p.completed) === 'true') return 100;
+  const total = Number(p.page_total) || 0;
+  const done = Number(p.pages_done) || 0;
+  return total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+}
+
+/**
+ * התקדמות בדפים (לא בוחן): נקרא מהיחידה בכל "סיימתי את הדף". כך גם יחידות בלי בוחן
+ * מדווחות התקדמות למורה (עד 04.09.2026 שלוש יחידות לא דיווחו כלום).
+ */
+function saveBagrutUnitProgress({ verifiedEmail, unit_id, pages_done, page_total }) {
+  const unit = BAGRUT_UNITS.find(u => u.unit_id === unit_id);
+  if (!unit) throw new Error('יחידה לא מוכרת');
+  const doneNum = Math.max(0, Number(pages_done) || 0);
+  const totalNum = Math.max(0, Number(page_total) || 0);
+  return withLock(() => {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    const emailNorm = stripInvisible_(verifiedEmail);
+    if (!sheetToObjects(ensureBagrutStudentsSheet_(ss)).some(s => stripInvisible_(s.email) === emailNorm)) {
+      throw new Error('אין לך גישה למקצוע תיירות בגרות. פנה/י למורה כדי שיוסיף/תוסיף אותך.');
+    }
+    const sheet = ensureBagrutProgressSheet_(ss);
+    const headers = getHeaders(sheet);
+    ['pages_done', 'page_total'].forEach(h => {
+      if (headers.indexOf(h) === -1) { sheet.getRange(1, headers.length + 1).setValue(h); headers.push(h); }
+    });
+    const rows = sheetToObjects(sheet);
+    const idx = rows.findIndex(p => stripInvisible_(p.email) === emailNorm && p.unit_id === unit_id);
+    const now = new Date().toISOString();
+    if (idx === -1) {
+      appendRow(sheet, {
+        email: verifiedEmail, unit_id, best_score: 0, total_questions: unit.total_questions,
+        attempts: 0, completed: false, last_activity: now, pages_done: doneNum, page_total: totalNum
+      });
+    } else {
+      const rowNum = idx + 2;
+      const prevDone = Number(rows[idx].pages_done) || 0;
+      sheet.getRange(rowNum, headers.indexOf('pages_done') + 1).setValue(Math.max(prevDone, doneNum));
+      sheet.getRange(rowNum, headers.indexOf('page_total') + 1).setValue(totalNum);
+      sheet.getRange(rowNum, headers.indexOf('last_activity') + 1).setValue(now);
+    }
+    return { saved: true };
+  });
 }
 
 function ensureBagrutMistakesSheet_(ss) {
@@ -54,22 +104,30 @@ function getBagrutTeacherDashboard({ verifiedEmail }) {
   const allOpenAnswers = sheetToObjects(ensureBagrutOpenAnswersSheet_(ss));
 
   const students = allStudents.map(s => {
-    const myProgress = allProgress.filter(p => stripInvisible_(p.email) === stripInvisible_(s.email));
+    const emailNorm = stripInvisible_(s.email);
+    const myProgress = allProgress.filter(p => stripInvisible_(p.email) === emailNorm);
+    const myAnswers = allOpenAnswers.filter(o => stripInvisible_(o.email) === emailNorm);
     const units = BAGRUT_UNITS.map(u => {
       const p = myProgress.find(row => row.unit_id === u.unit_id);
       return {
         unit_id: u.unit_id, name: u.name,
         best_score: p ? Number(p.best_score) || 0 : 0,
-        total_questions: u.total_questions,
+        total_questions: p && Number(p.total_questions) ? Number(p.total_questions) : u.total_questions,
         attempts: p ? Number(p.attempts) || 0 : 0,
         completed: p ? String(p.completed) === 'true' : false,
+        percent: bagrutUnitPercent_(p),
         last_activity: p ? p.last_activity : ''
       };
     });
+    const counted = units.filter((u, i) => BAGRUT_UNITS[i].counts_for_percent !== false);
     const completedCount = units.filter(u => u.completed).length;
-    const percent = BAGRUT_UNITS.length ? Math.round((completedCount / BAGRUT_UNITS.length) * 100) : 0;
-    const openAnswerCount = allOpenAnswers.filter(o => stripInvisible_(o.email) === stripInvisible_(s.email)).length;
-    return { email: s.email, name: s.name, class_name: s.class_name || '', units, percent, completedCount, openAnswerCount };
+    const percent = counted.length ? Math.round(counted.reduce((sum, u) => sum + u.percent, 0) / counted.length) : 0;
+    // ציון מיטבי = אחוז הטוב ביותר בבוחן כלשהו; פעילות אחרונה = המאוחרת מבין התקדמות ותשובות פתוחות
+    const scored = units.filter(u => u.attempts > 0 && u.total_questions > 0);
+    const best_score = scored.length ? Math.max.apply(null, scored.map(u => Math.round((u.best_score / u.total_questions) * 100))) : null;
+    const activityTimes = units.map(u => u.last_activity).concat(myAnswers.map(o => o.timestamp)).filter(Boolean).map(t => new Date(t).getTime()).filter(t => !isNaN(t));
+    const last_active = activityTimes.length ? new Date(Math.max.apply(null, activityTimes)).toISOString() : '';
+    return { email: s.email, name: s.name, class_name: s.class_name || '', units, percent, completedCount, openAnswerCount: myAnswers.length, best_score, last_active };
   });
 
   const avg = students.length ? Math.round(students.reduce((sum, s) => sum + s.percent, 0) / students.length) : 0;
@@ -224,18 +282,22 @@ function saveBagrutQuizResult({ verifiedEmail, unit_id, score, total }) {
     const idx = rows.findIndex(p => stripInvisible_(p.email) === emailNorm && p.unit_id === unit_id);
     const now = new Date().toISOString();
 
+    // "הושלם" = ציון עובר (60 ומעלה, לפי התקן), לא "ניגש לבוחן". לא מורידים סימון קיים.
+    const passed = totalNum > 0 && scoreNum / totalNum >= BAGRUT_PASS_RATIO;
     if (idx === -1) {
       appendRow(sheet, {
         email: verifiedEmail, unit_id, best_score: scoreNum, total_questions: totalNum,
-        attempts: 1, completed: true, last_activity: now
+        attempts: 1, completed: passed, last_activity: now
       });
     } else {
       const prevBest = Number(rows[idx].best_score) || 0;
+      const prevCompleted = String(rows[idx].completed) === 'true';
       const headers = getHeaders(sheet);
       const rowNum = idx + 2;
       sheet.getRange(rowNum, headers.indexOf('best_score') + 1).setValue(Math.max(prevBest, scoreNum));
+      sheet.getRange(rowNum, headers.indexOf('total_questions') + 1).setValue(totalNum);
       sheet.getRange(rowNum, headers.indexOf('attempts') + 1).setValue((Number(rows[idx].attempts) || 0) + 1);
-      sheet.getRange(rowNum, headers.indexOf('completed') + 1).setValue(true);
+      sheet.getRange(rowNum, headers.indexOf('completed') + 1).setValue(prevCompleted || passed);
       sheet.getRange(rowNum, headers.indexOf('last_activity') + 1).setValue(now);
     }
 
@@ -253,7 +315,8 @@ function saveBagrutQuizResult({ verifiedEmail, unit_id, score, total }) {
 const BAGRUT_MATERIAL_FOLDER_ID = '17sh3M-n6Gy56lUED85r6yTDNWwt_Ncah';
 const BAGRUT_MAX_FILE_BYTES = 5 * 1024 * 1024; // מדלגים על מצגות/תמונות כבדות — הן לא מקור טקסט טוב ממילא
 const BAGRUT_MAX_TEXT_CHARS_PER_FILE = 50000;
-const BAGRUT_BOT_DAILY_CAP = 300; // הגנה בסיסית על עומס/עלות — ה-endpoint הזה פתוח בלי התחברות (tourism11 ציבורי)
+const BAGRUT_BOT_DAILY_CAP = 300; // מכסה גלובלית לקריאות בלי token (tourism11 ציבורי)
+const BAGRUT_BOT_DAILY_CAP_PER_STUDENT = 60; // מכסה אישית לתלמיד/ה מחובר/ת (v2 שולח token)
 const BAGRUT_SUPPORTED_MIME_ = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': true, // docx
   'application/msword': true, // doc
@@ -354,44 +417,6 @@ function bagrutBotDailyCapCheck_() {
   cache.put(key, String(count + 1), 21600);
 }
 
-/**
- * בוט שאלות מבוסס אך ורק על מאגר הידע (knowledge_base) — לא ניגש לשום מקור חיצוני,
- * ולא משתמש בידע כללי של המודל. לא דורש התחברות: tourism11 עצמו אתר ציבורי בלי login,
- * אז ה-widget שם קורא לפעולה הזו ישירות בלי token.
- * mode: 'qa' (שאלה כללית על החומר) או 'hint' (עזרה סוקרטית על שאלת בגרות פתוחה ספציפית,
- * דורש bagrut_question).
- */
-function askBagrutBot({ question, mode, bagrut_question }) {
-  if (!question || !question.trim()) throw new Error('נא לכתוב שאלה');
-  if (question.length > 500) throw new Error('השאלה ארוכה מדי');
-  bagrutBotDailyCapCheck_();
-
-  const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
-  const knowledge = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));
-  if (!knowledge.length) {
-    throw new Error('מאגר החומר עדיין לא נסרק. יש להריץ פעם אחת את installBagrutDailyTrigger מעורך ה-Apps Script.');
-  }
-
-  const context = knowledge.map(k => '### ' + k.file_name + ' (' + k.folder_path + ')\n' + k.text).join('\n\n');
-  const groundingRules = 'ענה אך ורק על סמך החומר המצורף למטה, שמקורו בחומרי ההוראה האמיתיים של המורה. ' +
-    'אסור לך להשתמש בשום ידע חיצוני או כללי — רק במה שכתוב בחומר. אם התשובה לשאלה אינה ' +
-    'מופיעה בחומר, אמור זאת במפורש ("זה לא מופיע בחומר שיש לי") ואל תמציא תשובה. ענה בעברית, קצר וברור.';
-
-  let systemPrompt;
-  if (mode === 'hint' && bagrut_question) {
-    systemPrompt = 'אתה עוזר לימודי לתלמיד/ה שמתרגל/ת שאלת בגרות אמיתית בתיירות ותקוע/ה.\n' +
-      'השאלה: "' + bagrut_question + '"\n' + groundingRules + '\n' +
-      'אל תיתן את התשובה המלאה מיד — כוון בשאלות מנחות (שיטה סוקרטית) שיעזרו לתלמיד/ה להיזכר ' +
-      'או למצוא את התשובה בעצמו/ה מתוך החומר. רק אם התלמיד/ה כותב/ת שהוא/היא עדיין תקוע/ה אחרי ' +
-      'כמה ניסיונות — אפשר להסביר ישירות.';
-  } else {
-    systemPrompt = 'אתה עוזר לימודי לתלמידי תיכון הלומדים לקראת בגרות בתיירות.\n' + groundingRules;
-  }
-
-  const reply = callGemini(systemPrompt + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---', question);
-  return { reply };
-}
-
 function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   if (!question || !question.trim()) throw new Error('חסרה שאלה');
   if (!answer || !answer.trim()) throw new Error('נא לכתוב תשובה');
@@ -427,10 +452,20 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
     '"מידת ביטחון: גבוהה" אם אתם בטוחים בהערכה שלכם, או "מידת ביטחון: נמוכה" אם התשובה גבולית, ' +
     'עמומה, ארוכה/מורכבת מדי להעריך בבטחון מלא, או אם אתם לא בטוחים שהחומר מכסה אותה במלואו.';
 
-  const rawReply = callGemini(
-    bagrutSanitizeForPrompt_(systemPrompt) + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---',
-    'זו התשובה שכתבתי: "' + bagrutSanitizeForPrompt_(answer) + '"'
-  );
+  const promptForCheck = bagrutSanitizeForPrompt_(systemPrompt) + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---';
+  const answerForCheck = 'זו התשובה שכתבתי: "' + bagrutSanitizeForPrompt_(answer) + '"';
+  let rawReply;
+  try {
+    rawReply = callGemini(promptForCheck, answerForCheck);
+  } catch (e1) {
+    try {
+      Utilities.sleep(800);
+      rawReply = callGemini(promptForCheck, answerForCheck);
+    } catch (e2) {
+      // לא מדליפים שגיאת API לתלמיד/ה; התשובה נשמרת וממתינה לבדיקת מורה
+      rawReply = 'הבודק האוטומטי לא זמין כרגע. התשובה נשמרה ותיבדק על ידי המורה.\nמידת ביטחון: נמוכה';
+    }
+  }
 
   const confidenceMatch = rawReply.match(/מידת ביטחון:\s*(גבוהה|נמוכה)\s*$/);
   const confidence = confidenceMatch ? (confidenceMatch[1] === 'גבוהה' ? 'high' : 'low') : 'high';
@@ -743,16 +778,24 @@ function logClientError({ page, message, context }) {
 }
 
 
-// ========== תיקון: askBagrutBot לא ידליף שגיאת API גולמית לתלמיד ==========
-// גרסה זו מוגדרת שוב (function declaration חדשה) ולכן "דורסת" את ההגדרה המקורית
-// למעלה בזכות hoisting של הצהרות function ב-JS (ההגדרה האלחתום� מנצחת בפועל).
-// שום שורה קיימת לא נגעה בה — זו תוספת בלבד (add-only), כנדרש בפרויקט הזה.
-// ההבדל היחיד מול המקור: קריאת callGemini עטופה ב-try/catch עם ניסיון חוזר יחיד,
-// ובמקרה כשל כפול מוחזרת הודעה ידידותית בעברית במקום שגיאת ה-API הגולמית.
-function askBagrutBot({ question, mode, bagrut_question }) {
+/**
+ * בוט שאלות מבוסס אך ורק על מאגר הידע (knowledge_base) — לא ניגש לשום מקור חיצוני.
+ * mode: 'qa' (שאלה כללית על החומר) או 'hint' (עזרה סוקרטית על שאלת בגרות פתוחה, דורש bagrut_question).
+ *
+ * הרשאה ומכסה (04.09.2026): הפעולה נשארת פתוחה (tourism11 ציבורי), אבל כשמגיע token
+ * הוא מאומת ומופעלת מכסה אישית לתלמיד/ה במקום המכסה הגלובלית של כל האתר — כך שאדם
+ * אחד לא יכול לחסום את כל הכיתה, ותלמיד/ה מחובר/ת לא נחסם/ת בגלל אורחים.
+ * callGemini עטוף בניסיון חוזר יחיד; בכשל כפול חוזרת הודעה ידידותית ולא שגיאת API גולמית.
+ */
+function askBagrutBot({ question, mode, bagrut_question, token }) {
   if (!question || !question.trim()) throw new Error('נא לכתוב שאלה');
   if (question.length > 500) throw new Error('השאלה ארוכה מדי');
-  bagrutBotDailyCapCheck_();
+  let callerEmail = '';
+  if (token) {
+    try { callerEmail = verifyGoogleToken(token).email; } catch (_) { callerEmail = ''; }
+  }
+  if (callerEmail) bagrutGenericDailyCapCheck_('bot_' + stripInvisible_(callerEmail), BAGRUT_BOT_DAILY_CAP_PER_STUDENT);
+  else bagrutBotDailyCapCheck_();
 
   const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
   const knowledge = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));

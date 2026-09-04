@@ -70,7 +70,7 @@ function doPost(e) {
       'addClass', 'updateClass', 'deleteClass',
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
-      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'getBagrutMyProgress', 'saveBagrutQuizResult',
+      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress',
       'submitOpenAnswer', 'getBagrutStudentOpenAnswers', 'reviewOpenAnswer', 'getBagrutPendingReviewsForTeacher', 'getMyReviewNotices', 'ackReviewNotice', 'getAllContentOverrides', 'saveContentOverride', 'addBagrutStudentsBulk', 'getBagrutMistakesSummary', 'getBagrutMistakes', 'updateBagrutMistakes', 'getMySiteRecognition', 'saveSiteKnown', 'resetMySiteRecognition', 'getBagrutSiteRecognitionSummary'
     ];
 
@@ -139,6 +139,7 @@ function doPost(e) {
       removeBagrutStudent:       () => removeBagrutStudent(body),
       getBagrutMyProgress:       () => getBagrutMyProgress(body),
       saveBagrutQuizResult:      () => saveBagrutQuizResult(body),
+      saveBagrutUnitProgress:    () => saveBagrutUnitProgress(body),
       askBagrutBot:                () => askBagrutBot(body),
       submitOpenAnswer:            () => submitOpenAnswer(body),
       reviewOpenAnswer: () => reviewOpenAnswer(body),
@@ -173,7 +174,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return respond({ ok: true, message: 'כיתה פלוס API v2 פעיל' });
+  return respond({ ok: true, message: 'כיתה פלוס API v2 פעיל', version: typeof BACKEND_VERSION === 'string' ? BACKEND_VERSION : 'unknown' });
 }
 
 // ========== אימות גוגל ==========
@@ -256,7 +257,9 @@ function getMyProfile({ verifiedEmail, verifiedName }) {
     const groups = sheetToObjects(SpreadsheetApp.openById(SHEETS[key]).getSheetByName('groups'));
     return groups.some(g => String(g.members || '').split(',').map(stripInvisible_).includes(emailToCheck));
   });
-  if (isGroupMember) {
+  // תיירות לבגרות: תלמיד/ה שהמורה הוסיף/ה לרשימת students בגיליון הבגרות נכנס/ת
+  // גם בלי להיות בקבוצה של תיירות דיגיטלית (עד 04.09.2026 זה לא נבדק כאן בכלל).
+  if (isGroupMember || checkBagrutEnrollment_(verifiedEmail)) {
     return {
       name:  verifiedName,
       email: verifiedEmail,
