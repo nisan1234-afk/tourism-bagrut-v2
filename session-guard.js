@@ -31,6 +31,11 @@
     location.replace(HUB + '?return=' + encodeURIComponent(location.href));
   }
   function showBanner(text) {
+    if (!document.body) {
+      // הסקריפט נטען ב-<head>; אם הטיימר פג לפני שה-body קיים, מחכים ל-DOM
+      document.addEventListener('DOMContentLoaded', function () { showBanner(text); }, { once: true });
+      return;
+    }
     var banner = document.getElementById('sessionExpiryBanner');
     if (!banner) {
       banner = document.createElement('div');

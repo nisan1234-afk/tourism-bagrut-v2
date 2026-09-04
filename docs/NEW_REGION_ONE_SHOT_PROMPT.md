@@ -1,3 +1,5 @@
+> **עדכון 04.09.2026:** `addBagrutUnit`/`getBagrutUnits_` לא קיימים בבקאנד. רישום יחידה = עריכת `BAGRUT_UNITS` ב-`backend/bagrut.gs` ו-commit ל-main (פריסה אוטומטית). ר' `CLAUDE.md` ו-`docs/UNIT_TEMPLATE.md`.
+
 # פרומפט מוכן — הוספת חבל ארץ חדש בוואן-שוט
 
 מסמך זה הוא **פרומפט מוכן להעתקה**, לא רק הסבר. כשיש לך תיקיית חומר על

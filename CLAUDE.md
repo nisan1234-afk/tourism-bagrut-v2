@@ -112,8 +112,9 @@ CAPABILITIES.md`):** לא להוסיף עד שהמדיניות הזו (קודק�
 
 1. דף HTML אחד ב-`units/<slug>.html`, תוכן **סטטי בתוך ה-HTML** (לא מוטבע
    כמחרוזות JS), מחולק לדפי-משנה עם `data-page-panel="<id>"`.
-2. קובץ JS ייעודי אחד ליחידה (`<slug>-unit.js`) — מעתיקים תבנית מ-
-   `valleys-unit.js`/`dead-sea-unit.js`/`galilee-unit.js`, לא ממציאים מבנה חדש.
+2. **אין קובץ JS ליחידה.** כל יחידה נטענת עם `unit-runtime.js` המשותף לפי החוזה ב-
+   `docs/UNIT_TEMPLATE.md` (`data-unit-*` על `<body>`, `#unitData` עם שקופיות/בוחן/בגרות).
+   מעתיקים את `units/valleys.html` כתבנית. (עד 04.09 היה כאן `<slug>-unit.js` לכל יחידה; הקבצים נמחקו.)
 3. **`data-field-key` על כל טקסט מהיום הראשון** (לא בדיעבד) — פורמט:
    `<unit_id>__<page>__<tag><n>` (למשל `haamakim__overview__p1`). זה מה
    שמפעיל אוטומטית את עריכת-התוכן למורה (`content-overrides.js` +
@@ -175,11 +176,11 @@ commit ל-`main` שנוגע ב-`backend/` מפעיל את `.github/workflows/dep
 (08, פתוחות בכוונה — לא ב-protectedActions). כל 05-08 פרוסות מ-26.08.2026,
 גרסה 66.
 
-### `BAGRUT_UNITS` — הפך לדינמי (25.08.2026)
-`getBagrutUnits_()` קורא כעת מטאב גיליון `bagrut_units`; אם הטאב ריק נופל
-בחזרה למערך הקבוע המקורי (fallback, לא נמחק). יחידה חדשה נרשמת דרך פעולה
-מוגנת חדשה `addBagrutUnit` — **אין יותר צורך בסבב B רק כדי לרשום יחידה**.
-בוצע ב-B (המשתמש אישר "בוצע"), טרם אומת ידנית מול הבקאנד החי מהסשן הזה.
+### `BAGRUT_UNITS` — קבוע בקוד (אומת 04.09.2026)
+**התיעוד הקודם כאן ("הפך לדינמי, `getBagrutUnits_` קורא מטאב `bagrut_units`, פעולה `addBagrutUnit`")
+לא תאם את הקוד.** המקור שיוצא מהעורך ב-04.09 (ועכשיו יושב ב-`backend/bagrut.gs`) מכיל `BAGRUT_UNITS`
+קבוע ואין בו `getBagrutUnits_` או `addBagrutUnit`. יחידה חדשה נרשמת בעריכת המערך ב-`backend/bagrut.gs`
+(commit ל-main = פריסה). אין טאב `bagrut_units` בשימוש.
 
 ## סיכונים/מוסכמות שחשוב לזכור
 

@@ -102,6 +102,8 @@
   }
   const state = loadState();
   let syncTimer = null;
+  let lastSyncedDone = -1;
+  // שמירה מקומית בכל שינוי; לשרת רק כשמספר הדפים שהושלמו השתנה (לא בכל שקופית או תמונה)
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
@@ -109,11 +111,12 @@
       /* ignore */
     }
     renderProgress();
+    if (state.done.length === lastSyncedDone) return;
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(
-      () => quietly(api('saveBagrutUnitProgress', { unit_id: UNIT.id, pages_done: state.done.length, page_total: pages.length })),
-      800
-    );
+    syncTimer = setTimeout(() => {
+      lastSyncedDone = state.done.length;
+      quietly(api('saveBagrutUnitProgress', { unit_id: UNIT.id, pages_done: state.done.length, page_total: pages.length }));
+    }, 800);
   }
   function renderProgress() {
     const pct = pages.length ? Math.round((state.done.length / pages.length) * 100) : 0;
@@ -407,7 +410,11 @@
       (qIndex === QUIZ.length - 1 ? 'סיום הבוחן' : 'לשאלה הבאה') + '</button></div>';
     const list = $('answerList');
     // סדר התשובות מעורבב בכל הצגה, כדי שהמיקום לא ילמד את התשובה
-    const order = x.a.map((_, i) => i).sort(() => Math.random() - 0.5);
+    const order = x.a.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
     order.forEach((i) => {
       const label = x.a[i];
       const b = document.createElement('button');
@@ -458,7 +465,7 @@
   const examBox = $('examBank');
   if (examBox) {
     if (!EXAM.length) examBox.innerHTML = '<p class="quiz-feedback">שאלות בגרות ליחידה זו יתווספו כשיאומתו מול מסמך המקור.</p>';
-    examBox.innerHTML = EXAM.map(
+    else examBox.innerHTML = EXAM.map(
       (q, qi) =>
         '<article class="exam-question"><h3>' + escapeHtml(q.title) + '</h3>' +
         (q.parts || [])

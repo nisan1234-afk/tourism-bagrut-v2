@@ -119,7 +119,7 @@ function renderRoster() {
   const progress = roster.map((s) => Number(s.progress_percent ?? s.percent ?? 0) || 0),
     notStarted = progress.filter((x) => x === 0).length,
     needsHelp = roster.filter(
-      (s, i) => progress[i] > 0 && (progress[i] < 40 || Number(s.best_score || 100) < 60)
+      (s, i) => progress[i] > 0 && (progress[i] < 40 || (s.best_score == null ? 100 : Number(s.best_score)) < 60)
     ).length,
     onTrack = Math.max(0, roster.length - notStarted - needsHelp),
     averageProgress = progress.length ? Math.round(progress.reduce((a, b) => a + b, 0) / progress.length) : 0;
