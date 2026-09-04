@@ -250,15 +250,25 @@ function getBagrutMyProgress({ verifiedEmail }) {
   const units = BAGRUT_UNITS.map(u => {
     const p = myProgress.find(row => row.unit_id === u.unit_id);
     return {
-      unit_id: u.unit_id, name: u.name, total_questions: u.total_questions,
+      unit_id: u.unit_id, name: u.name,
+      total_questions: p && Number(p.total_questions) ? Number(p.total_questions) : u.total_questions,
       best_score: p ? Number(p.best_score) || 0 : 0,
       attempts: p ? Number(p.attempts) || 0 : 0,
       completed: p ? String(p.completed) === 'true' : false,
+      percent: bagrutUnitPercent_(p),
+      pages_done: p ? Number(p.pages_done) || 0 : 0,
+      page_total: p ? Number(p.page_total) || 0 : 0,
+      counts_for_percent: u.counts_for_percent !== false,
       last_activity: p ? p.last_activity : ''
     };
   });
 
-  return { units };
+  // "מה שכחתי": מספר השאלות שעדיין מסומנות כטעות פעילה בכל יחידה
+  const mistakes = sheetToObjects(ensureBagrutMistakesSheet_(ss)).filter(r => stripInvisible_(r.email) === emailNorm && r.status === 'active');
+  const mistakeCounts = {};
+  mistakes.forEach(r => { mistakeCounts[r.unit_id] = (mistakeCounts[r.unit_id] || 0) + 1; });
+
+  return { units, mistakes: mistakeCounts };
 }
 
 function saveBagrutQuizResult({ verifiedEmail, unit_id, score, total }) {
