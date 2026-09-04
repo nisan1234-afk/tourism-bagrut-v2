@@ -232,3 +232,23 @@ function setupUnitSearch() {
 renderUnitGrid();
 setupUnitFilters();
 setupUnitSearch();
+
+// "המשימה להיום": מה שהמורה פרסם/ה מופיע בראש דף הבית עם קישור ישיר ליחידה.
+async function renderTodayTask() {
+  const box = document.getElementById('todayTask');
+  const user = getKitahUser();
+  if (!box || !user?.token) return;
+  try {
+    const data = await reviewApi('getBagrutAssignment');
+    const a = data?.assignment;
+    if (!a) return;
+    const card = document.querySelector(`.unit-card[data-unit-id="${a.unit_id}"] .card-link`);
+    document.getElementById('today-task-title').textContent = a.unit_name || a.unit_id;
+    document.getElementById('todayTaskNote').textContent = a.note || '';
+    document.getElementById('todayTaskLink').href = card ? card.getAttribute('href') : '#units';
+    box.hidden = false;
+  } catch (_) {
+    /* שקט — אין משימה או אין חיבור */
+  }
+}
+renderTodayTask();

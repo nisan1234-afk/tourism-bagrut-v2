@@ -2,7 +2,7 @@
 // של המורה. עד 04.09.2026 הטאב הציג את הניסיונות של הדפדפן המקומי בלבד (ממצא A2 בסקירה).
 const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', hashivut: 'חשיבות התיירות' };
 const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html' };
-const WEEK = 7 * 24 * 60 * 60 * 1000;
+const WEEK = 7 * 24 * 60 * 60 * 1000; // פעילות = כל שמירה לשרת: דף שהושלם, תשובה, בוחן, תמונה
 function lastActivityOf(student) {
   const times = [student.last_active, ...(student.units || []).map((u) => u.last_activity)].filter(Boolean).map((t) => new Date(t).getTime()).filter((t) => !isNaN(t));
   return times.length ? Math.max(...times) : 0;
@@ -14,7 +14,13 @@ function renderInsights(students, pendingCount) {
   const activeWeek = students.filter((s) => Date.now() - lastActivityOf(s) < WEEK).length;
   const avg = total ? Math.round(students.reduce((sum, s) => sum + (Number(s.percent) || 0), 0) / total) : 0;
   const passedAny = students.filter((s) => (s.units || []).some((u) => u.completed)).length;
+  const DAY = 24 * 60 * 60 * 1000;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const activeToday = students.filter((s) => lastActivityOf(s) >= startOfToday.getTime());
+  const missingToday = students.filter((s) => lastActivityOf(s) < startOfToday.getTime());
   stats.innerHTML =
+    `<article><span>פעילים היום</span><b>${activeToday.length}</b><small>${missingToday.length ? 'לא נראו היום: ' + missingToday.slice(0, 8).map((s) => safe(s.name || s.email)).join(', ') + (missingToday.length > 8 ? ' ועוד ' + (missingToday.length - 8) : '') : 'כל הכיתה פעילה היום'}</small></article>` +
     `<article><span>פעילים השבוע</span><b>${activeWeek}</b><small>מתוך ${total} תלמידים רשומים</small></article>` +
     `<article><span>התקדמות ממוצעת</span><b>${avg}%</b><small>ממוצע אחוזי היחידות לכל תלמיד/ה</small></article>` +
     `<article><span>עברו בוחן</span><b>${passedAny}</b><small>לפחות ביחידה אחת (60 ומעלה)</small></article>` +
@@ -450,3 +456,59 @@ async function resetField(btn) {
 loadClassroom();
 loadPendingReviews();
 loadEditContent();
+
+// ---------- "המשימה להיום" ----------
+function renderAssignmentOptions() {
+  const select = document.getElementById('assignmentUnit');
+  if (!select) return;
+  CONTENT_PAGES.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p.unit_id;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+}
+function renderAssignment(assignment) {
+  const box = document.getElementById('assignmentCurrent');
+  if (!box) return;
+  if (!assignment) {
+    box.innerHTML = '<span class="review-badge">אין משימה פעילה</span>';
+    return;
+  }
+  const page = CONTENT_PAGES.find((p) => p.unit_id === assignment.unit_id);
+  box.innerHTML = `<span class="review-badge ok">פעילה</span> <b>${safe(assignment.unit_name)}</b>${assignment.note ? ' · ' + safe(assignment.note) : ''} <a href="${page ? page.url : 'index.html'}">לפתיחה ←</a>`;
+  document.getElementById('assignmentUnit').value = assignment.unit_id;
+  document.getElementById('assignmentNote').value = assignment.note || '';
+}
+async function loadAssignment() {
+  if (!teacherUser?.token || !document.getElementById('assignmentCurrent')) return;
+  try {
+    const data = await teacherAPI('getBagrutAssignment');
+    renderAssignment(data.assignment);
+  } catch (e) {
+    document.getElementById('assignmentCurrent').textContent = 'לא ניתן לטעון את המשימה: ' + e.message;
+  }
+}
+async function saveAssignment(unit_id) {
+  const status = document.getElementById('assignmentStatus');
+  status.textContent = 'שומר…';
+  try {
+    await teacherAPI('setBagrutAssignment', { unit_id, note: document.getElementById('assignmentNote').value.trim() });
+    status.textContent = unit_id ? 'פורסם לתלמידים ✓' : 'המשימה בוטלה';
+    await loadAssignment();
+  } catch (e) {
+    status.textContent = 'שגיאה: ' + e.message;
+  }
+}
+renderAssignmentOptions();
+document.getElementById('assignmentForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const unit = document.getElementById('assignmentUnit').value;
+  if (!unit) {
+    document.getElementById('assignmentStatus').textContent = 'בחרו יחידה קודם.';
+    return;
+  }
+  saveAssignment(unit);
+});
+document.getElementById('assignmentClear')?.addEventListener('click', () => saveAssignment(''));
+loadAssignment();
