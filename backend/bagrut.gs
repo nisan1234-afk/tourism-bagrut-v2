@@ -834,3 +834,49 @@ function askBagrutBot({ question, mode, bagrut_question, token }) {
   }
   return { reply };
 }
+
+// ========== "המשימה להיום" (04.09.2026) ==========
+// המורה מפרסם/ת יחידה (ואופציונלית הערה, למשל "דפים 1–3"), והתלמידים רואים אותה
+// בראש דף הבית של תיירות לבגרות עם קישור ישיר. משימה אחת פעילה לכל מורה.
+
+function ensureBagrutAssignmentsSheet_(ss) {
+  return ensureSheetWithHeaders(ss, 'assignments', ['teacher_email', 'unit_id', 'page', 'note', 'created_at', 'active']);
+}
+
+function setBagrutAssignment({ verifiedEmail, unit_id, page, note }) {
+  requireRole(verifiedEmail, ['teacher', 'homeroom', 'admin', 'school_admin']);
+  const unit = unit_id ? BAGRUT_UNITS.find(u => u.unit_id === unit_id) : null;
+  if (unit_id && !unit) throw new Error('יחידה לא מוכרת');
+  return withLock(() => {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    const sheet = ensureBagrutAssignmentsSheet_(ss);
+    const rows = sheetToObjects(sheet);
+    const headers = getHeaders(sheet);
+    rows.forEach((r, i) => {
+      if (r.teacher_email == verifiedEmail && String(r.active) === 'true') {
+        sheet.getRange(i + 2, headers.indexOf('active') + 1).setValue(false);
+      }
+    });
+    if (!unit) return { saved: true, cleared: true };
+    appendRow(sheet, {
+      teacher_email: verifiedEmail, unit_id: unit.unit_id, page: String(page || '').slice(0, 60),
+      note: String(note || '').slice(0, 300), created_at: new Date().toISOString(), active: true
+    });
+    return { saved: true };
+  });
+}
+
+/** התלמיד/ה מקבל/ת את המשימה הפעילה של המורה שלו/ה; מורה מקבל/ת את שלו/ה. */
+function getBagrutAssignment({ verifiedEmail }) {
+  const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+  const emailNorm = stripInvisible_(verifiedEmail);
+  const me = sheetToObjects(ensureBagrutStudentsSheet_(ss)).find(s => stripInvisible_(s.email) === emailNorm);
+  const teacherEmail = me ? me.teacher_email : verifiedEmail;
+  const rows = sheetToObjects(ensureBagrutAssignmentsSheet_(ss))
+    .filter(r => String(r.active) === 'true' && stripInvisible_(r.teacher_email) === stripInvisible_(teacherEmail))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!rows.length) return { assignment: null };
+  const r = rows[0];
+  const unit = BAGRUT_UNITS.find(u => u.unit_id === r.unit_id);
+  return { assignment: { unit_id: r.unit_id, unit_name: unit ? unit.name : r.unit_id, page: r.page || '', note: r.note || '', created_at: r.created_at } };
+}
