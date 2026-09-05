@@ -564,7 +564,7 @@ function bagrutExportText_(fileId) {
  */
 function bagrutExtractFileText_(file) {
   const mime = file.getMimeType();
-  if (mime === 'application/vnd.google-apps.document') return DocumentApp.openById(file.getId()).getBody().getText();
+  if (mime === 'application/vnd.google-apps.document') return bagrutExportText_(file.getId()); // דרך Drive export: ה-web app אינו מורשה ל-DocumentApp
   if (mime === 'application/vnd.google-apps.presentation') return bagrutExportText_(file.getId());
   const blob = file.getBlob();
   const isSlides = !!BAGRUT_SLIDES_MIME_[mime];
@@ -575,7 +575,7 @@ function bagrutExtractFileText_(file) {
   );
   try {
     // מצגות: ייצוא לטקסט דרך Drive API (בלי היקף הרשאה חדש); מסמכים: כמו קודם
-    return isSlides ? bagrutExportText_(temp.id) : DocumentApp.openById(temp.id).getBody().getText();
+    return bagrutExportText_(temp.id); // גם למסמכים: ייצוא טקסט דרך Drive, לא DocumentApp (חסר היקף הרשאה ב-web app)
   } finally {
     Drive.Files.remove(temp.id);
   }
