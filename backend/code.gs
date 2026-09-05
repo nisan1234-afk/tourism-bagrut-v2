@@ -2074,29 +2074,33 @@ function areAiFeaturesEnabled() {
   return val !== 'false';
 }
 
-function callGemini(systemPrompt, userMessage) {
+function callGemini(systemPrompt, userMessage, options) {
   if (!areAiFeaturesEnabled()) throw new Error('פיצ׳רי ה-AI כבויים זמנית');
-
+  options = options || {};
+  // מצב מהיר (05.09.2026): בלי "חשיבה" ועם תקרת פלט. אם המודל לא מכיר את השדה, נופלים לקריאה רגילה.
+  const body = {
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ parts: [{ text: userMessage }] }]
+  };
+  if (options.fast) {
+    body.generationConfig = { maxOutputTokens: options.maxOutputTokens || 900, thinkingConfig: { thinkingBudget: 0 } };
+  }
   const res = UrlFetchApp.fetch(
     'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + getGeminiKey(),
-    {
-      method: 'post',
-      contentType: 'application/json',
-      muteHttpExceptions: true,
-      payload: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userMessage }] }]
-      })
-    }
+    { method: 'post', contentType: 'application/json', muteHttpExceptions: true, payload: JSON.stringify(body) }
   );
   const data = JSON.parse(res.getContentText());
 
   if (data.error) {
+    if (options.fast && Number(data.error.code) === 400) {
+      // השדה thinkingConfig לא נתמך במודל הזה: מנסים בלי המצב המהיר
+      return callGemini(systemPrompt, userMessage, { fast: false });
+    }
     throw new Error('Gemini החזיר שגיאה (קוד ' + data.error.code + '): ' + data.error.message);
   }
 
   const text = data.candidates && data.candidates[0] && data.candidates[0].content
-    ? data.candidates[0].content.parts[0].text
+    ? data.candidates[0].content.parts.map(function (p) { return p.text || ''; }).join('')
     : '';
   if (!text) throw new Error('Gemini לא החזיר תשובה. תגובה גולמית: ' + res.getContentText().slice(0, 300));
   return text;

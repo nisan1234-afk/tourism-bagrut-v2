@@ -538,15 +538,16 @@ function bagrutKnowledgeForUnit_(knowledge, unit_id) {
 function bagrutContextText_(rows) {
   return rows.map(k => '### ' + k.file_name + ' (' + k.folder_path + ')\n' + k.text).join('\n\n');
 }
-function bagrutLogSlow_(what, ms, extra) {
-  if (ms < 20000) return;
+function bagrutLogSlow_(what, ms, extra, threshold) {
+  if (ms < (threshold === undefined ? 20000 : threshold)) return;
   try {
     const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
-    appendRow(ensureBagrutErrorLogSheet_(ss), { page: 'server', message: what + ' איטי: ' + Math.round(ms / 1000) + ' שניות', context: String(extra || '').slice(0, 500), timestamp: new Date().toISOString() });
+    appendRow(ensureBagrutErrorLogSheet_(ss), { page: 'server', message: what + ': ' + (ms / 1000).toFixed(1) + ' שניות' + (ms >= 20000 ? ' (איטי)' : ''), context: String(extra || '').slice(0, 500), timestamp: new Date().toISOString() });
   } catch (_) { /* לא מפילים פעולה בגלל לוג */ }
 }
 
 function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
+  const tStart = Date.now();
   if (!question || !question.trim()) throw new Error('חסרה שאלה');
   if (!answer || !answer.trim()) throw new Error('נא לכתוב תשובה');
   if (answer.length > 3000) throw new Error('התשובה ארוכה מדי');
@@ -596,19 +597,25 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   const promptForCheck = bagrutSanitizeForPrompt_(systemPrompt) + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---';
   const answerForCheck = 'זו התשובה שכתבתי: "' + bagrutSanitizeForPrompt_(answer) + '"';
   let rawReply;
+  let attempts = 1;
+  let firstError = '';
   const t0 = Date.now();
   try {
-    rawReply = callGemini(promptForCheck, answerForCheck);
+    rawReply = callGemini(promptForCheck, answerForCheck, { fast: true });
   } catch (e1) {
+    firstError = String(e1 && e1.message || e1).slice(0, 120);
+    attempts = 2;
     try {
       Utilities.sleep(800);
-      rawReply = callGemini(promptForCheck, answerForCheck);
+      rawReply = callGemini(promptForCheck, answerForCheck, { fast: true });
     } catch (e2) {
       // לא מדליפים שגיאת API לתלמיד/ה; התשובה נשמרת וממתינה לבדיקת מורה
       rawReply = 'הבודק האוטומטי לא זמין כרגע. התשובה נשמרה ותיבדק על ידי המורה.\nמידת ביטחון: נמוכה';
+      attempts = 3;
     }
   }
-  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched);
+  // חלון אבחון (05.09): כל בדיקה נרשמת עם משך, כדי להשוות לזמן שהתלמיד ראה בדפדפן
+  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched + ' attempts=' + attempts + (firstError ? ' first_error=' + firstError : '') + ' total_since_start=' + (Date.now() - tStart) + 'ms', 0);
 
   const confidenceMatch = rawReply.match(/מידת ביטחון:\s*(גבוהה|נמוכה)\s*$/);
   const confidence = confidenceMatch ? (confidenceMatch[1] === 'גבוהה' ? 'high' : 'low') : 'high';
@@ -969,11 +976,11 @@ function askBagrutBot({ question, mode, bagrut_question, token, unit_id }) {
   let reply;
   const t0 = Date.now();
   try {
-    reply = callGemini(fullPrompt, question);
+    reply = callGemini(fullPrompt, question, { fast: true });
   } catch (e1) {
     try {
       Utilities.sleep(800);
-      reply = callGemini(fullPrompt, question);
+      reply = callGemini(fullPrompt, question, { fast: true });
     } catch (e2) {
       reply = 'המאמן קצת עמוס כרגע, נסו שוב בעוד רגע';
     }
