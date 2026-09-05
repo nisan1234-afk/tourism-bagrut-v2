@@ -2117,10 +2117,21 @@ function callGeminiOnce_(model, systemPrompt, userMessage, fast, maxOutputTokens
     err.code = Number(data.error.code) || 0;
     throw err;
   }
-  const text = data.candidates && data.candidates[0] && data.candidates[0].content
-    ? data.candidates[0].content.parts.map(function (p) { return p.text || ''; }).join('')
+  const cand = data.candidates && data.candidates[0];
+  const text = cand && cand.content && cand.content.parts
+    ? cand.content.parts.map(function (p) { return p.text || ''; }).join('')
     : '';
+  callGeminiOnce_.lastFinish = cand ? String(cand.finishReason || '') : '';
   if (!text) throw new Error('Gemini לא החזיר תשובה. תגובה גולמית: ' + res.getContentText().slice(0, 300));
+  // תקרת הפלט נגמרה (למשל כשהמודל "חושב" על חשבון התקרה) והמשוב נקטע באמצע: מנסים שוב בלי תקרה
+  if (fast && callGeminiOnce_.lastFinish === 'MAX_TOKENS' && !callGeminiOnce_.retried) {
+    callGeminiOnce_.retried = true;
+    try {
+      return callGeminiOnce_(model, systemPrompt, userMessage, false, undefined);
+    } finally {
+      callGeminiOnce_.retried = false;
+    }
+  }
   return text;
 }
 /**
@@ -2146,7 +2157,7 @@ function callGemini(systemPrompt, userMessage, options) {
     try {
       if (step.retry) Utilities.sleep(2000);
       const text = callGeminiOnce_(step.model, systemPrompt, userMessage, step.fast, options.maxOutputTokens);
-      callGemini.last = { model: step.model, mode: step.fast ? 'fast' : 'plain' };
+      callGemini.last = { model: step.model, mode: step.fast ? 'fast' : 'plain', finish: callGeminiOnce_.lastFinish || '' };
       return text;
     } catch (e) {
       lastErr = e;

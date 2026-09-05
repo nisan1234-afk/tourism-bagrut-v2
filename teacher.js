@@ -8,7 +8,10 @@ const WEEK = 7 * 24 * 60 * 60 * 1000; // פעילות = כל שמירה לשרת
 function currentUnitOf(student) {
   const active = (student.units || []).filter((u) => u.last_activity && !isNaN(new Date(u.last_activity).getTime()));
   if (!active.length) return null;
-  return active.reduce((a, b) => (new Date(b.last_activity).getTime() > new Date(a.last_activity).getTime() ? b : a));
+  const latest = (list) => list.reduce((a, b) => (new Date(b.last_activity).getTime() > new Date(a.last_activity).getTime() ? b : a));
+  // יחידה שבה יש התקדמות אמיתית (דף שהושלם או בוחן) קודמת ליחידה שרק נפתחה או שנענתה בה שאלה (דוח B, 05.09)
+  const withProgress = active.filter((u) => (Number(u.percent) || 0) > 0 || (Number(u.attempts) || 0) > 0);
+  return latest(withProgress.length ? withProgress : active);
 }
 function lastActivityOf(student) {
   const times = [student.last_active, ...(student.units || []).map((u) => u.last_activity)].filter(Boolean).map((t) => new Date(t).getTime()).filter((t) => !isNaN(t));

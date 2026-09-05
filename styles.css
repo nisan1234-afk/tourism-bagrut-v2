@@ -3481,6 +3481,18 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   color: var(--forest);
 }
 
+.answer-feedback .relogin-inline {
+  margin-inline-start: 8px;
+  padding: 4px 12px;
+  border: 1px solid var(--forest);
+  border-radius: 999px;
+  background: var(--forest);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 /* דוח שיעור (טאב סקירה, דשבורד המורה) */
 .lesson-report {
   margin-top: 18px;

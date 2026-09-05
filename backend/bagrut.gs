@@ -691,7 +691,7 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
     }
   }
   // חלון אבחון (05.09): כל בדיקה נרשמת עם משך, כדי להשוות לזמן שהתלמיד ראה בדפדפן
-  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched + ' attempts=' + attempts + (firstError ? ' first_error=' + firstError : '') + ' model=' + (callGemini.last ? callGemini.last.model + '/' + callGemini.last.mode : '?') + ' total_since_start=' + (Date.now() - tStart) + 'ms', 0);
+  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched + ' attempts=' + attempts + (firstError ? ' first_error=' + firstError : '') + ' model=' + (callGemini.last ? callGemini.last.model + '/' + callGemini.last.mode + '/' + (callGemini.last.finish || '') : '?') + ' reply_chars=' + String(rawReply || '').length + ' total_since_start=' + (Date.now() - tStart) + 'ms', 0);
 
   const confidenceMatch = rawReply.match(/מידת ביטחון:\s*(גבוהה|נמוכה)\s*$/);
   const confidence = confidenceMatch ? (confidenceMatch[1] === 'גבוהה' ? 'high' : 'low') : 'high';

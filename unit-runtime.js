@@ -74,6 +74,17 @@
     if (window.kitahSession?.isExpired()) return 'הכניסה פגה. היכנסו מחדש כדי לשמור.';
     return '';
   }
+  // הודעת סשן עם כפתור "כניסה מחדש" (חוזר לאותו דף אחרי הכניסה; הטיוטה נשמרת מקומית)
+  function showSessionProblem(feedback, problem) {
+    feedback.className = 'answer-feedback needs-work';
+    feedback.textContent = problem + ' התשובה נשארה בתיבה. ';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'relogin-inline';
+    b.textContent = 'כניסה מחדש';
+    b.addEventListener('click', () => (window.kitahSession?.relogin ? window.kitahSession.relogin() : location.replace('https://nisan1234-afk.github.io/?return=' + encodeURIComponent(location.href))));
+    feedback.appendChild(b);
+  }
   // כל קריאה לשרת מוגבלת בזמן: ממשק שנתקע על "שולח…" לנצח הוא באג בפני עצמו (דוח בדיקה חיה, 05.09)
   const API_TIMEOUT_MS = Number(window.TB_API_TIMEOUT_MS) || 50000;
   async function api(action, params = {}) {
@@ -367,8 +378,7 @@
     }
     const problem = sessionProblem();
     if (problem) {
-      feedback.className = 'answer-feedback needs-work';
-      feedback.textContent = problem + ' התשובה נשארה בתיבה.';
+      showSessionProblem(feedback, problem);
       return;
     }
     feedback.className = 'answer-feedback loading';
@@ -641,7 +651,8 @@
       else feedback.textContent = text;
     };
     if (problem) {
-      note(problem + ' התשובה נשארה בתיבה.');
+      if (local) note(problem + ' התשובה נשארה בתיבה.');
+      else showSessionProblem(feedback, problem);
       return;
     }
     try {
