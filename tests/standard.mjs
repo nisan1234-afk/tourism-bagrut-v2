@@ -105,7 +105,7 @@ for (const file of readdirSync(UNITS_DIR).filter((f) => f.endsWith('.html')).sor
     }
   }
 
-  const gameCount = (html.match(/"type":"(match|clues|order|memory|puzzle|map|streak|speed|silent-map|recognition)"/g) || []).length;
+  const gameCount = (html.match(/"type":\s*"(match|clues|order|memory|puzzle|map|streak|speed|silent-map|recognition)"/g) || []).length;
   console.log(`${failures === problems ? 'ok  ' : '    '} ${file} (${panels.length} דפים, ${gameCount} משחקים)`);
 }
 

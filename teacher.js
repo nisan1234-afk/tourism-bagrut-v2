@@ -634,3 +634,48 @@ document.getElementById('reportCsv')?.addEventListener('click', () => {
   const date = currentReportDate();
   downloadCSV(`דוח-שיעור-${date}.csv`, lessonReportCSV(roster, date));
 });
+
+// ---------- מאגר החומר לבוט (סריקה מחדש מהדשבורד) ----------
+function renderKnowledgeList(data) {
+  const box = document.getElementById('knowledgeList');
+  if (!box) return;
+  const files = data.files || [];
+  if (!files.length) {
+    box.innerHTML = '<div class="empty-state">המאגר ריק. לחצו "סריקת חומרים מחדש".</div>';
+    return;
+  }
+  const byFolder = {};
+  files.forEach((f) => (byFolder[f.folder || '(שורש)'] = byFolder[f.folder || '(שורש)'] || []).push(f));
+  const last = files.map((f) => f.scanned).filter(Boolean).sort().pop();
+  box.innerHTML =
+    `<p class="knowledge-total"><b>${files.length}</b> קבצים · <b>${Math.round((data.total_chars || 0) / 1000)}K</b> תווים${last ? ' · נסרק לאחרונה ' + new Date(last).toLocaleString('he-IL') : ''}</p>` +
+    Object.entries(byFolder)
+      .sort((a, b) => a[0].localeCompare(b[0], 'he'))
+      .map(([folder, list]) => `<details class="knowledge-folder"><summary><b>${safe(folder)}</b> <small>${list.length} קבצים · ${Math.round(list.reduce((n, f) => n + (Number(f.chars) || 0), 0) / 1000)}K</small></summary><ul>${list.map((f) => `<li>${safe(f.name)} <small>${Math.round((Number(f.chars) || 0) / 1000)}K</small></li>`).join('')}</ul></details>`)
+      .join('');
+}
+async function loadKnowledgeSummary() {
+  if (!teacherUser?.token || !document.getElementById('knowledgeList')) return;
+  try {
+    renderKnowledgeList(await teacherAPI('getBagrutKnowledgeSummary'));
+  } catch (e) {
+    document.getElementById('knowledgeList').innerHTML = '<div class="empty-state">לא ניתן לטעון את רשימת הקבצים: ' + safe(e.message) + '</div>';
+  }
+}
+document.getElementById('rescanKnowledge')?.addEventListener('click', async () => {
+  const btn = document.getElementById('rescanKnowledge'),
+    status = document.getElementById('knowledgeStatus');
+  btn.disabled = true;
+  status.textContent = 'סורק את הדרייב… זה לוקח כמה דקות, אפשר להמשיך לעבוד בינתיים.';
+  try {
+    const data = await teacherAPI('refreshBagrutKnowledge');
+    const skipped = data.skipped || [];
+    status.innerHTML = `נסרקו <b>${data.scanned}</b> קבצים (${Math.round((data.chars || 0) / 1000)}K תווים).` + (skipped.length ? ` דולגו ${skipped.length}: ` + skipped.map((x) => safe(x.name) + ' (' + safe(x.reason) + ')').join(', ') : ' הכול נקלט.');
+    await loadKnowledgeSummary();
+  } catch (e) {
+    status.textContent = /לא ענה בזמן|Failed to fetch|NetworkError/.test(e.message) ? 'הסריקה ממשיכה בשרת. רעננו את הדף בעוד 2–3 דקות כדי לראות את הרשימה המעודכנת.' : 'הסריקה נכשלה: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+loadKnowledgeSummary();

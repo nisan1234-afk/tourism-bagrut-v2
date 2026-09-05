@@ -399,15 +399,20 @@ function saveBagrutQuizResult({ verifiedEmail, unit_id, score, total }) {
  * הסריקה רקורסיבית, אז אין צורך לעדכן את ה-ID הזה כשמוסיפים חומר חדש בעתיד.
  */
 const BAGRUT_MATERIAL_FOLDER_ID = '17sh3M-n6Gy56lUED85r6yTDNWwt_Ncah';
-const BAGRUT_MAX_FILE_BYTES = 5 * 1024 * 1024; // מדלגים על מצגות/תמונות כבדות — הן לא מקור טקסט טוב ממילא
+const BAGRUT_MAX_FILE_BYTES = 30 * 1024 * 1024; // עד 05.09 היה 5MB, ו"מצגת ירושלים.pdf" (18MB) פשוט לא נסרקה
 const BAGRUT_MAX_TEXT_CHARS_PER_FILE = 50000;
 const BAGRUT_BOT_DAILY_CAP = 300; // מכסה גלובלית לקריאות בלי token (tourism11 ציבורי)
 const BAGRUT_BOT_DAILY_CAP_PER_STUDENT = 60; // מכסה אישית לתלמיד/ה מחובר/ת (v2 שולח token)
 const BAGRUT_SUPPORTED_MIME_ = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': true, // docx
   'application/msword': true, // doc
-  'application/pdf': true
+  'application/pdf': true,
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': true, // pptx (מ-05.09)
+  'application/vnd.ms-powerpoint': true, // ppt
+  'application/vnd.google-apps.presentation': true, // Google Slides
+  'application/vnd.google-apps.document': true // Google Docs
 };
+const BAGRUT_SLIDES_MIME_ = { 'application/vnd.openxmlformats-officedocument.presentationml.presentation': true, 'application/vnd.ms-powerpoint': true, 'application/vnd.google-apps.presentation': true };
 
 function ensureBagrutKnowledgeSheet_(ss) {
   return ensureSheetWithHeaders(ss, 'knowledge_base', ['file_id', 'file_name', 'folder_path', 'text', 'char_count', 'last_scanned']);
@@ -432,40 +437,86 @@ function bagrutSanitizeForPrompt_(text) {
 function refreshBagrutKnowledgeBase() {
   return withLock(() => {
     const results = [];
+    const skipped = [];
     const rootFolder = DriveApp.getFolderById(BAGRUT_MATERIAL_FOLDER_ID);
-    bagrutWalkFolder_(rootFolder, rootFolder.getName(), results, 0);
+    bagrutWalkFolder_(rootFolder, rootFolder.getName(), results, 0, skipped);
 
     const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
     const sheet = ensureBagrutKnowledgeSheet_(ss);
     sheet.clearContents();
     sheet.appendRow(['file_id', 'file_name', 'folder_path', 'text', 'char_count', 'last_scanned']);
     const now = new Date().toISOString();
-    results.forEach(r => sheet.appendRow([r.fileId, r.fileName, r.folderPath, r.text, r.text.length, now]));
-    return { scanned: results.length };
+    if (results.length) {
+      sheet.getRange(2, 1, results.length, 6).setValues(results.map(r => [r.fileId, r.fileName, r.folderPath, r.text, r.text.length, now]));
+    }
+    return { scanned: results.length, chars: results.reduce((s, r) => s + r.text.length, 0), skipped: skipped, files: results.map(r => ({ name: r.fileName, folder: r.folderPath, chars: r.text.length })), scanned_at: now };
   });
 }
 
-function bagrutWalkFolder_(folder, pathPrefix, results, depth) {
+/** סריקה מחדש מהדשבורד (מורה/אדמין), למשל אחרי שנוספו קבצים לדרייב. עלולה לקחת כמה דקות. */
+function refreshBagrutKnowledge({ verifiedEmail }) {
+  requireRole(verifiedEmail, ['teacher', 'admin', 'school_admin']);
+  return refreshBagrutKnowledgeBase();
+}
+
+/** מה יש במאגר עכשיו: רשימת קבצים, תיקיות וגודל, בלי הטקסט עצמו. */
+function getBagrutKnowledgeSummary({ verifiedEmail }) {
+  requireRole(verifiedEmail, ['teacher', 'admin', 'school_admin']);
+  const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+  const rows = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));
+  return {
+    files: rows.map(r => ({ name: r.file_name, folder: String(r.folder_path || '').replace(/^אתר תירות אלוני הבשן\s*\/?/, ''), chars: Number(r.char_count) || String(r.text || '').length, scanned: r.last_scanned })),
+    total_chars: rows.reduce((s, r) => s + (Number(r.char_count) || String(r.text || '').length), 0)
+  };
+}
+
+function bagrutWalkFolder_(folder, pathPrefix, results, depth, skipped) {
   if (depth > 4) return;
+  skipped = skipped || [];
   const files = folder.getFiles();
   while (files.hasNext()) {
     const file = files.next();
-    if (!BAGRUT_SUPPORTED_MIME_[file.getMimeType()]) continue;
-    if (file.getSize() > BAGRUT_MAX_FILE_BYTES) continue;
+    const mime = file.getMimeType();
+    if (!BAGRUT_SUPPORTED_MIME_[mime]) {
+      if (!/^(image|audio|video)\//.test(mime)) skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'סוג קובץ לא נתמך: ' + mime });
+      continue;
+    }
+    if (file.getSize() > BAGRUT_MAX_FILE_BYTES) { skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'גדול מ-30MB' }); continue; }
     try {
-      const text = bagrutExtractFileText_(file);
+      const text = bagrutFixReversedHebrew_(bagrutExtractFileText_(file));
       if (text && text.trim()) {
         results.push({ fileId: file.getId(), fileName: file.getName(), folderPath: pathPrefix, text: text.slice(0, BAGRUT_MAX_TEXT_CHARS_PER_FILE) });
-      }
+      } else skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'לא נמצא טקסט (אולי סריקה של תמונות)' });
     } catch (e) {
       // קובץ בודד שנכשל להמיר לא אמור להפיל את כל הסריקה — ממשיכים לקובץ הבא
+      skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'ההמרה נכשלה: ' + String(e && e.message || e).slice(0, 120) });
     }
   }
   const subfolders = folder.getFolders();
   while (subfolders.hasNext()) {
     const sub = subfolders.next();
-    bagrutWalkFolder_(sub, pathPrefix + '/' + sub.getName(), results, depth + 1);
+    bagrutWalkFolder_(sub, pathPrefix + '/' + sub.getName(), results, depth + 1, skipped);
   }
+}
+
+// טקסט שיצא מ-PDF עברי הפוך (כל שורה מסוף להתחלה, "םילשורי" במקום "ירושלים"): הופכים כל שורה בחזרה,
+// ומשאירים מספרים ואותיות לטיניות בכיוון הנכון. מזוהה לפי מילים נפוצות שמופיעות הפוכות יותר מאשר ישרות.
+function bagrutFixReversedHebrew_(text) {
+  const t = String(text || '');
+  const markers = ['ירושלים', 'העיר', 'הבית', 'תיירות', 'ישראל', 'אתר', 'שנה', 'בית'];
+  const rev = (s) => Array.from(s).reverse().join('');
+  const count = (needle) => t.split(needle).length - 1;
+  let normal = 0, reversed = 0;
+  markers.forEach(m => { normal += count(m); reversed += count(rev(m)); });
+  if (reversed < 5 || reversed <= normal * 2) return t;
+  return t.split('\n').map(line => rev(line).replace(/[0-9A-Za-z][0-9A-Za-z.,:\/%-]*/g, run => rev(run))).join('\n');
+}
+function bagrutExportText_(fileId) {
+  const res = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + fileId + '/export?mimeType=text/plain', {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
+  });
+  if (res.getResponseCode() !== 200) throw new Error('export נכשל: ' + res.getResponseCode());
+  return res.getContentText('UTF-8');
 }
 
 /**
@@ -473,16 +524,21 @@ function bagrutWalkFolder_(folder, pathPrefix, results, depth) {
  * דורש הפעלת Advanced Drive Service (Services → + → Drive API) בפרויקט.
  */
 function bagrutExtractFileText_(file) {
+  const mime = file.getMimeType();
+  if (mime === 'application/vnd.google-apps.document') return DocumentApp.openById(file.getId()).getBody().getText();
+  if (mime === 'application/vnd.google-apps.presentation') return bagrutExportText_(file.getId());
   const blob = file.getBlob();
-  const tempDoc = Drive.Files.create(
-    { name: 'temp_bagrut_extract_' + Date.now(), mimeType: MimeType.GOOGLE_DOCS },
+  const isSlides = !!BAGRUT_SLIDES_MIME_[mime];
+  const temp = Drive.Files.create(
+    { name: 'temp_bagrut_extract_' + Date.now(), mimeType: isSlides ? 'application/vnd.google-apps.presentation' : MimeType.GOOGLE_DOCS },
     blob,
     { convert: true }
   );
   try {
-    return DocumentApp.openById(tempDoc.id).getBody().getText();
+    // מצגות: ייצוא לטקסט דרך Drive API (בלי היקף הרשאה חדש); מסמכים: כמו קודם
+    return isSlides ? bagrutExportText_(temp.id) : DocumentApp.openById(temp.id).getBody().getText();
   } finally {
-    Drive.Files.remove(tempDoc.id);
+    Drive.Files.remove(temp.id);
   }
 }
 

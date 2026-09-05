@@ -3447,6 +3447,40 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   }
 }
 
+/* מאגר החומר לבוט (טאב עריכת תוכן) */
+.knowledge-panel {
+  margin-top: 18px;
+}
+.knowledge-total {
+  margin: 8px 0 12px;
+  color: var(--muted);
+}
+.knowledge-folder {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.knowledge-folder summary {
+  cursor: pointer;
+}
+.knowledge-folder small {
+  color: var(--muted);
+}
+.knowledge-folder ul {
+  margin: 8px 0 4px;
+  padding-inline-start: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+#knowledgeStatus {
+  display: block;
+  min-height: 18px;
+  margin: 6px 0 10px;
+  color: var(--forest);
+}
+
 /* דוח שיעור (טאב סקירה, דשבורד המורה) */
 .lesson-report {
   margin-top: 18px;
