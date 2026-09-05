@@ -141,6 +141,8 @@
   const state = loadState();
   for (const field of ['games', 'examPassed']) if (!Array.isArray(state[field])) state[field] = [];
   if (!state.drafts || typeof state.drafts !== 'object') state.drafts = {};
+  // בוחן שעבר לפני 05.09 (כשהסימון דרש לחיצה) מסמן את דף התרגול רטרואקטיבית
+  if (QUIZ.length && state.quiz && state.quiz.total && state.quiz.best / state.quiz.total >= PASS_RATIO && pages.includes('practice') && !state.done.includes('practice')) state.done.push('practice');
   let syncTimer = null;
   let lastSyncedDone = -1;
   // שמירה מקומית בכל שינוי; לשרת רק כשמספר הדפים שהושלמו השתנה (לא בכל שקופית או תמונה)

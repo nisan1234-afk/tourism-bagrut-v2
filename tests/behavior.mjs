@@ -297,6 +297,21 @@ for (const file of unitFiles) {
   await context.close();
 }
 
+// בוחן שעבר לפני העדכון (בלי סימון דף): הדף מסומן רטרואקטיבית בטעינה
+{
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.addInitScript((u) => { sessionStorage.setItem('kitahUser', JSON.stringify(u)); localStorage.setItem('tb:v1:yerushalayim', JSON.stringify({ done: ['overview'], submitted: ['overview'], failed: {}, recognized: [], matched: [], slidesSeen: 0, quiz: { best: 15, total: 20 } })); }, USER);
+  await context.route('**/*', (route) => (route.request().url().startsWith(origin) ? route.continue() : route.abort()));
+  const page = await context.newPage();
+  await page.goto(`${origin}/units/jerusalem.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(200);
+  const done = await page.evaluate(() => JSON.parse(localStorage.getItem('tb:v1:yerushalayim')).done);
+  const ok = done.includes('practice') && (await page.locator('#pageNav button[data-page="practice"].done').count()) === 1;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} רטרואקטיבי: בוחן שעבר מסמן את דף התרגול בטעינה`);
+  if (!ok) failures++;
+  await context.close();
+}
+
 // שרת שלא עונה: הממשק חייב להשתחרר אחרי ה-timeout עם הודעה כנה, והתשובה נשארת בתיבה (דוח בדיקה חיה 05.09)
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });

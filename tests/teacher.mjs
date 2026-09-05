@@ -90,6 +90,11 @@ expect(seen.includes('getBagrutTeacherDashboard'), 'הדשבורד לא ביקש
 expect((await page.locator('#studentsBody tr').count()) === 4, 'רשימת התלמידים לא מציגה 4 שורות');
 const pulse = await page.textContent('#classPulse');
 expect(pulse.includes('טרם התחילו') && /טרם התחילו\s*1/.test(pulse.replace(/\s+/g, ' ')), 'דופק הכיתה: "טרם התחילו" צריך להיות 1');
+// עמודת ההתקדמות מציגה את היחידה הנוכחית (הפעילות האחרונה), לא ממוצע על 5 יחידות
+const danaRow = await page.$$eval('#studentsBody tr', (trs) => { const tr = trs.find((t) => t.textContent.includes('דנה כהן')); return tr ? [...tr.children].map((td) => td.textContent.replace(/\s+/g, ' ').trim()) : []; });
+expect(danaRow[2] && danaRow[2].startsWith('40%') && danaRow[2].includes('הגליל') && danaRow[2].includes('כללי 28%'), `רשימה: התקדמות דנה צריכה להיות "40% הגליל · כללי 28%" (${danaRow[2]})`);
+const eliRow = await page.$$eval('#studentsBody tr', (trs) => { const tr = trs.find((t) => t.textContent.includes('אלי שמש')); return tr ? [...tr.children].map((td) => td.textContent.trim()) : []; });
+expect(eliRow[2] === 'טרם התחיל/ה', `רשימה: אלי צריך "טרם התחיל/ה" (${eliRow[2]})`);
 const stats = (await page.textContent('#teacherStats')).replace(/\s+/g, ' ');
 expect(/פעילים היום\s*2/.test(stats), 'תובנות: "פעילים היום" צריך להיות 2');
 expect(stats.includes('נועה בר') && stats.includes('אלי שמש'), 'תובנות: "לא נראו היום" צריך לכלול את נועה ואלי');

@@ -1,2 +1,2 @@
 /** נכתב אוטומטית ע"י deploy-backend.yml (git sha). בפריסה ידנית לעדכן ביד. */
-const BACKEND_VERSION = '2026-09-05 stability-8 (relevance, fallback-model, pages-percent)';
+const BACKEND_VERSION = '2026-09-05 stability-9 (auto-fallback-model)';

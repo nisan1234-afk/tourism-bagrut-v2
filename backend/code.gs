@@ -2074,9 +2074,29 @@ function areAiFeaturesEnabled() {
   return val !== 'false';
 }
 
-// מודל גיבוי כשהראשי עמוס (503/429). ניתן לשנות ב-Script Properties: GEMINI_FALLBACK_MODEL.
+// מודל גיבוי כשהראשי עמוס (503/429). קודם Script Property GEMINI_FALLBACK_MODEL; אחרת מגלים אוטומטית מרשימת
+// המודלים הזמינים למפתח (05.09: השם הקשיח gemini-2.5-flash-lite כבר לא זמין, 404). התוצאה נשמרת במטמון 6 שעות.
 function getGeminiFallbackModel() {
-  return PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL') || 'gemini-2.5-flash-lite';
+  const override = PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL');
+  if (override) return override;
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('gemini_fallback_model');
+  if (cached) return cached === 'none' ? '' : cached;
+  let pick = '';
+  try {
+    const res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=' + getGeminiKey(), { muteHttpExceptions: true });
+    const data = JSON.parse(res.getContentText());
+    const names = (data.models || [])
+      .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+      .map(function (m) { return String(m.name || '').replace(/^models\//, ''); })
+      .filter(function (n) { return n && n !== GEMINI_MODEL && /flash/.test(n) && !/latest|preview|exp|image|tts|audio|live|thinking/i.test(n); });
+    // מעדיפים flash-lite (מהיר) בגרסה הגבוהה ביותר, אחרת flash
+    const score = function (n) { return (/lite/.test(n) ? 100 : 0) + (parseFloat((n.match(/(\d+(?:\.\d+)?)/) || [0, 0])[1]) || 0); };
+    names.sort(function (a, b) { return score(b) - score(a); });
+    pick = names[0] || '';
+  } catch (_) { pick = ''; }
+  cache.put('gemini_fallback_model', pick || 'none', 21600);
+  return pick;
 }
 function callGeminiOnce_(model, systemPrompt, userMessage, fast, maxOutputTokens) {
   const body = {
@@ -2116,10 +2136,13 @@ function callGemini(systemPrompt, userMessage, options) {
     if (options.fast) plan.push({ model: fallback, fast: true });
     plan.push({ model: fallback, fast: false });
   }
+  // עומס הוא לרוב זמני: ניסיון אחרון על המודל הראשי אחרי המתנה קצרה
+  plan.push({ model: primary, fast: !!options.fast, retry: true });
   let lastErr = null;
   for (let i = 0; i < plan.length; i++) {
     const step = plan[i];
     try {
+      if (step.retry) Utilities.sleep(2000);
       const text = callGeminiOnce_(step.model, systemPrompt, userMessage, step.fast, options.maxOutputTokens);
       callGemini.last = { model: step.model, mode: step.fast ? 'fast' : 'plain' };
       return text;
@@ -2128,8 +2151,9 @@ function callGemini(systemPrompt, userMessage, options) {
       const code = e && e.code;
       // 400 במצב מהיר = השדה לא נתמך: ממשיכים לאותו מודל במצב רגיל. עומס (503/429) = קופצים למודל הגיבוי.
       if (step.fast && code === 400) continue;
-      if (code === 503 || code === 429) {
-        while (i + 1 < plan.length && plan[i + 1].model === step.model) i++;
+      if (code === 503 || code === 429 || code === 404) {
+        // עומס או מודל לא קיים: מדלגים לשלב הבא שאינו אותו מודל (או לניסיון החוזר)
+        while (i + 1 < plan.length && plan[i + 1].model === step.model && !plan[i + 1].retry) i++;
         continue;
       }
       throw e;

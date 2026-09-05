@@ -3,6 +3,13 @@
 const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', hashivut: 'חשיבות התיירות' };
 const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html' };
 const WEEK = 7 * 24 * 60 * 60 * 1000; // פעילות = כל שמירה לשרת: דף שהושלם, תשובה, בוחן, תמונה
+// היחידה הנוכחית = היחידה עם הפעילות האחרונה. ברשימת התלמידים מציגים אותה, כי ממוצע על 5 יחידות
+// (8% אחרי 40% ביחידה אחת) לא אומר למורה כלום בתחילת שנה (דוח B, 05.09).
+function currentUnitOf(student) {
+  const active = (student.units || []).filter((u) => u.last_activity && !isNaN(new Date(u.last_activity).getTime()));
+  if (!active.length) return null;
+  return active.reduce((a, b) => (new Date(b.last_activity).getTime() > new Date(a.last_activity).getTime() ? b : a));
+}
 function lastActivityOf(student) {
   const times = [student.last_active, ...(student.units || []).map((u) => u.last_activity)].filter(Boolean).map((t) => new Date(t).getTime()).filter((t) => !isNaN(t));
   return times.length ? Math.max(...times) : 0;
@@ -191,19 +198,23 @@ function renderRoster() {
     ? roster
         .map(
           (s) =>
-            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.email || '')}</small></td><td>${safe(s.class_name || '—')}</td><td>${safe(s.progress_percent ?? s.percent ?? 0)}%</td><td>${safe(s.best_score ?? '—')}</td><td>${s.last_active ? new Date(s.last_active).toLocaleDateString('he-IL') : 'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action" data-change-email="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">שינוי מייל</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">הסרה</button></div></td></tr>`
+            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.email || '')}</small></td><td>${safe(s.class_name || '—')}</td><td>${(() => {
+              const cu = currentUnitOf(s);
+              return cu ? `<b>${safe(cu.percent ?? 0)}%</b><small>${safe(cu.name || cu.unit_id)} · כללי ${safe(s.percent ?? 0)}%</small>` : '<small>טרם התחיל/ה</small>';
+            })()}</td><td>${safe(s.best_score ?? '—')}</td><td>${s.last_active ? new Date(s.last_active).toLocaleDateString('he-IL') : 'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action" data-change-email="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">שינוי מייל</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">הסרה</button></div></td></tr>`
         )
         .join('')
     : '<tr><td colspan="6">אין תלמידים רשומים עדיין.</td></tr>';
-  const progress = roster.map((s) => Number(s.progress_percent ?? s.percent ?? 0) || 0),
-    notStarted = progress.filter((x) => x === 0).length,
+  // דופק הכיתה לפי היחידה הנוכחית של כל תלמיד/ה (לא ממוצע על כל היחידות)
+  const progress = roster.map((s) => Number(currentUnitOf(s)?.percent ?? 0) || 0),
+    notStarted = roster.filter((s) => !currentUnitOf(s)).length,
     needsHelp = roster.filter(
-      (s, i) => progress[i] > 0 && (progress[i] < 40 || (s.best_score == null ? 100 : Number(s.best_score)) < 60)
+      (s, i) => currentUnitOf(s) && (progress[i] < 40 || (s.best_score == null ? 100 : Number(s.best_score)) < 60)
     ).length,
     onTrack = Math.max(0, roster.length - notStarted - needsHelp),
-    averageProgress = progress.length ? Math.round(progress.reduce((a, b) => a + b, 0) / progress.length) : 0;
+    averageProgress = progress.length ? Math.round(progress.reduce((a, b) => a + b, 0) / progress.length) : 0; // ממוצע ההתקדמות ביחידה הנוכחית
   document.getElementById('classPulse').innerHTML =
-    `<article><span>טרם התחילו</span><b>${notStarted}</b></article><article><span>זקוקים לחיזוק</span><b>${needsHelp}</b></article><article><span>בדרך הנכונה</span><b>${onTrack}</b></article><article><span>התקדמות ממוצעת</span><b>${averageProgress}%</b></article>`;
+    `<article><span>טרם התחילו</span><b>${notStarted}</b></article><article><span>זקוקים לחיזוק</span><b>${needsHelp}</b></article><article><span>בדרך הנכונה</span><b>${onTrack}</b></article><article><span>ממוצע ביחידה הנוכחית</span><b>${averageProgress}%</b></article>`;
   document
     .querySelectorAll('[data-student-answers]')
     .forEach((b) => b.addEventListener('click', () => openStudentAnswers(b.dataset.studentAnswers)));
