@@ -4595,3 +4595,13 @@ html:not(.page-authorized) .protected-page > :not(.access-gate) {
     align-items: stretch;
   }
 }
+
+/* ===== נגישות ומובייל (05.09) ===== */
+.unit-page,
+.progress-page {
+  overflow-x: hidden; /* מגירת הניווט יוצאת מהמסך במובייל; אסור שתיצור גלילה אופקית */
+}
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #f2a900;
+  outline-offset: 2px;
+}

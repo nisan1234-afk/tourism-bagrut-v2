@@ -87,6 +87,14 @@ for (const path of PAGES) {
 
   const gated = await page.evaluate(() => document.documentElement.classList.contains('page-authorized') || document.documentElement.classList.contains('teacher-authorized'));
   if (!gated) problems.push('שער הכניסה לא נפתח למרות kitahUser ב-sessionStorage');
+  // מובייל: אסור גלילה אופקית (הבדיקה רצה ברוחב 390px)
+  const sideScroll = await page.evaluate(() => {
+    window.scrollTo(9999, 0);
+    const x = window.scrollX;
+    window.scrollTo(0, 0);
+    return x;
+  });
+  if (sideScroll > 1) problems.push(`גלילה אופקית במובייל: הדף זז ${sideScroll}px הצידה`);
   const redirected = !page.url().startsWith(origin);
   if (redirected) problems.push('הדף הפנה החוצה: ' + page.url());
 
