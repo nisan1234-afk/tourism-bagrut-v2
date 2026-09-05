@@ -23,3 +23,4 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run smoke
       - run: npm run behavior
+      - run: npm run teacher

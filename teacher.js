@@ -67,6 +67,85 @@ function renderInsights(students, pendingCount) {
     : '<p class="empty-state">אין עדיין תלמידים רשומים.</p>';
 }
 
+// דוח שיעור: מי היה פעיל ביום נתון, מה עשה, ומי לא נראה. מאותם נתוני דשבורד (בלי קריאה נוספת לשרת).
+// "פעילות" = שמירה לשרת (דף שהושלם, בוחן, תשובה פתוחה, תמונה). לכל יחידה נשמר רק המועד האחרון,
+// ולכן לתאריך שאינו היום הדוח חלקי, וזה נאמר למורה בדף.
+function localDateKey(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function dayRange(dateStr) {
+  const [y, m, d] = String(dateStr || '').split('-').map(Number);
+  const start = y && m && d ? new Date(y, m - 1, d) : new Date();
+  start.setHours(0, 0, 0, 0);
+  return { start: start.getTime(), end: start.getTime() + 24 * 60 * 60 * 1000 };
+}
+function lessonReportRows(students, dateStr) {
+  const { start, end } = dayRange(dateStr);
+  const inDay = (t) => {
+    const ms = t ? new Date(t).getTime() : NaN;
+    return !isNaN(ms) && ms >= start && ms < end;
+  };
+  return students.map((s) => {
+    const units = (s.units || []).filter((u) => inDay(u.last_activity));
+    const active = units.length > 0 || inDay(s.last_active);
+    const done = units.map((u) => {
+      const name = u.name || UNIT_LABELS[u.unit_id] || u.unit_id;
+      const quiz = u.attempts > 0 && u.total_questions ? ` · בוחן ${u.best_score}/${u.total_questions}` : '';
+      return `${name} (${Number(u.percent) || 0}%${quiz})`;
+    });
+    if (active && !done.length) done.push('תשובה פתוחה או פעילות ללא דף שהושלם');
+    return { student: s, active, done, unitIds: units.map((u) => u.unit_id) };
+  });
+}
+function renderLessonReport(students, dateStr) {
+  const body = document.getElementById('reportBody');
+  if (!body) return;
+  const summary = document.getElementById('reportSummary');
+  const absentBox = document.getElementById('reportAbsent');
+  if (!students.length) {
+    summary.innerHTML = '<p class="empty-state">אין תלמידים רשומים, ולכן אין עדיין דוח.</p>';
+    body.innerHTML = '';
+    absentBox.textContent = '';
+    return;
+  }
+  const rows = lessonReportRows(students, dateStr);
+  const active = rows.filter((r) => r.active);
+  const absent = rows.filter((r) => !r.active);
+  const unitCount = {};
+  active.forEach((r) => r.unitIds.forEach((id) => (unitCount[id] = (unitCount[id] || 0) + 1)));
+  const topUnit = Object.entries(unitCount).sort((a, b) => b[1] - a[1])[0];
+  summary.innerHTML =
+    `<article><span>פעילים</span><b>${active.length}</b><small>מתוך ${rows.length}</small></article>` +
+    `<article><span>לא נראו</span><b>${absent.length}</b><small>${absent.length ? 'הרשימה למטה' : 'כולם היו כאן'}</small></article>` +
+    `<article><span>היחידה שעבדו בה הכי הרבה</span><b>${topUnit ? safe(UNIT_LABELS[topUnit[0]] || topUnit[0]) : '—'}</b><small>${topUnit ? topUnit[1] + ' תלמידים' : 'אין פעילות ביום זה'}</small></article>`;
+  body.innerHTML = active.length
+    ? active
+        .map(
+          ({ student: s, done }) =>
+            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.class_name || s.email || '')}</small></td><td>${done.map(safe).join('<br>')}</td><td>${safe(s.percent ?? 0)}%</td><td>${safe(s.openAnswerCount ?? 0)}</td></tr>`
+        )
+        .join('')
+    : '<tr><td colspan="4">אף תלמיד/ה לא היה/תה פעיל/ה בתאריך הזה.</td></tr>';
+  absentBox.innerHTML = absent.length
+    ? `<b>לא נראו (${absent.length}):</b> ${absent.map((r) => safe(r.student.name || r.student.email)).join(', ')}`
+    : '';
+}
+function lessonReportCSV(students, dateStr) {
+  const rows = lessonReportRows(students, dateStr);
+  const q = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  return [
+    ['תאריך', 'שם', 'דוא״ל', 'כיתה', 'פעיל/ה', 'מה נעשה', 'התקדמות כללית', 'ציון מיטבי', 'תשובות פתוחות'].map(q),
+    ...rows.map(({ student: s, active, done }) =>
+      [dateStr, s.name, s.email, s.class_name, active ? 'כן' : 'לא', done.join(' | '), (s.percent ?? 0) + '%', s.best_score ?? '', s.openAnswerCount ?? 0].map(q)
+    ),
+  ];
+}
+function currentReportDate() {
+  const input = document.getElementById('reportDate');
+  if (input && !input.value) input.value = localDateKey(Date.now());
+  return input ? input.value : localDateKey(Date.now());
+}
 const TEACHER_API =
   'https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec';
 let teacherUser = null,
@@ -145,6 +224,7 @@ async function loadClassroom() {
     roster = data.students || [];
     renderRoster();
     renderInsights(roster, window.__pendingCount);
+    renderLessonReport(roster, currentReportDate());
     document.getElementById('teacherDataState').textContent = 'מחובר לכיתה פלוס';
     document.getElementById('overviewMessage').textContent = roster.length
       ? `${roster.length} תלמידים רשומים. עברו לרשימה כדי לזהות מי טרם התחיל ומי זקוק לחיזוק.`
@@ -152,6 +232,7 @@ async function loadClassroom() {
   } catch (e) {
     document.getElementById('teacherDataState').textContent = 'החיבור דורש בדיקה';
     renderInsights([], undefined);
+    renderLessonReport([], currentReportDate());
     document.getElementById('overviewMessage').textContent = 'לא הצלחנו לטעון את נתוני הכיתה: ' + e.message;
     document.getElementById('studentsBody').innerHTML = '<tr><td colspan="6">' + e.message + '</td></tr>';
   }
@@ -512,3 +593,8 @@ document.getElementById('assignmentForm')?.addEventListener('submit', (e) => {
 });
 document.getElementById('assignmentClear')?.addEventListener('click', () => saveAssignment(''));
 loadAssignment();
+document.getElementById('reportDate')?.addEventListener('change', () => renderLessonReport(roster, currentReportDate()));
+document.getElementById('reportCsv')?.addEventListener('click', () => {
+  const date = currentReportDate();
+  downloadCSV(`דוח-שיעור-${date}.csv`, lessonReportCSV(roster, date));
+});
