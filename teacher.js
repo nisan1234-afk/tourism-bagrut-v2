@@ -654,7 +654,7 @@ function renderKnowledgeList(data) {
     `<p class="knowledge-total"><b>${files.length}</b> קבצים · <b>${Math.round((data.total_chars || 0) / 1000)}K</b> תווים${last ? ' · נסרק לאחרונה ' + new Date(last).toLocaleString('he-IL') : ''}</p>` +
     Object.entries(byFolder)
       .sort((a, b) => a[0].localeCompare(b[0], 'he'))
-      .map(([folder, list]) => `<details class="knowledge-folder"><summary><b>${safe(folder)}</b> <small>${list.length} קבצים · ${Math.round(list.reduce((n, f) => n + (Number(f.chars) || 0), 0) / 1000)}K</small></summary><ul>${list.map((f) => `<li>${safe(f.name)} <small>${Math.round((Number(f.chars) || 0) / 1000)}K</small></li>`).join('')}</ul></details>`)
+      .map(([folder, list]) => `<details class="knowledge-folder"><summary><b>${safe(folder)}</b> <small>${list.length} קבצים · ${Math.round(list.reduce((n, f) => n + (Number(f.chars) || 0), 0) / 1000)}K</small></summary><ul>${list.map((f) => `<li>${f.id ? `<a href="https://drive.google.com/file/d/${encodeURIComponent(f.id)}/view" target="_blank" rel="noopener">${safe(f.name)}</a>` : safe(f.name)} <small>${Math.round((Number(f.chars) || 0) / 1000)}K</small></li>`).join('')}</ul></details>`)
       .join('');
 }
 async function loadKnowledgeSummary() {

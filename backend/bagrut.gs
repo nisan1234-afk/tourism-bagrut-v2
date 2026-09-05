@@ -478,7 +478,7 @@ function getBagrutKnowledgeSummary({ verifiedEmail }) {
   const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
   const rows = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));
   return {
-    files: rows.map(r => ({ name: r.file_name, folder: String(r.folder_path || '').replace(/^אתר תירות אלוני הבשן\s*\/?/, ''), chars: Number(r.char_count) || String(r.text || '').length, scanned: r.last_scanned })),
+    files: rows.map(r => ({ id: r.file_id, name: r.file_name, folder: String(r.folder_path || '').replace(/^אתר תירות אלוני הבשן\s*\/?/, ''), chars: Number(r.char_count) || String(r.text || '').length, scanned: r.last_scanned })),
     total_chars: rows.reduce((s, r) => s + (Number(r.char_count) || String(r.text || '').length), 0)
   };
 }

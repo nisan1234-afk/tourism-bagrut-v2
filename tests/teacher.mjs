@@ -37,7 +37,7 @@ const RESPONSES = {
   getBagrutPendingReviewsForTeacher: { pending: [{ id: 'r1', email: 'dana@example.com', student_name: 'דנה כהן', unit_id: 'yerushalayim', question: 'שאלה', answer: 'תשובה', bot_feedback: 'משוב', timestamp: todayAt(9) }] },
   getBagrutAssignment: { assignment: null },
   getAllContentOverrides: { overrides: {} },
-  getBagrutKnowledgeSummary: { files: [{ name: 'מושגים.docx', folder: 'מושגים', chars: 20000, scanned: '2026-09-05T10:00:00Z' }, { name: 'מצגת.pptx', folder: 'חבלים/ירושלים/חומרי גלם', chars: 9000, scanned: '2026-09-05T10:00:00Z' }], total_chars: 29000 },
+  getBagrutKnowledgeSummary: { files: [{ name: 'מושגים.docx', folder: 'מושגים', chars: 20000, scanned: '2026-09-05T10:00:00Z' }, { id: 'abc123', name: 'מצגת.pptx', folder: 'חבלים/ירושלים/חומרי גלם', chars: 9000, scanned: '2026-09-05T10:00:00Z' }], total_chars: 29000 },
   refreshBagrutKnowledge: { scanned: 3, chars: 31000, skipped: [{ name: 'ישן.xls', folder: 'חבלים', reason: 'סוג קובץ לא נתמך' }], files: [], scanned_at: '2026-09-05T20:00:00Z' },
   updateBagrutStudentEmail: { updated: true, email: 'dana.new@example.com', changed: { students: 1, progress: 2, mistakes: 0, open_answers: 3, open_answer_reviews: 1, site_recognition: 0 } },
 };
@@ -146,6 +146,7 @@ expect(sentBodies.filter((b) => b.action === 'updateBagrutStudentEmail').length 
 await page.waitForTimeout(200);
 const kl = (await page.textContent('#knowledgeList')).replace(/\s+/g, ' ');
 expect(kl.includes('2 קבצים') && kl.includes('29K') && kl.includes('ירושלים'), 'מאגר: הרשימה לא מציגה 2 קבצים ו-29K (' + kl.slice(0, 60) + ')');
+expect((await page.getAttribute('#knowledgeList a', 'href')) === 'https://drive.google.com/file/d/abc123/view', 'מאגר: שם הקובץ לא מקשר לקובץ בדרייב');
 await page.$eval('#rescanKnowledge', (b) => b.click());
 await page.waitForFunction(() => /נסרקו/.test(document.getElementById('knowledgeStatus')?.textContent || ''), null, { timeout: 5000 }).catch(() => {});
 const ks = await page.textContent('#knowledgeStatus');
