@@ -1,0 +1,55 @@
+name: Health check (live)
+
+# בדיקת בריאות של מה שהתלמידים רואים בפועל: שני האתרים החיים וה-API.
+# רצה כל בוקר בימי לימוד (07:00 שעון ישראל, א׳–ה׳) וגם ידנית.
+# אם משהו לא עונה, הריצה נכשלת ו-GitHub שולח מייל למי שערך את הקובץ הזה לאחרונה.
+# לא משנה כלום בפרודקשן, רק קוראת.
+
+on:
+  schedule:
+    - cron: '0 4 * * 0-4'
+  workflow_dispatch:
+
+env:
+  API_URL: https://script.google.com/macros/s/AKfycbwf3-MNZBBi64zXcNH7wfhBRoEBl9brtQ9QRI4Won5RmUIOrl_WBivN6uI5NAp6Mc0h/exec
+  HUB_URL: https://nisan1234-afk.github.io/
+  SITE_URL: https://nisan1234-afk.github.io/tourism-bagrut-v2/
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hub and site pages respond
+        run: |
+          fail=0
+          for url in "$HUB_URL" "${SITE_URL}index.html" "${SITE_URL}teacher.html" "${SITE_URL}progress.html" \
+                     "${SITE_URL}unit-runtime.js" "${SITE_URL}session-guard.js" \
+                     "${SITE_URL}units/coastal-plain.html" "${SITE_URL}units/jerusalem.html" \
+                     "${SITE_URL}units/valleys.html" "${SITE_URL}units/dead-sea.html" "${SITE_URL}units/galilee.html"; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 30 "$url" || echo 000)
+            if [ "$code" = "200" ]; then echo "ok   $code $url"; else echo "FAIL $code $url"; fail=1; fi
+          done
+          # ה-CSS שהדפים מפנים אליו באמת (לפי ?v=) חייב להיטען, אחרת האתר נראה שבור
+          css=$(curl -sS -L --max-time 30 "${SITE_URL}index.html" | grep -o 'styles\.css?v=[0-9]*' | head -1)
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 30 "${SITE_URL}${css:-styles.css}" || echo 000)
+          if [ "$code" = "200" ]; then echo "ok   $code ${SITE_URL}${css}"; else echo "FAIL $code ${SITE_URL}${css}"; fail=1; fi
+          [ "$fail" = 0 ] || { echo "::error::אחד הדפים החיים לא עונה 200"; exit 1; }
+
+      - name: API is alive (doGet + open action)
+        run: |
+          GET_BODY=$(curl -sS -L --max-time 60 "$API_URL")
+          echo "$GET_BODY" | head -c 300; echo
+          echo "$GET_BODY" | grep -q '"ok":true' || { echo "::error::doGet לא ענה ok:true"; exit 1; }
+          echo "$GET_BODY" | grep -o '"version":"[^"]*"' || echo "::warning::doGet ללא version"
+          POST_BODY=$(curl -sS -L --max-time 60 "$API_URL" -H 'Content-Type: text/plain' \
+            --data '{"action":"getContentOverrides","unit_id":"galil"}')
+          echo "$POST_BODY" | head -c 300; echo
+          echo "$POST_BODY" | grep -q '"ok":true' || { echo "::error::getContentOverrides לא ענה ok:true"; exit 1; }
+
+      # אימות בלי טוקן חייב להיכשל בצורה מסודרת (JSON עם ok:false), לא ליפול ל-HTML של שגיאה
+      - name: Protected action rejects missing token cleanly
+        run: |
+          BODY=$(curl -sS -L --max-time 60 "$API_URL" -H 'Content-Type: text/plain' \
+            --data '{"action":"getBagrutMyProgress"}')
+          echo "$BODY" | head -c 300; echo
+          echo "$BODY" | grep -q '"ok":false' || { echo "::error::פעולה מוגנת בלי טוקן לא החזירה ok:false"; exit 1; }

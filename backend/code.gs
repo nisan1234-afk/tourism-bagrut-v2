@@ -181,8 +181,30 @@ function doGet() {
 
 // ========== אימות גוגל ==========
 
+// כמה זמן לזכור טוקן שכבר אומת מול Google (שניות). לא יותר מזמן החיים שנותר לטוקן עצמו.
+// בשיעור של כיתה שלמה כל שמירת דף היא קריאה מוגנת; בלי זה כל אחת מחכה ל-Google (~0.3 שנ׳)
+// ומגדילה את מכסת UrlFetch היומית.
+const TOKEN_CACHE_SECONDS = 600;
+
+function tokenCacheKey_(token) {
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(token), Utilities.Charset.UTF_8);
+  return 'tok:' + Utilities.base64EncodeWebSafe(digest);
+}
+
 function verifyGoogleToken(token) {
   if (!token) throw new Error('לא סופק token');
+
+  // 1) טוקן שכבר אומת לאחרונה: עונים מהמטמון (רק תוצאות חיוביות נשמרות, ורק עד פקיעת הטוקן)
+  let cache = null, key = null;
+  try {
+    cache = CacheService.getScriptCache();
+    key = tokenCacheKey_(token);
+    const hit = cache.get(key);
+    if (hit) {
+      const info = JSON.parse(hit);
+      if (info && info.email) return { email: info.email, name: info.name || info.email };
+    }
+  } catch (_) { /* מטמון לא זמין: ממשיכים לאימות מלא */ }
 
   try {
     const res  = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + token);
@@ -192,7 +214,17 @@ function verifyGoogleToken(token) {
     if (!info.email_verified) throw new Error('מייל לא מאומת');
     if (info.aud !== GOOGLE_CLIENT_ID) throw new Error('token לא הונפק עבור אפליקציה זו');
 
-    return { email: info.email, name: info.name || info.email };
+    const result = { email: info.email, name: info.name || info.email };
+
+    // 2) שומרים במטמון עד TOKEN_CACHE_SECONDS, אבל לעולם לא מעבר לפקיעת הטוקן (exp בשניות)
+    try {
+      const expSec = Number(info.exp) || 0;
+      const remaining = Math.floor(expSec - Date.now() / 1000) - 30;
+      const ttl = Math.min(TOKEN_CACHE_SECONDS, remaining);
+      if (cache && key && ttl >= 60) cache.put(key, JSON.stringify(result), ttl);
+    } catch (_) { /* כשל בשמירה למטמון לא אמור להפיל אימות שהצליח */ }
+
+    return result;
   } catch(e) {
     throw new Error('אימות נכשל: ' + e.message);
   }

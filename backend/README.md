@@ -19,6 +19,9 @@
 2. ה-Action: בדיקת תחביר → צילום של המקור שבעורך (רשת ביטחון) → `clasp push` → `clasp deploy -i <deployment>` → קריאת אימות ל-API.
 3. אם משהו נכשל, הקוד בעורך כבר עודכן אבל **הגרסה הפרוסה לא** (deploy הוא הצעד האחרון). לתקן ולדחוף שוב.
 
+בנוסף, `.github/workflows/health-check.yml` בודק כל בוקר לימודים (ובלחיצה ידנית, Actions → Health check → Run workflow)
+שהאתרים וה-API חיים. כשל מגיע במייל מ-GitHub. הוא רק קורא ולא משנה כלום.
+
 ## מה צריך להיות מוגדר פעם אחת
 
 - Apps Script API מופעל בחשבון: https://script.google.com/home/usersettings
