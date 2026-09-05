@@ -37,7 +37,9 @@ const RESPONSES = {
   getBagrutPendingReviewsForTeacher: { pending: [{ id: 'r1', email: 'dana@example.com', student_name: 'דנה כהן', unit_id: 'yerushalayim', question: 'שאלה', answer: 'תשובה', bot_feedback: 'משוב', timestamp: todayAt(9) }] },
   getBagrutAssignment: { assignment: null },
   getAllContentOverrides: { overrides: {} },
+  updateBagrutStudentEmail: { updated: true, email: 'dana.new@example.com', changed: { students: 1, progress: 2, mistakes: 0, open_answers: 3, open_answer_reviews: 1, site_recognition: 0 } },
 };
+const sentBodies = [];
 
 async function serve() {
   const server = createServer(async (req, res) => {
@@ -66,8 +68,9 @@ await context.route('**/*', (route) => {
   if (req.url().startsWith(origin)) return route.continue();
   if (req.url().includes('script.google.com') && req.method() === 'POST') {
     let action = '';
-    try { action = JSON.parse(req.postData() || '{}').action; } catch {}
-    seen.push(action);
+    let body = {};
+    try { body = JSON.parse(req.postData() || '{}'); action = body.action; } catch {}
+    seen.push(action); sentBodies.push(body);
     const data = RESPONSES[action];
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data ? { ok: true, data } : { ok: false, error: 'פעולה לא מוכרת בבדיקה: ' + action }) });
   }
@@ -115,6 +118,22 @@ await page.dispatchEvent('#reportDate', 'change');
 const rows3 = await page.$$eval('#reportBody tr', (trs) => trs.map((tr) => tr.textContent.replace(/\s+/g, ' ')));
 expect(rows3.length === 1 && rows3[0].includes('נועה בר') && rows3[0].includes('בוחן 9/20'), 'דוח שיעור לתאריך קודם: רק נועה עם הבוחן שלה');
 expect((await page.textContent('#reportAbsent')).includes('דנה כהן'), 'דוח שיעור לתאריך קודם: דנה ברשימת הנעדרים');
+
+// שינוי מייל: prompt → קריאה לשרת עם המייל הישן והחדש → טעינה מחדש של הכיתה
+await page.evaluate(() => { window.prompt = () => ' Dana.New@example.com '; });
+const dashboardCallsBefore = seen.filter((a) => a === 'getBagrutTeacherDashboard').length;
+await page.$eval('[data-change-email="dana@example.com"]', (b) => b.click()); // הטאב מוסתר, לכן לחיצה ישירה
+await page.waitForFunction((n) => document.getElementById('teacherDataState')?.textContent.includes('עודכן'), null, { timeout: 5000 }).catch(() => {});
+const emailCall = sentBodies.find((b) => b.action === 'updateBagrutStudentEmail');
+expect(emailCall && emailCall.email === 'dana@example.com' && emailCall.new_email === 'Dana.New@example.com', 'שינוי מייל: הבקשה לשרת לא נשאה את המייל הישן והחדש');
+expect(emailCall && emailCall.token === USER.token, 'שינוי מייל: הבקשה בלי טוקן');
+expect(seen.filter((a) => a === 'getBagrutTeacherDashboard').length === dashboardCallsBefore + 1, 'שינוי מייל: הכיתה לא נטענה מחדש אחרי העדכון');
+expect((await page.textContent('#teacherDataState')).includes('דנה כהן'), 'שינוי מייל: אין אישור על המסך');
+// ביטול ב-prompt: לא נשלח כלום
+await page.evaluate(() => { window.prompt = () => null; });
+await page.$eval('[data-change-email="yossi@example.com"]', (b) => b.click());
+await page.waitForTimeout(200);
+expect(sentBodies.filter((b) => b.action === 'updateBagrutStudentEmail').length === 1, 'שינוי מייל: ביטול ב-prompt שלח בקשה');
 
 // CSV: תוכן נכון (ההורדה עצמה נבדקת דרך הפונקציה, לא דרך הדפדפן)
 const csv = await page.evaluate((k) => lessonReportCSV(roster, k), key);

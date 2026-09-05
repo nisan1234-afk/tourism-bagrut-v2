@@ -209,6 +209,72 @@ function removeBagrutStudent({ verifiedEmail, email }) {
   });
 }
 
+/**
+ * החלפת מייל של תלמיד/ה בכל הטאבים בבת אחת, כדי שהתלמיד/ה ימשיכו מאותה נקודה עם חשבון Google אחר
+ * (למשל: יובאו עם מייל של הורה, ועכשיו יש חשבון משלהם). כל הרשומות מזוהות לפי מייל, ולכן
+ * מחיקה והוספה מחדש היו מנתקות את ההיסטוריה. answer_key בטאב הבדיקות מתחיל במייל, ולכן גם הוא נכתב מחדש.
+ */
+function updateBagrutStudentEmail({ verifiedEmail, email, new_email }) {
+  requireRole(verifiedEmail, ['teacher', 'homeroom', 'admin', 'school_admin']);
+  const oldNorm = stripInvisible_(email);
+  const newEmail = String(new_email || '').trim();
+  const newNorm = stripInvisible_(newEmail);
+  if (!oldNorm || !newNorm) throw new Error('חסר מייל');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newNorm)) throw new Error('המייל החדש לא תקין');
+  if (oldNorm === newNorm) throw new Error('המייל החדש זהה לישן');
+  return withLock(() => {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    const studentsSheet = ensureBagrutStudentsSheet_(ss);
+    const students = sheetToObjects(studentsSheet);
+    const idx = students.findIndex(s => stripInvisible_(s.email) === oldNorm && s.teacher_email == verifiedEmail);
+    if (idx === -1) throw new Error('תלמיד/ה לא נמצא/ה ברשימה שלך');
+    if (students.some(s => stripInvisible_(s.email) === newNorm)) throw new Error('המייל החדש כבר רשום לתלמיד/ה אחר/ת');
+
+    const changed = {};
+    const sheets = [
+      ['students', studentsSheet],
+      ['progress', ensureBagrutProgressSheet_(ss)],
+      ['mistakes', ensureBagrutMistakesSheet_(ss)],
+      ['open_answers', ensureBagrutOpenAnswersSheet_(ss)],
+      ['open_answer_reviews', ensureBagrutOpenAnswerReviewsSheet_(ss)],
+      ['site_recognition', ensureBagrutSiteRecognitionSheet_(ss)]
+    ];
+    sheets.forEach(([name, sheet]) => {
+      changed[name] = rewriteEmailColumn_(sheet, oldNorm, newNorm);
+    });
+    return { updated: true, email: newNorm, changed: changed };
+  });
+}
+
+/** מחליפה מייל בעמודת email של גיליון (ובעמודת answer_key אם קיימת). מחזירה כמה שורות שונו. */
+function rewriteEmailColumn_(sheet, oldNorm, newNorm) {
+  const headers = getHeaders(sheet);
+  const emailCol = headers.indexOf('email');
+  const keyCol = headers.indexOf('answer_key');
+  const lastRow = sheet.getLastRow();
+  if (emailCol === -1 || lastRow < 2) return 0;
+  const emailRange = sheet.getRange(2, emailCol + 1, lastRow - 1, 1);
+  const emails = emailRange.getValues();
+  const keyRange = keyCol === -1 ? null : sheet.getRange(2, keyCol + 1, lastRow - 1, 1);
+  const keys = keyRange ? keyRange.getValues() : null;
+  let count = 0;
+  emails.forEach((row, i) => {
+    if (stripInvisible_(row[0]) !== oldNorm) return;
+    row[0] = newNorm;
+    if (keys) {
+      const key = String(keys[i][0] || '');
+      const sep = key.indexOf('|');
+      if (sep !== -1 && stripInvisible_(key.slice(0, sep)) === oldNorm) keys[i][0] = newNorm + key.slice(sep);
+    }
+    count++;
+  });
+  if (count) {
+    emailRange.setValues(emails);
+    if (keyRange) keyRange.setValues(keys);
+  }
+  return count;
+}
+
 /** מחזירה למורה את היסטוריית השאלות הפתוחות של תלמיד/ה ספציפי/ת (רק אם שייכ/ת לו). */
 function getBagrutStudentOpenAnswers({ verifiedEmail, studentEmail }) {
   requireRole(verifiedEmail, ['teacher', 'homeroom', 'admin', 'school_admin']);

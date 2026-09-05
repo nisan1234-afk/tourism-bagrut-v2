@@ -70,7 +70,7 @@ function doPost(e) {
       'addClass', 'updateClass', 'deleteClass',
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
-      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
+      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
       'submitOpenAnswer', 'getBagrutStudentOpenAnswers', 'reviewOpenAnswer', 'getBagrutPendingReviewsForTeacher', 'getMyReviewNotices', 'ackReviewNotice', 'getAllContentOverrides', 'saveContentOverride', 'addBagrutStudentsBulk', 'getBagrutMistakesSummary', 'getBagrutMistakes', 'updateBagrutMistakes', 'getMySiteRecognition', 'saveSiteKnown', 'resetMySiteRecognition', 'getBagrutSiteRecognitionSummary'
     ];
 
@@ -137,6 +137,7 @@ function doPost(e) {
       getBagrutTeacherDashboard: () => getBagrutTeacherDashboard(body),
       addBagrutStudent:          () => addBagrutStudent(body),
       removeBagrutStudent:       () => removeBagrutStudent(body),
+      updateBagrutStudentEmail:  () => updateBagrutStudentEmail(body),
       getBagrutMyProgress:       () => getBagrutMyProgress(body),
       saveBagrutQuizResult:      () => saveBagrutQuizResult(body),
       saveBagrutUnitProgress:    () => saveBagrutUnitProgress(body),

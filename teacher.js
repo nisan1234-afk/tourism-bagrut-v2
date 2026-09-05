@@ -191,7 +191,7 @@ function renderRoster() {
     ? roster
         .map(
           (s) =>
-            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.email || '')}</small></td><td>${safe(s.class_name || '—')}</td><td>${safe(s.progress_percent ?? s.percent ?? 0)}%</td><td>${safe(s.best_score ?? '—')}</td><td>${s.last_active ? new Date(s.last_active).toLocaleDateString('he-IL') : 'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">הסרה</button></div></td></tr>`
+            `<tr><td><b>${safe(s.name || 'ללא שם')}</b><small>${safe(s.email || '')}</small></td><td>${safe(s.class_name || '—')}</td><td>${safe(s.progress_percent ?? s.percent ?? 0)}%</td><td>${safe(s.best_score ?? '—')}</td><td>${s.last_active ? new Date(s.last_active).toLocaleDateString('he-IL') : 'טרם התחיל/ה'}</td><td><div class="row-actions"><button class="table-action" data-student-answers="${safe(s.email)}">תשובות</button><button class="table-action" data-change-email="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">שינוי מייל</button><button class="table-action danger" data-remove-student="${safe(s.email)}" data-student-name="${safe(s.name || s.email)}">הסרה</button></div></td></tr>`
         )
         .join('')
     : '<tr><td colspan="6">אין תלמידים רשומים עדיין.</td></tr>';
@@ -210,6 +210,28 @@ function renderRoster() {
   document
     .querySelectorAll('[data-remove-student]')
     .forEach((b) => b.addEventListener('click', () => removeStudent(b.dataset.removeStudent, b.dataset.studentName)));
+  document
+    .querySelectorAll('[data-change-email]')
+    .forEach((b) => b.addEventListener('click', () => changeStudentEmail(b.dataset.changeEmail, b.dataset.studentName)));
+}
+// שינוי מייל: ההתקדמות, הבחנים והתשובות עוברות למייל החדש (הכול מזוהה לפי מייל בשרת).
+async function changeStudentEmail(email, name) {
+  const next = window.prompt(`מייל חדש עבור ${name}:\nההתקדמות, הבחנים והתשובות יעברו למייל החדש.`, email);
+  if (next == null) return;
+  const new_email = next.trim();
+  if (!new_email || new_email.toLowerCase() === String(email).toLowerCase()) return;
+  const chip = document.getElementById('teacherDataState');
+  chip.textContent = 'מעדכן מייל…';
+  try {
+    const data = await teacherAPI('updateBagrutStudentEmail', { email, new_email });
+    const moved = Object.values(data.changed || {}).reduce((a, b) => a + Number(b || 0), 0) - 1;
+    chip.textContent = `המייל עודכן${moved > 0 ? ' · ' + moved + ' רשומות התקדמות הועברו' : ''}`;
+    await loadClassroom();
+    chip.textContent = `המייל של ${name} עודכן`;
+  } catch (e) {
+    chip.textContent = 'שינוי המייל נכשל: ' + e.message;
+    window.alert('שינוי המייל נכשל: ' + e.message);
+  }
 }
 async function loadClassroom() {
   if (!teacherUser?.token) {
