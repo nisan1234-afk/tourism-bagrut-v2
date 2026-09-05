@@ -2074,36 +2074,68 @@ function areAiFeaturesEnabled() {
   return val !== 'false';
 }
 
-function callGemini(systemPrompt, userMessage, options) {
-  if (!areAiFeaturesEnabled()) throw new Error('פיצ׳רי ה-AI כבויים זמנית');
-  options = options || {};
-  // מצב מהיר (05.09.2026): בלי "חשיבה" ועם תקרת פלט. אם המודל לא מכיר את השדה, נופלים לקריאה רגילה.
+// מודל גיבוי כשהראשי עמוס (503/429). ניתן לשנות ב-Script Properties: GEMINI_FALLBACK_MODEL.
+function getGeminiFallbackModel() {
+  return PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL') || 'gemini-2.5-flash-lite';
+}
+function callGeminiOnce_(model, systemPrompt, userMessage, fast, maxOutputTokens) {
   const body = {
     system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [{ parts: [{ text: userMessage }] }]
   };
-  if (options.fast) {
-    body.generationConfig = { maxOutputTokens: options.maxOutputTokens || 900, thinkingConfig: { thinkingBudget: 0 } };
-  }
+  // מצב מהיר (05.09.2026): בלי "חשיבה" ועם תקרת פלט
+  if (fast) body.generationConfig = { maxOutputTokens: maxOutputTokens || 900, thinkingConfig: { thinkingBudget: 0 } };
   const res = UrlFetchApp.fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + getGeminiKey(),
+    'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + getGeminiKey(),
     { method: 'post', contentType: 'application/json', muteHttpExceptions: true, payload: JSON.stringify(body) }
   );
   const data = JSON.parse(res.getContentText());
-
   if (data.error) {
-    if (options.fast && Number(data.error.code) === 400) {
-      // השדה thinkingConfig לא נתמך במודל הזה: מנסים בלי המצב המהיר
-      return callGemini(systemPrompt, userMessage, { fast: false });
-    }
-    throw new Error('Gemini החזיר שגיאה (קוד ' + data.error.code + '): ' + data.error.message);
+    const err = new Error('Gemini החזיר שגיאה (קוד ' + data.error.code + '): ' + data.error.message);
+    err.code = Number(data.error.code) || 0;
+    throw err;
   }
-
   const text = data.candidates && data.candidates[0] && data.candidates[0].content
     ? data.candidates[0].content.parts.map(function (p) { return p.text || ''; }).join('')
     : '';
   if (!text) throw new Error('Gemini לא החזיר תשובה. תגובה גולמית: ' + res.getContentText().slice(0, 300));
   return text;
+}
+/**
+ * options.fast: בלי חשיבה + תקרת פלט. סדר הניסיונות: מודל ראשי (מהיר) → אם 400 (השדה לא נתמך) אותו מודל רגיל →
+ * אם 503/429 (עומס) מודל הגיבוי. callGemini.last מתעד איזה מודל ומצב ענו בפועל, לצורך לוג.
+ */
+function callGemini(systemPrompt, userMessage, options) {
+  if (!areAiFeaturesEnabled()) throw new Error('פיצ׳רי ה-AI כבויים זמנית');
+  options = options || {};
+  const plan = [];
+  const primary = GEMINI_MODEL, fallback = getGeminiFallbackModel();
+  if (options.fast) plan.push({ model: primary, fast: true });
+  plan.push({ model: primary, fast: false });
+  if (fallback && fallback !== primary) {
+    if (options.fast) plan.push({ model: fallback, fast: true });
+    plan.push({ model: fallback, fast: false });
+  }
+  let lastErr = null;
+  for (let i = 0; i < plan.length; i++) {
+    const step = plan[i];
+    try {
+      const text = callGeminiOnce_(step.model, systemPrompt, userMessage, step.fast, options.maxOutputTokens);
+      callGemini.last = { model: step.model, mode: step.fast ? 'fast' : 'plain' };
+      return text;
+    } catch (e) {
+      lastErr = e;
+      const code = e && e.code;
+      // 400 במצב מהיר = השדה לא נתמך: ממשיכים לאותו מודל במצב רגיל. עומס (503/429) = קופצים למודל הגיבוי.
+      if (step.fast && code === 400) continue;
+      if (code === 503 || code === 429) {
+        while (i + 1 < plan.length && plan[i + 1].model === step.model) i++;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr || new Error('Gemini לא זמין');
 }
 
 /**

@@ -45,7 +45,7 @@
     $('overallMeter').style.width = overall + '%';
 
     const started = shown.filter((u) => (Number(u.percent) || 0) > 0 || u.attempts > 0).length;
-    const passed = shown.filter((u) => u.completed).length;
+    const passed = shown.filter((u) => u.completed).length; // בחנים שעברו (הדגל completed = בוחן 60+)
     const scored = shown.filter((u) => u.attempts > 0 && u.total_questions);
     const best = scored.length ? Math.max(...scored.map((u) => Math.round((u.best_score / u.total_questions) * 100))) : null;
     const totalMistakes = Object.values(mistakes).reduce((s, n) => s + (Number(n) || 0), 0);
@@ -59,9 +59,11 @@
         const pct = Number(u.percent) || 0;
         const score = u.attempts > 0 && u.total_questions ? Math.round((u.best_score / u.total_questions) * 100) : null;
         const m = Number(mistakes[u.unit_id]) || 0;
-        const status = u.completed ? 'הושלמה ✓' : pct > 0 || u.attempts > 0 ? 'בתהליך' : 'טרם התחלת';
+        // "הושלמה" = כל הדפים; "בתהליך" = דף שהושלם, בוחן, או כל פעילות שנשמרה (גם תשובה פתוחה)
+        const unitDone = u.unit_complete === true || (u.page_total > 0 && u.pages_done >= u.page_total);
+        const status = unitDone ? 'הושלמה ✓' : pct > 0 || u.attempts > 0 || u.last_activity ? 'בתהליך' : 'טרם התחלת';
         const quizText = score === null ? 'עוד לא ניגשת לבוחן' : 'בוחן: ' + score + (u.completed ? ' · עבר' : ' · צריך 60') + ' · ' + u.attempts + ' ניסיונות';
-        return `<article class="progress-unit ${u.completed ? 'done' : ''}">
+        return `<article class="progress-unit ${unitDone ? 'done' : ''}">
           <div class="progress-unit-head"><h2>${esc(u.name)}</h2><span class="progress-status">${status}</span></div>
           <div class="meter"><i style="width:${pct}%"></i></div>
           <ul class="progress-facts">

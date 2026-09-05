@@ -563,12 +563,14 @@
     const pct = Math.round((qScore / QUIZ.length) * 100);
     const passed = qScore / QUIZ.length >= PASS_RATIO;
     if (!state.quiz || qScore > state.quiz.best) state.quiz = { best: qScore, total: QUIZ.length };
+    // בוחן שעבר מסמן את דף התרגול מיד (כמו שכתוב בדף), בלי לחיצה נוספת על "סיימתי"
+    if (passed && pages.includes('practice') && !state.done.includes('practice')) state.done.push('practice');
     save();
     quietly(api('saveBagrutQuizResult', { unit_id: UNIT.id, score: qScore, total: QUIZ.length }));
     quietly(api('updateBagrutMistakes', { unit_id: UNIT.id, results: qResults }));
     quizBox.innerHTML =
       '<div class="quiz-card"><p class="quiz-kicker">תוצאה</p><h3>הציון שלך: ' + pct + '</h3>' +
-      '<p class="quiz-feedback">' + (passed ? 'עברתם את הבוחן ✓ אפשר לסמן את הדף כהושלם.' : 'עדיין לא 60. כדאי לחזור לדפי התוכן ולנסות שוב.') + '</p>' +
+      '<p class="quiz-feedback">' + (passed ? 'עברתם את הבוחן ✓ הדף סומן כהושלם.' : 'עדיין לא 60. כדאי לחזור לדפי התוכן ולנסות שוב.') + '</p>' +
       '<button class="button button-primary" id="startQuiz">ניסיון נוסף</button></div>';
     $('startQuiz').addEventListener('click', () => {
       qIndex = 0;

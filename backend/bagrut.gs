@@ -30,12 +30,20 @@ function ensureBagrutProgressSheet_(ss) {
 }
 
 /** אחוז ההתקדמות ביחידה אחת: דפים שהושלמו מתוך כל הדפים; בוחן שעבר = 100. */
+// אחוז יחידה = דפים שהושלמו מתוך כל הדפים. "completed" בשורה הוא דגל הבוחן (עבר 60), לא סיום היחידה.
+// עד 05.09 בוחן שעבר הציג 100% גם עם 3 דפים מתוך 10, ותלמיד ראה "הושלמה ✓" מוקדם מדי (דוח B).
 function bagrutUnitPercent_(p) {
   if (!p) return 0;
-  if (String(p.completed) === 'true') return 100;
   const total = Number(p.page_total) || 0;
   const done = Number(p.pages_done) || 0;
-  return total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  if (total) return Math.min(100, Math.round((done / total) * 100));
+  return String(p.completed) === 'true' ? 100 : 0; // יחידה ישנה בלי מעקב דפים
+}
+function bagrutUnitComplete_(p) {
+  if (!p) return false;
+  const total = Number(p.page_total) || 0;
+  if (total) return (Number(p.pages_done) || 0) >= total;
+  return String(p.completed) === 'true';
 }
 
 /**
@@ -115,12 +123,13 @@ function getBagrutTeacherDashboard({ verifiedEmail }) {
         total_questions: p && Number(p.total_questions) ? Number(p.total_questions) : u.total_questions,
         attempts: p ? Number(p.attempts) || 0 : 0,
         completed: p ? String(p.completed) === 'true' : false,
+        unit_complete: bagrutUnitComplete_(p),
         percent: bagrutUnitPercent_(p),
         last_activity: p ? p.last_activity : ''
       };
     });
     const counted = units.filter((u, i) => BAGRUT_UNITS[i].counts_for_percent !== false);
-    const completedCount = units.filter(u => u.completed).length;
+    const completedCount = units.filter(u => u.unit_complete).length;
     const percent = counted.length ? Math.round(counted.reduce((sum, u) => sum + u.percent, 0) / counted.length) : 0;
     // ציון מיטבי = אחוז הטוב ביותר בבוחן כלשהו; פעילות אחרונה = המאוחרת מבין התקדמות ותשובות פתוחות
     const scored = units.filter(u => u.attempts > 0 && u.total_questions > 0);
@@ -321,6 +330,7 @@ function getBagrutMyProgress({ verifiedEmail }) {
       best_score: p ? Number(p.best_score) || 0 : 0,
       attempts: p ? Number(p.attempts) || 0 : 0,
       completed: p ? String(p.completed) === 'true' : false,
+      unit_complete: bagrutUnitComplete_(p),
       percent: bagrutUnitPercent_(p),
       pages_done: p ? Number(p.pages_done) || 0 : 0,
       page_total: p ? Number(p.page_total) || 0 : 0,
@@ -507,10 +517,19 @@ const BAGRUT_UNIT_FOLDER_KEYS = {
   galil: ['גליל']
 };
 const BAGRUT_GENERAL_FOLDER_KEYS = ['מושגים', 'כללי'];
-const BAGRUT_CONTEXT_MAX_CHARS = 150000;
-const BAGRUT_CONTEXT_FALLBACK_MAX_CHARS = 150000;
+const BAGRUT_CONTEXT_MAX_CHARS = 60000; // 143K לקח 27 שניות; 25K לקח 32 (עומס), אז הגודל הוא רק חלק מהסיפור, אבל כל תו עולה זמן
+const BAGRUT_CONTEXT_FALLBACK_MAX_CHARS = 60000;
 
-function bagrutKnowledgeForUnit_(knowledge, unit_id) {
+// דירוג רלוונטיות פשוט: כמה ממילות השאלה (3 תווים ומעלה) מופיעות בקובץ. הקבצים הרלוונטיים נכנסים ראשונים לתקרה.
+function bagrutRelevance_(text, query) {
+  if (!query) return 0;
+  const words = String(query).replace(/[^\u0590-\u05FFA-Za-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3);
+  const uniq = {};
+  words.forEach(w => { uniq[w.replace(/^[והבכלמש]/, '')] = true; uniq[w] = true; });
+  const t = String(text || '');
+  return Object.keys(uniq).filter(w => w.length >= 3 && t.indexOf(w) !== -1).length;
+}
+function bagrutKnowledgeForUnit_(knowledge, unit_id, query) {
   const keys = BAGRUT_UNIT_FOLDER_KEYS[unit_id] || [];
   const hit = (k, list) => list.some(w => String(k.folder_path || '').indexOf(w) !== -1 || String(k.file_name || '').indexOf(w) !== -1);
   // קבצים כפולים (אותו שם ב-doc וב-pdf, או "(1)"): שומרים את הגרסה הארוכה
@@ -521,9 +540,10 @@ function bagrutKnowledgeForUnit_(knowledge, unit_id) {
     if (!byName[key] || String(k.text || '').length > String(byName[key].text || '').length) byName[key] = k;
   });
   const unique = Object.keys(byName).map(k => byName[k]);
-  const unitRows = keys.length ? unique.filter(k => hit(k, keys)) : [];
-  const generalRows = unique.filter(k => hit(k, BAGRUT_GENERAL_FOLDER_KEYS) && !hit(k, keys));
-  const ordered = unitRows.length ? unitRows.concat(generalRows) : unique;
+  const byRelevance = (rows) => rows.map((k, i) => ({ k, i, r: bagrutRelevance_(k.text, query) })).sort((a, b) => b.r - a.r || a.i - b.i).map(x => x.k);
+  const unitRows = keys.length ? byRelevance(unique.filter(k => hit(k, keys))) : [];
+  const generalRows = byRelevance(unique.filter(k => hit(k, BAGRUT_GENERAL_FOLDER_KEYS) && !hit(k, keys)));
+  const ordered = unitRows.length ? unitRows.concat(generalRows) : byRelevance(unique);
   const cap = unitRows.length ? BAGRUT_CONTEXT_MAX_CHARS : BAGRUT_CONTEXT_FALLBACK_MAX_CHARS;
   const picked = [];
   let total = 0;
@@ -569,7 +589,7 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   }
   const knowledge = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));
   if (!knowledge.length) throw new Error('מאגר החומר עדיין לא נסרק. יש להריץ פעם אחת את installBagrutDailyTrigger מעורך ה-Apps Script.');
-  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id);
+  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id, question + ' ' + answer);
   const context = bagrutContextText_(picked.rows);
 
   const groundingRules = 'ענה אך ורק על סמך החומר המצורף למטה, שמקורו בחומרי ההוראה האמיתיים של המורה. ' +
@@ -615,7 +635,7 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
     }
   }
   // חלון אבחון (05.09): כל בדיקה נרשמת עם משך, כדי להשוות לזמן שהתלמיד ראה בדפדפן
-  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched + ' attempts=' + attempts + (firstError ? ' first_error=' + firstError : '') + ' total_since_start=' + (Date.now() - tStart) + 'ms', 0);
+  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched + ' attempts=' + attempts + (firstError ? ' first_error=' + firstError : '') + ' model=' + (callGemini.last ? callGemini.last.model + '/' + callGemini.last.mode : '?') + ' total_since_start=' + (Date.now() - tStart) + 'ms', 0);
 
   const confidenceMatch = rawReply.match(/מידת ביטחון:\s*(גבוהה|נמוכה)\s*$/);
   const confidence = confidenceMatch ? (confidenceMatch[1] === 'גבוהה' ? 'high' : 'low') : 'high';
@@ -954,7 +974,7 @@ function askBagrutBot({ question, mode, bagrut_question, token, unit_id }) {
   }
 
   // עם unit_id (המנוע המשותף שולח אותו) החומר מצומצם לחבל + מושגים כלליים; בלעדיו: הכול, בלי כפילויות ועם תקרה
-  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id);
+  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id, question + ' ' + (bagrut_question || ''));
   const context = bagrutContextText_(picked.rows);
   const groundingRules = 'ענה אך ורק על סמך החומר המצורף למטה, שמקורו בחומרי ההוראה האמיתיים של המורה. ' +
     'אסור לך להשתמש בשום ידע חיצוני או כללי — רק במה שכתוב בחומר. אם התשובה לשאלה אינה ' +
@@ -985,7 +1005,7 @@ function askBagrutBot({ question, mode, bagrut_question, token, unit_id }) {
       reply = 'המאמן קצת עמוס כרגע, נסו שוב בעוד רגע';
     }
   }
-  bagrutLogSlow_('askBagrutBot', Date.now() - t0, 'unit=' + (unit_id || '') + ' chars=' + picked.chars + ' files=' + picked.rows.length);
+  bagrutLogSlow_('askBagrutBot', Date.now() - t0, 'unit=' + (unit_id || '') + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' model=' + (callGemini.last ? callGemini.last.model + '/' + callGemini.last.mode : '?'), 8000);
   return { reply };
 }
 
