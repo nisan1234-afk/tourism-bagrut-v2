@@ -163,6 +163,50 @@
     if ($('unitPercent')) $('unitPercent').textContent = pct + '%';
     if ($('unitMeter')) $('unitMeter').style.width = pct + '%';
     $$('#pageNav button').forEach((b) => b.classList.toggle('done', state.done.includes(b.dataset.page)));
+    renderHome();
+  }
+
+  // ---------- כרטיס "המאמן האישי / המוכנות שלי" (זהה בכל יחידה, מצויר בראש הדף הראשון) ----------
+  // המשימה הבאה = הדף הראשון שלא הושלם. שלושת סימני המוכנות אחידים: להבין (כל דפי התוכן), לזהות (דף התמונות),
+  // לענות כמו בבגרות (בוחן שעבר, או מאגר הבגרות אם אין בוחן).
+  const homeCard = panels.length ? document.createElement('section') : null;
+  if (homeCard) {
+    homeCard.className = 'student-coach-home';
+    homeCard.id = 'unitHome';
+    panels[0].prepend(homeCard);
+    homeCard.addEventListener('click', (e) => {
+      const go = e.target.closest('[data-goto-page]');
+      if (go) {
+        e.preventDefault();
+        show(pages.indexOf(go.dataset.gotoPage));
+      }
+      if (e.target.closest('[data-coach-open]')) $('coachWidget')?.classList.add('open');
+    });
+  }
+  function pageTitle(id) {
+    return ($$('#pageNav button').find((b) => b.dataset.page === id)?.textContent || panelOf(id)?.dataset.pageTitle || id).trim().replace(/^\d+\.\s*/, '');
+  }
+  function renderHome() {
+    if (!homeCard) return;
+    const pct = pages.length ? Math.round((state.done.length / pages.length) * 100) : 0;
+    const next = pages.find((id) => !state.done.includes(id));
+    const contentPages = pages.filter((id) => kindOf(id) === 'content');
+    const understood = contentPages.length > 0 && contentPages.every((id) => state.done.includes(id));
+    const recognized = pages.includes('images') ? state.done.includes('images') : false;
+    const answered = QUIZ.length ? Boolean(state.quiz && state.quiz.best / state.quiz.total >= PASS_RATIO) : EXAM.length ? EXAM_KEYS.length > 0 && EXAM_KEYS.every((k) => state.examPassed.includes(k)) : state.done.includes('practice');
+    const started = state.done.length > 0;
+    homeCard.innerHTML =
+      '<div class="coach-welcome"><span>המאמן האישי שלך לבגרות</span>' +
+      '<h2>' + (next ? (started ? 'ממשיכים בדיוק מהמקום שעצרת' : 'יוצאים לדרך ב' + escapeHtml(UNIT.label)) : 'סיימת את ' + escapeHtml(UNIT.label) + ' ✓') + '</h2>' +
+      '<p>' + (next ? (started ? 'כבר בנית בסיס טוב. המשימה הבאה קצרה ומחברת ישירות למה שצריך לדעת לבגרות.' : pages.length + ' דפים קצרים, תמונות ומשחקים, ובסוף תדע בדיוק אם אתה מוכן.') : 'אפשר לחזור לכל דף, לתרגל שוב ולשפר ציון.') + '</p>' +
+      '<div class="coach-actions">' +
+      (next ? '<a class="button button-primary button-large" href="#' + next + '" data-goto-page="' + next + '">המשימה הבאה: ' + escapeHtml(pageTitle(next)) + ' ←</a><small>דף ' + (pages.indexOf(next) + 1) + ' מתוך ' + pages.length + ' · אפשר לעצור בכל רגע</small>' : '<a class="button button-primary button-large" href="#practice" data-goto-page="' + (pages.includes('practice') ? 'practice' : pages[pages.length - 1]) + '">לתרגל שוב ←</a>') +
+      '</div></div>' +
+      '<aside class="readiness-card"><span>המוכנות שלי</span><strong>' + pct + '%</strong><div class="meter"><i style="width:' + pct + '%"></i></div><ul>' +
+      '<li class="' + (understood ? 'done' : '') + '">להבין את האזור</li>' +
+      '<li class="' + (recognized ? 'done' : '') + '">לזהות את האתרים</li>' +
+      '<li class="' + (answered ? 'done' : '') + '">לענות כמו בבגרות</li></ul>' +
+      '<button class="coach-help" type="button" data-coach-open>לא בטוח מה לעשות? שאל את המאמן</button></aside>';
   }
 
   // ---------- ניווט ----------

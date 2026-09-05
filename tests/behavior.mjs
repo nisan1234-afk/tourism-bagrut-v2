@@ -152,6 +152,10 @@ for (const file of unitFiles) {
   expect((await page.textContent('#pageCounter')).includes(`מתוך ${pages.length}`), 'מונה הדפים לא תואם למספר הדפים');
   expect((await page.textContent('#unitPercent')) === '0%', 'התקדמות התחלתית אינה 0%');
   expect((await page.$$eval('[data-page-panel]', (els) => els.filter((e) => !e.hidden).length)) === 1, 'יותר מדף אחד גלוי');
+  // כרטיס המוכנות זהה בכל יחידה: מצויר בראש הדף הראשון, מצביע על הדף הראשון שלא הושלם
+  expect((await page.locator('#unitHome .readiness-card strong').textContent()) === '0%', 'כרטיס המוכנות לא מתחיל מ-0%');
+  expect((await page.locator('#unitHome [data-goto-page]').getAttribute('data-goto-page')) === pages[0], 'המשימה הבאה בהתחלה אינה הדף הראשון');
+  expect((await page.locator('#unitHome li.done').count()) === 0, 'סימני מוכנות דלוקים לפני שהתחילו');
 
   const games = Array.isArray(data.games) ? data.games : [];
   const kinds = await page.$$eval('[data-page-panel]', (els) => Object.fromEntries(els.map((e) => [e.dataset.pagePanel, e.dataset.pageKind || (e.dataset.pagePanel === 'open-practice' ? 'exam' : ['images', 'presentation', 'practice', 'games'].includes(e.dataset.pagePanel) ? e.dataset.pagePanel : 'content')])));
@@ -276,6 +280,11 @@ for (const file of unitFiles) {
   const pct = await page.textContent('#unitPercent');
   const expected = data.quiz.length ? '100%' : `${Math.round(((pages.length - 1) / pages.length) * 100)}%`;
   expect(pct === expected, `התקדמות סופית ${pct}, ציפיתי ${expected}`);
+  await page.click(`#pageNav button[data-page="${pages[0]}"]`);
+  expect((await page.locator('#unitHome .readiness-card strong').textContent()) === expected, 'כרטיס המוכנות לא מציג את ההתקדמות הסופית');
+  const doneMarks = await page.locator('#unitHome li.done').count();
+  expect(doneMarks === (data.quiz.length ? 3 : 2), `סימני מוכנות: ${doneMarks} (ציפיתי ${data.quiz.length ? 3 : 2})`);
+  if (data.quiz.length) expect((await page.locator('#unitHome h2').textContent()).includes('סיימת'), 'אחרי 100% הכרטיס לא מברך על סיום');
   // רענון: המצב נשמר מקומית
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(200);

@@ -3437,6 +3437,16 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   color: var(--muted);
 }
 
+/* כרטיס המוכנות (unit-runtime, זהה בכל יחידה) */
+.lesson-page > .student-coach-home {
+  margin: 0 0 28px;
+}
+@media (max-width: 760px) {
+  .student-coach-home {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* דוח שיעור (טאב סקירה, דשבורד המורה) */
 .lesson-report {
   margin-top: 18px;
