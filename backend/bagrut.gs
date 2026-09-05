@@ -434,22 +434,35 @@ function bagrutSanitizeForPrompt_(text) {
  * סורקת מחדש את כל תיקיית החומר ובונה מאגר ידע טקסטואלי בטאב knowledge_base.
  * מיועדת לרוץ פעם ביום דרך טריגר (ר' installBagrutDailyTrigger) — לא endpoint רשת.
  */
+// סריקה מדורגת (05.09): קובץ שלא השתנה מאז הסריקה הקודמת לא מומר שוב (הטקסט נלקח מהגיליון), ויש תקציב זמן
+// כדי לא לחרוג ממגבלת 6 הדקות של Apps Script. מה שלא הספיק ייסרק בהרצה הבאה (הכפתור או הטריגר היומי).
+const BAGRUT_SCAN_TIME_BUDGET_MS = 4.5 * 60 * 1000;
+
 function refreshBagrutKnowledgeBase() {
   return withLock(() => {
-    const results = [];
-    const skipped = [];
-    const rootFolder = DriveApp.getFolderById(BAGRUT_MATERIAL_FOLDER_ID);
-    bagrutWalkFolder_(rootFolder, rootFolder.getName(), results, 0, skipped);
-
+    const started = Date.now();
     const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
     const sheet = ensureBagrutKnowledgeSheet_(ss);
+    const previous = {};
+    sheetToObjects(sheet).forEach(r => { if (r.file_id) previous[r.file_id] = r; });
+    const results = [];
+    const skipped = [];
+    const state = { started: started, previous: previous, reused: 0, converted: 0, deferred: 0 };
+    const rootFolder = DriveApp.getFolderById(BAGRUT_MATERIAL_FOLDER_ID);
+    bagrutWalkFolder_(rootFolder, rootFolder.getName(), results, 0, skipped, state);
+
+    const now = new Date().toISOString();
     sheet.clearContents();
     sheet.appendRow(['file_id', 'file_name', 'folder_path', 'text', 'char_count', 'last_scanned']);
-    const now = new Date().toISOString();
     if (results.length) {
-      sheet.getRange(2, 1, results.length, 6).setValues(results.map(r => [r.fileId, r.fileName, r.folderPath, r.text, r.text.length, now]));
+      sheet.getRange(2, 1, results.length, 6).setValues(results.map(r => [r.fileId, r.fileName, r.folderPath, r.text, r.text.length, r.scannedAt || now]));
     }
-    return { scanned: results.length, chars: results.reduce((s, r) => s + r.text.length, 0), skipped: skipped, files: results.map(r => ({ name: r.fileName, folder: r.folderPath, chars: r.text.length })), scanned_at: now };
+    return {
+      scanned: results.length, converted: state.converted, reused: state.reused, deferred: state.deferred,
+      chars: results.reduce((s, r) => s + r.text.length, 0), skipped: skipped,
+      files: results.map(r => ({ name: r.fileName, folder: r.folderPath, chars: r.text.length })), scanned_at: now,
+      seconds: Math.round((Date.now() - started) / 1000)
+    };
   });
 }
 
@@ -470,9 +483,10 @@ function getBagrutKnowledgeSummary({ verifiedEmail }) {
   };
 }
 
-function bagrutWalkFolder_(folder, pathPrefix, results, depth, skipped) {
+function bagrutWalkFolder_(folder, pathPrefix, results, depth, skipped, state) {
   if (depth > 4) return;
   skipped = skipped || [];
+  state = state || { started: Date.now(), previous: {}, reused: 0, converted: 0, deferred: 0 };
   const files = folder.getFiles();
   while (files.hasNext()) {
     const file = files.next();
@@ -482,8 +496,24 @@ function bagrutWalkFolder_(folder, pathPrefix, results, depth, skipped) {
       continue;
     }
     if (file.getSize() > BAGRUT_MAX_FILE_BYTES) { skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'גדול מ-30MB' }); continue; }
+    const prev = state.previous[file.getId()];
+    const unchanged = prev && prev.last_scanned && file.getLastUpdated().getTime() <= new Date(prev.last_scanned).getTime() && String(prev.text || '').trim();
+    if (unchanged) {
+      // לא השתנה מאז הסריקה הקודמת: משתמשים בטקסט השמור (בלי המרה יקרה)
+      results.push({ fileId: file.getId(), fileName: file.getName(), folderPath: pathPrefix, text: String(prev.text), scannedAt: prev.last_scanned });
+      state.reused++;
+      continue;
+    }
+    if (Date.now() - state.started > BAGRUT_SCAN_TIME_BUDGET_MS) {
+      // נגמר תקציב הזמן: שומרים את מה שהיה (אם היה) ומסמנים להמשך בהרצה הבאה
+      if (prev && String(prev.text || '').trim()) results.push({ fileId: file.getId(), fileName: file.getName(), folderPath: pathPrefix, text: String(prev.text), scannedAt: prev.last_scanned });
+      skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'נדחה להרצה הבאה (נגמר זמן הסריקה)' });
+      state.deferred++;
+      continue;
+    }
     try {
       const text = bagrutFixReversedHebrew_(bagrutExtractFileText_(file));
+      state.converted++;
       if (text && text.trim()) {
         results.push({ fileId: file.getId(), fileName: file.getName(), folderPath: pathPrefix, text: text.slice(0, BAGRUT_MAX_TEXT_CHARS_PER_FILE) });
       } else skipped.push({ name: file.getName(), folder: pathPrefix, reason: 'לא נמצא טקסט (אולי סריקה של תמונות)' });
@@ -495,7 +525,7 @@ function bagrutWalkFolder_(folder, pathPrefix, results, depth, skipped) {
   const subfolders = folder.getFolders();
   while (subfolders.hasNext()) {
     const sub = subfolders.next();
-    bagrutWalkFolder_(sub, pathPrefix + '/' + sub.getName(), results, depth + 1, skipped);
+    bagrutWalkFolder_(sub, pathPrefix + '/' + sub.getName(), results, depth + 1, skipped, state);
   }
 }
 

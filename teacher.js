@@ -673,7 +673,8 @@ document.getElementById('rescanKnowledge')?.addEventListener('click', async () =
   try {
     const data = await teacherAPI('refreshBagrutKnowledge');
     const skipped = data.skipped || [];
-    status.innerHTML = `נסרקו <b>${data.scanned}</b> קבצים (${Math.round((data.chars || 0) / 1000)}K תווים).` + (skipped.length ? ` דולגו ${skipped.length}: ` + skipped.map((x) => safe(x.name) + ' (' + safe(x.reason) + ')').join(', ') : ' הכול נקלט.');
+    const deferred = skipped.filter((x) => /נדחה/.test(x.reason)).length;
+    status.innerHTML = `נסרקו <b>${data.scanned}</b> קבצים (${Math.round((data.chars || 0) / 1000)}K תווים, ${data.converted ?? '?'} הומרו מחדש, ${data.seconds ?? '?'} שניות).` + (deferred ? ` <b>${deferred} קבצים נדחו להרצה הבאה</b>, לחצו שוב על הכפתור.` : '') + (skipped.length - deferred > 0 ? ` דולגו: ` + skipped.filter((x) => !/נדחה/.test(x.reason)).map((x) => safe(x.name) + ' (' + safe(x.reason) + ')').join(', ') : ' הכול נקלט.');
     await loadKnowledgeSummary();
   } catch (e) {
     status.textContent = /לא ענה בזמן|Failed to fetch|NetworkError/.test(e.message) ? 'הסריקה ממשיכה בשרת. רעננו את הדף בעוד 2–3 דקות כדי לראות את הרשימה המעודכנת.' : 'הסריקה נכשלה: ' + e.message;
