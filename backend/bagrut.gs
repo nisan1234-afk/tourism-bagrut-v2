@@ -493,6 +493,59 @@ function bagrutBotDailyCapCheck_() {
   cache.put(key, String(count + 1), 21600);
 }
 
+
+// ========== מאגר הידע לפי יחידה (05.09.2026, אחרי דוח הבדיקה החיה) ==========
+// עד עכשיו כל בדיקה שלחה לג'מיני את כל המאגר (~260K תווים, כולל קבצים כפולים doc/pdf), ולכן
+// "בדיקה בעזרת הבוט" לקחה 40–90 שניות. עכשיו שולחים רק את תיקיית החבל + חומר כללי (מושגים), בלי כפילויות,
+// ועם תקרת גודל. הבדיקה מהירה יותר וגם מדויקת יותר (פחות "זה לא מופיע בחומר").
+const BAGRUT_UNIT_FOLDER_KEYS = {
+  mishor_hachof: ['מישור החוף'],
+  haamakim: ['העמקים', 'עמקים'],
+  yam_hamelach: ['ים המלח', 'מדבר יהודה'],
+  yerushalayim: ['ירושלים'],
+  hashivut: ['חשיבות'],
+  galil: ['גליל']
+};
+const BAGRUT_GENERAL_FOLDER_KEYS = ['מושגים', 'כללי'];
+const BAGRUT_CONTEXT_MAX_CHARS = 150000;
+const BAGRUT_CONTEXT_FALLBACK_MAX_CHARS = 150000;
+
+function bagrutKnowledgeForUnit_(knowledge, unit_id) {
+  const keys = BAGRUT_UNIT_FOLDER_KEYS[unit_id] || [];
+  const hit = (k, list) => list.some(w => String(k.folder_path || '').indexOf(w) !== -1 || String(k.file_name || '').indexOf(w) !== -1);
+  // קבצים כפולים (אותו שם ב-doc וב-pdf, או "(1)"): שומרים את הגרסה הארוכה
+  const byName = {};
+  knowledge.forEach(k => {
+    const base = String(k.file_name || '').replace(/\.[a-z0-9]+$/i, '').replace(/\s*\(\d+\)\s*$/, '').trim();
+    const key = String(k.folder_path || '') + '|' + base;
+    if (!byName[key] || String(k.text || '').length > String(byName[key].text || '').length) byName[key] = k;
+  });
+  const unique = Object.keys(byName).map(k => byName[k]);
+  const unitRows = keys.length ? unique.filter(k => hit(k, keys)) : [];
+  const generalRows = unique.filter(k => hit(k, BAGRUT_GENERAL_FOLDER_KEYS) && !hit(k, keys));
+  const ordered = unitRows.length ? unitRows.concat(generalRows) : unique;
+  const cap = unitRows.length ? BAGRUT_CONTEXT_MAX_CHARS : BAGRUT_CONTEXT_FALLBACK_MAX_CHARS;
+  const picked = [];
+  let total = 0;
+  ordered.forEach(k => {
+    const text = String(k.text || '');
+    if (total + text.length > cap) return;
+    picked.push(k);
+    total += text.length;
+  });
+  return { rows: picked, chars: total, unitMatched: unitRows.length > 0 };
+}
+function bagrutContextText_(rows) {
+  return rows.map(k => '### ' + k.file_name + ' (' + k.folder_path + ')\n' + k.text).join('\n\n');
+}
+function bagrutLogSlow_(what, ms, extra) {
+  if (ms < 20000) return;
+  try {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    appendRow(ensureBagrutErrorLogSheet_(ss), { page: 'server', message: what + ' איטי: ' + Math.round(ms / 1000) + ' שניות', context: String(extra || '').slice(0, 500), timestamp: new Date().toISOString() });
+  } catch (_) { /* לא מפילים פעולה בגלל לוג */ }
+}
+
 function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   if (!question || !question.trim()) throw new Error('חסרה שאלה');
   if (!answer || !answer.trim()) throw new Error('נא לכתוב תשובה');
@@ -502,9 +555,21 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   const emailNorm = stripInvisible_(verifiedEmail);
   const student = students.find(s => stripInvisible_(s.email) === emailNorm);
   if (!student) throw new Error('אין לך גישה למקצוע תיירות בגרות. פנה/י למורה כדי שיוסיף/תוסיף אותך.');
+  // אותה תשובה שנשלחה שוב תוך 15 דקות (למשל אחרי שהדפדפן התייאש מלחכות) לא נשמרת פעמיים:
+  // מחזירים את המשוב שכבר נשמר. זה מה שמונע כפילויות כשהתלמיד לוחץ שוב.
+  const recentSame = sheetToObjects(ensureBagrutOpenAnswersSheet_(ss))
+    .filter(o => stripInvisible_(o.email) === emailNorm && String(o.unit_id) === String(unit_id || '') &&
+      String(o.question) === question.slice(0, 500) && String(o.answer) === answer.slice(0, 3000) &&
+      Date.now() - new Date(o.timestamp).getTime() < 15 * 60 * 1000)
+    .pop();
+  if (recentSame) {
+    const review = sheetToObjects(ensureBagrutOpenAnswerReviewsSheet_(ss)).find(r => r.answer_key === emailNorm + '|' + recentSame.timestamp);
+    return { feedback: String(recentSame.feedback || ''), status: review ? review.status : 'auto', confidence: review ? review.confidence : 'high', duplicate: true };
+  }
   const knowledge = sheetToObjects(ensureBagrutKnowledgeSheet_(ss));
   if (!knowledge.length) throw new Error('מאגר החומר עדיין לא נסרק. יש להריץ פעם אחת את installBagrutDailyTrigger מעורך ה-Apps Script.');
-  const context = knowledge.map(k => '### ' + k.file_name + ' (' + k.folder_path + ')\n' + k.text).join('\n\n');
+  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id);
+  const context = bagrutContextText_(picked.rows);
 
   const groundingRules = 'ענה אך ורק על סמך החומר המצורף למטה, שמקורו בחומרי ההוראה האמיתיים של המורה. ' +
     'אסור לך להשתמש בשום ידע חיצוני או כללי — רק במה שכתוב בחומר. אם התשובה לשאלה אינה ' +
@@ -531,6 +596,7 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
   const promptForCheck = bagrutSanitizeForPrompt_(systemPrompt) + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---';
   const answerForCheck = 'זו התשובה שכתבתי: "' + bagrutSanitizeForPrompt_(answer) + '"';
   let rawReply;
+  const t0 = Date.now();
   try {
     rawReply = callGemini(promptForCheck, answerForCheck);
   } catch (e1) {
@@ -542,6 +608,7 @@ function submitOpenAnswer({ verifiedEmail, unit_id, question, answer }) {
       rawReply = 'הבודק האוטומטי לא זמין כרגע. התשובה נשמרה ותיבדק על ידי המורה.\nמידת ביטחון: נמוכה';
     }
   }
+  bagrutLogSlow_('submitOpenAnswer', Date.now() - t0, 'unit=' + unit_id + ' chars=' + picked.chars + ' files=' + picked.rows.length + ' matched=' + picked.unitMatched);
 
   const confidenceMatch = rawReply.match(/מידת ביטחון:\s*(גבוהה|נמוכה)\s*$/);
   const confidence = confidenceMatch ? (confidenceMatch[1] === 'גבוהה' ? 'high' : 'low') : 'high';
@@ -863,7 +930,7 @@ function logClientError({ page, message, context }) {
  * אחד לא יכול לחסום את כל הכיתה, ותלמיד/ה מחובר/ת לא נחסם/ת בגלל אורחים.
  * callGemini עטוף בניסיון חוזר יחיד; בכשל כפול חוזרת הודעה ידידותית ולא שגיאת API גולמית.
  */
-function askBagrutBot({ question, mode, bagrut_question, token }) {
+function askBagrutBot({ question, mode, bagrut_question, token, unit_id }) {
   if (!question || !question.trim()) throw new Error('נא לכתוב שאלה');
   if (question.length > 500) throw new Error('השאלה ארוכה מדי');
   let callerEmail = '';
@@ -879,7 +946,9 @@ function askBagrutBot({ question, mode, bagrut_question, token }) {
     throw new Error('מאגר החומר עדיין לא נסרק. יש להריץ פעם אחת את installBagrutDailyTrigger מעורך ה-Apps Script.');
   }
 
-  const context = knowledge.map(k => '### ' + k.file_name + ' (' + k.folder_path + ')\n' + k.text).join('\n\n');
+  // עם unit_id (המנוע המשותף שולח אותו) החומר מצומצם לחבל + מושגים כלליים; בלעדיו: הכול, בלי כפילויות ועם תקרה
+  const picked = bagrutKnowledgeForUnit_(knowledge, unit_id);
+  const context = bagrutContextText_(picked.rows);
   const groundingRules = 'ענה אך ורק על סמך החומר המצורף למטה, שמקורו בחומרי ההוראה האמיתיים של המורה. ' +
     'אסור לך להשתמש בשום ידע חיצוני או כללי — רק במה שכתוב בחומר. אם התשובה לשאלה אינה ' +
     'מופיעה בחומר, אמור זאת במפורש ("זה לא מופיע בחומר שיש לי") ואל תמציא תשובה. ענה בעברית, קצר וברור.';
@@ -898,6 +967,7 @@ function askBagrutBot({ question, mode, bagrut_question, token }) {
   const fullPrompt = systemPrompt + '\n\n--- החומר ---\n' + context + '\n--- סוף החומר ---';
 
   let reply;
+  const t0 = Date.now();
   try {
     reply = callGemini(fullPrompt, question);
   } catch (e1) {
@@ -908,6 +978,7 @@ function askBagrutBot({ question, mode, bagrut_question, token }) {
       reply = 'המאמן קצת עמוס כרגע, נסו שוב בעוד רגע';
     }
   }
+  bagrutLogSlow_('askBagrutBot', Date.now() - t0, 'unit=' + (unit_id || '') + ' chars=' + picked.chars + ' files=' + picked.rows.length);
   return { reply };
 }
 

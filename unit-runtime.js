@@ -74,15 +74,22 @@
     if (window.kitahSession?.isExpired()) return 'הכניסה פגה. היכנסו מחדש כדי לשמור.';
     return '';
   }
+  // כל קריאה לשרת מוגבלת בזמן: ממשק שנתקע על "שולח…" לנצח הוא באג בפני עצמו (דוח בדיקה חיה, 05.09)
+  const API_TIMEOUT_MS = Number(window.TB_API_TIMEOUT_MS) || 50000;
   async function api(action, params = {}) {
     const problem = sessionProblem();
     if (problem) throw new Error(problem);
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), API_TIMEOUT_MS) : null;
     let res, data;
     try {
-      res = await fetch(API, { method: 'POST', body: JSON.stringify({ action, token: getUser().token, ...params }) });
+      res = await fetch(API, { method: 'POST', body: JSON.stringify({ action, token: getUser().token, ...params }), signal: controller?.signal });
       data = await res.json();
-    } catch (_) {
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw new Error('השרת לא ענה בזמן (יותר מ-' + Math.round(API_TIMEOUT_MS / 1000) + ' שניות)');
       throw new Error('אין חיבור לשרת כרגע. נסו שוב בעוד רגע.');
+    } finally {
+      clearTimeout(timer);
     }
     if (!data.ok) throw new Error(data.error || 'שגיאה');
     return data.data;
@@ -323,7 +330,7 @@
     try {
       const data = await api('submitOpenAnswer', { unit_id: UNIT.id, question, answer });
       const statusLine =
-        data?.status === 'pending_review' ? 'נשמר ✓ · הבודק לא היה בטוח, התשובה ממתינה לבדיקת המורה.' : 'נשמר בכיתה פלוס ✓';
+        (data?.status === 'pending_review' ? 'נשמר ✓ · הבודק לא היה בטוח, התשובה ממתינה לבדיקת המורה.' : 'נשמר בכיתה פלוס ✓') + (data?.duplicate ? ' (תשובה זהה כבר נשמרה קודם)' : '');
       feedback.className = 'answer-feedback success';
       feedback.innerHTML =
         (data?.feedback ? '<b>משוב הבוט:</b> ' + escapeHtml(data.feedback).replace(/\n/g, '<br>') + '<br>' : '') +
@@ -951,7 +958,7 @@
     speed(game, card, body) {
       const seconds = game.seconds || 45;
       const pass = game.pass || Math.max(1, game.items.length - 1);
-      const question = el('p', 'game-speed-question', 'ענו על ' + pass + ' מתוך ' + game.items.length + ' שאלות לפני שהזמן נגמר.');
+      const question = el('p', 'game-speed-question', 'לחצו "התחלת האתגר" כשאתם מוכנים. ' + seconds + ' שניות, ' + pass + ' נכונות מתוך ' + game.items.length + '.');
       const head = el('div', 'speed-head', '<b class="speed-timer">' + seconds + '</b><span class="speed-score">0 / ' + game.items.length + '</span>');
       const choices = el('div', 'game-choices');
       const fb = el('small', 'game-feedback', 'השעון יתחיל בלחיצה');
@@ -1233,12 +1240,19 @@
       const pending = appendMsg('bot', '...חושב, רגע');
       try {
         const token = getUser()?.token || '';
-        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'askBagrutBot', question: q, mode: 'qa', bagrut_question: '', token }) });
-        const data = await res.json();
+        const controller = typeof AbortController === 'function' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), API_TIMEOUT_MS) : null;
+        let data;
+        try {
+          const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'askBagrutBot', question: q, mode: 'qa', bagrut_question: '', unit_id: UNIT.id, token }), signal: controller?.signal });
+          data = await res.json();
+        } finally {
+          clearTimeout(timer);
+        }
         if (!data.ok) throw new Error(data.error || 'שגיאה');
         pending.textContent = data.data.reply;
       } catch (err) {
-        pending.textContent = 'המאמן לא זמין כרגע (' + err.message + '). נסו שוב בעוד רגע.';
+        pending.textContent = 'המאמן לא זמין כרגע (' + (err?.name === 'AbortError' ? 'לא ענה בזמן' : err.message) + '). נסו שוב בעוד רגע.';
       }
     });
   }

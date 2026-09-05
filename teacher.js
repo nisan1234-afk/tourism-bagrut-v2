@@ -594,7 +594,10 @@ async function loadAssignment() {
 }
 async function saveAssignment(unit_id) {
   const status = document.getElementById('assignmentStatus');
+  const current = document.getElementById('assignmentCurrent');
   status.textContent = 'שומר…';
+  // עד שהשרת עונה לא מציגים מצב ישן ("אין משימה פעילה") כאילו הוא עדכני
+  if (current) current.innerHTML = '<span class="review-badge">' + (unit_id ? 'מפרסם…' : 'מבטל…') + '</span>';
   try {
     await teacherAPI('setBagrutAssignment', { unit_id, note: document.getElementById('assignmentNote').value.trim() });
     status.textContent = unit_id ? 'פורסם לתלמידים ✓' : 'המשימה בוטלה';

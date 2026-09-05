@@ -288,6 +288,33 @@ for (const file of unitFiles) {
   await context.close();
 }
 
+// שרת שלא עונה: הממשק חייב להשתחרר אחרי ה-timeout עם הודעה כנה, והתשובה נשארת בתיבה (דוח בדיקה חיה 05.09)
+{
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.addInitScript((u) => { sessionStorage.setItem('kitahUser', JSON.stringify(u)); window.TB_API_TIMEOUT_MS = 1500; }, USER);
+  await context.route('**/*', (route) => {
+    if (route.request().url().startsWith(origin)) return route.continue();
+    if (route.request().url().includes('script.google.com')) return new Promise(() => {}); // תלוי לנצח
+    return route.abort();
+  });
+  const page = await context.newPage();
+  const problems = [];
+  await page.goto(`${origin}/units/jerusalem.html`, { waitUntil: 'load' });
+  const panel = page.locator('[data-page-panel]').first();
+  await panel.locator('.check-card textarea').fill(LONG_ANSWER);
+  await panel.locator('.check-open').click();
+  await page.waitForTimeout(300);
+  if (!(await panel.locator('.answer-feedback').textContent()).includes('שולח')) problems.push('לא הוצג "שולח לבדיקה…" בזמן ההמתנה');
+  await page.waitForTimeout(1700);
+  const fb = await panel.locator('.answer-feedback').textContent();
+  if (!fb.includes('לא ענה בזמן') || !fb.includes('נשארה בתיבה')) problems.push('אחרי timeout אין הודעה כנה (' + fb.slice(0, 80) + ')');
+  if ((await panel.locator('.check-card textarea').inputValue()) !== LONG_ANSWER) problems.push('התשובה נמחקה מהתיבה אחרי timeout');
+  console.log(`${problems.length ? 'FAIL' : 'ok  '} timeout: שרת שלא עונה משחרר את הממשק תוך ${1.5}s`);
+  problems.forEach((p) => console.log('      - ' + p));
+  if (problems.length) failures++;
+  await context.close();
+}
+
 await browser.close();
 server.close();
 if (failures) { console.error(`\n${failures} יחידות נכשלו`); process.exit(1); }

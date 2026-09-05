@@ -1,6 +1,6 @@
 # תבנית יחידה אחידה — חוזה בין דף התוכן למנוע המשותף
 
-מ-04.09.2026 כל יחידת לימוד (חוץ ממישור החוף, שמחכה להעברה) בנויה מאותה תבנית ומופעלת
+מ-04.09.2026 כל יחידת לימוד (מ-05.09 גם מישור החוף) בנויה מאותה תבנית ומופעלת
 על ידי קובץ אחד: `unit-runtime.js`. הדף מספק **תוכן בלבד** (HTML סטטי + JSON), והמנוע
 מספק את כל ההתנהגות. כך כל יחידה מקבלת אוטומטית את אותה פדגוגיה ואת אותם כללי השלמה.
 
@@ -37,7 +37,12 @@
 | תוכן | כל id אחר | `h2[data-field-key]`, `.check-card` עם `label`, `textarea[data-open-question]`, `button.check-open`, `.answer-feedback`, ו-`button.complete-page` | שאלת הדף נשלחה לבדיקה בהצלחה (או שהשרת נכשל פעמיים, כדי לא לחסום למידה) |
 | תמונות | `images` | `button.visual-poster[data-recognition="<שם האתר>"]` לכל תמונה; אופציונלי מפה אילמת: `[data-match-label]` + `[data-match-target]` + `#matchFeedback`; `button.complete-page` | כל התמונות נחשפו וכל הפריטים שובצו |
 | מצגת | `presentation` | `.slide-deck` עם `#slideStage`, `#prevSlide`, `#slideCount`, `#nextSlide`, `#fullscreenSlides`; `button.complete-page` | הגיעו לשקופית האחרונה |
-| תרגול | `practice` | `#unitQuiz`, `#examBank`, `button.complete-page` | בוחן: ציון 60 ומעלה. בלי בוחן: לפחות סעיף אחד נשלח |
+| תרגול | `practice` | `#unitQuiz`, `button.complete-page` (ו-`#examBank` אם אין דף exam נפרד) | בוחן: ציון 60 ומעלה. בלי בוחן: לפחות סעיף אחד נשלח |
+| מאגר בגרות | `open-practice` או `data-page-kind="exam"` | `#examProgress`, `#examBank`, `button.complete-page` | כל הסעיפים עברו את המחוון (רוב הרכיבים נמצאו, 8 מילים לפחות) |
+| סיכום משחקים | `games` | `#gamesSummary`, `button.complete-page` | כל המשחקים ביחידה הושלמו |
+
+דף תוכן שיש בו משחקים (`games[].page`) נחשב "הושלם" רק אחרי שאלת הדף **וגם** כל המשחקים שלו.
+`#examBank` חייב להופיע באיזשהו דף (תרגול או מאגר). המנוע שומר טיוטות של כל תיבת תשובה מקומית.
 
 צילומי אתרים ונופים רק מ-`https://nisan1234-afk.github.io/jerusalem-tour/images/`. תמונות
 עיצוב ואביזרים (מפה אילמת וכו') מכל מקור, מסומנות `data-decor`.
@@ -62,7 +67,7 @@
 
 ## 5. מה המנוע שומר
 
-- מקומית: `tb:v1:<unit_id>` = `{ done, submitted, failed, recognized, matched, slidesSeen, quiz }`,
+- מקומית: `tb:v1:<unit_id>` = `{ done, submitted, failed, recognized, matched, slidesSeen, quiz, games, examPassed, drafts }`,
   ובנוסף `tourismLastVisit` ו-`tourismUnitProgress` לדף הבית.
 - בשרת (עם token): `saveBagrutUnitProgress` בכל השלמת דף, `submitOpenAnswer` בכל שליחה,
   `saveSiteKnown` בכל חשיפת תמונה, `saveBagrutQuizResult` + `updateBagrutMistakes` בסוף בוחן,
