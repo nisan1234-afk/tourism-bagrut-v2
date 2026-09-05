@@ -3344,6 +3344,99 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   }
 }
 
+/* משחקים מונחי-נתונים במנוע המשותף (unit-runtime.js, DATA.games) */
+.learning-game .game-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+.learning-game .game-body > .button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.learning-game .match-grid {
+  display: grid;
+  gap: 9px;
+}
+.learning-game .match-grid label {
+  display: grid;
+  gap: 5px;
+}
+.learning-game .match-grid.inline label {
+  grid-template-columns: 1fr 110px;
+  gap: 8px;
+  align-items: center;
+}
+.learning-game .game-clue,
+.learning-game .game-statement,
+.learning-game .game-map-prompt,
+.learning-game .game-speed-question {
+  color: var(--ink);
+  font-weight: 600;
+  margin: 0;
+}
+.chapter-game-grid .wide-game {
+  grid-column: 1 / -1;
+}
+.chapter-game-grid.single {
+  grid-template-columns: 1fr;
+}
+.chapter-game-grid .recognition-card {
+  margin: 0;
+}
+.chapter-game-grid .recognition-card > img {
+  min-height: 220px;
+  object-fit: cover;
+}
+@media (max-width: 760px) {
+  .chapter-game-grid {
+    grid-template-columns: 1fr;
+  }
+  .silent-map-game {
+    grid-template-columns: 1fr;
+  }
+}
+.region-slide .slide-accent {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--forest);
+  font-size: 12px;
+  font-weight: 700;
+}
+.lesson-page .lesson-hero {
+  margin-bottom: 22px;
+}
+.exam-question .question-label {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+}
+.exam-question .question-label em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 500;
+}
+.exam-question.answer-complete {
+  border-color: #79aa8f;
+  box-shadow: inset 0 0 0 1px #b9dbc8;
+}
+.exam-part.part-complete .exam-part-state {
+  color: #2f7a52;
+  font-weight: 700;
+}
+.answer-feedback .server-note {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
 /* דוח שיעור (טאב סקירה, דשבורד המורה) */
 .lesson-report {
   margin-top: 18px;

@@ -33,6 +33,100 @@ async function launch() {
   catch { return chromium.launch({ executablePath: ['/opt/pw-browsers/chromium', '/usr/bin/chromium'].find((p) => existsSync(p)) }); }
 }
 
+
+// פותר משחקים: מפעיל כל משחק דרך הממשק כמו תלמיד (הנתונים נקראים מ-#unitData, כמו שהתלמיד יכול)
+async function solveGame(page, panel, game, expect) {
+  const card = panel.locator(`[data-game-card="${game.id}"]`);
+  expect((await card.count()) === 1, `משחק ${game.id}: הכרטיס לא צויר`);
+  const click = (loc) => loc.dispatchEvent('click');
+  switch (game.type) {
+    case 'match': {
+      for (let i = 0; i < game.items.length; i++) await card.locator(`[data-match-item="${i}"]`).selectOption({ label: game.items[i][1] });
+      await click(card.locator('button', { hasText: 'בדיקה' }).last());
+      break;
+    }
+    case 'clues': {
+      for (const item of game.items) {
+        await click(card.locator('.game-choices button', { hasText: item[1][item[2] || 0] }).first());
+        await click(card.locator('button', { hasText: 'הרמז הבא' }));
+        await page.waitForTimeout(30);
+      }
+      break;
+    }
+    case 'order': {
+      for (let i = 0; i < game.stops.length; i++) await card.locator(`[data-order="${i}"]`).selectOption({ label: game.stops[i] });
+      await click(card.locator('button', { hasText: 'בדיקת המסלול' }));
+      break;
+    }
+    case 'memory': {
+      for (let pair = 0; pair < game.pairs.length; pair++) {
+        const two = card.locator(`.memory-board button[data-pair="${pair}"]`);
+        await click(two.nth(0));
+        await click(two.nth(1));
+      }
+      break;
+    }
+    case 'puzzle': {
+      // מחליפים עד שכל חתיכה במקומה (לכל היותר 9 החלפות)
+      for (let round = 0; round < 12; round++) {
+        const order = await card.locator('.image-puzzle button').evaluateAll((els) => els.map((e) => Number(e.dataset.piece)));
+        const pos = order.findIndex((piece, i) => piece !== i);
+        if (pos === -1) break;
+        const from = order.indexOf(pos); // איפה נמצאת החתיכה שצריכה להיות ב-pos
+        await click(card.locator(`.image-puzzle button[data-position="${pos}"]`));
+        await click(card.locator(`.image-puzzle button[data-position="${from}"]`));
+      }
+      break;
+    }
+    case 'map': {
+      const rounds = Math.min(game.rounds || 5, game.sites.length);
+      for (let r = 0; r < rounds; r++) {
+        const prompt = await card.locator('.game-map-prompt').textContent();
+        const idx = game.sites.findIndex((s) => prompt.endsWith(s[0]));
+        expect(idx >= 0, `משחק ${game.id}: לא זוהה היעד בהנחיה "${prompt}"`);
+        await click(card.locator(`[data-map-site="${idx}"]`));
+        await page.waitForTimeout(700);
+      }
+      break;
+    }
+    case 'streak': {
+      for (let n = 0; n < (game.target || 5); n++) {
+        const text = await card.locator('.game-statement').textContent();
+        const item = game.items.find((x) => x[0] === text);
+        await click(card.locator(`[data-streak-answer="${item[1] ? 'true' : 'false'}"]`));
+        await page.waitForTimeout(850);
+      }
+      break;
+    }
+    case 'speed': {
+      await click(card.locator('button', { hasText: 'התחלת האתגר' }));
+      for (const item of game.items) {
+        await click(card.locator('.game-choices button', { hasText: item[2] }).first());
+        await page.waitForTimeout(550);
+      }
+      break;
+    }
+    case 'silent-map': {
+      for (const s of game.sites) {
+        await click(card.locator(`[data-silent-label="${s[0]}"]`));
+        await click(card.locator(`[data-silent-target="${s[0]}"]`));
+      }
+      break;
+    }
+    case 'recognition': {
+      for (const item of game.items) {
+        await click(card.locator('.answer-list button', { hasText: item[0] }).first());
+        await click(card.locator('button.button-primary'));
+      }
+      break;
+    }
+    default:
+      expect(false, `משחק ${game.id}: סוג לא מוכר בבדיקה ${game.type}`);
+  }
+  await page.waitForTimeout(50);
+  expect((await card.getAttribute('class')).includes('game-complete'), `משחק ${game.id} (${game.type}): לא סומן כהושלם אחרי פתרון נכון`);
+}
+
 const { server, origin } = await serve();
 const browser = await launch();
 const unitFiles = (await readdir(join(ROOT, 'units'))).filter((f) => f.endsWith('.html'));
@@ -59,11 +153,49 @@ for (const file of unitFiles) {
   expect((await page.textContent('#unitPercent')) === '0%', 'התקדמות התחלתית אינה 0%');
   expect((await page.$$eval('[data-page-panel]', (els) => els.filter((e) => !e.hidden).length)) === 1, 'יותר מדף אחד גלוי');
 
+  const games = Array.isArray(data.games) ? data.games : [];
+  const kinds = await page.$$eval('[data-page-panel]', (els) => Object.fromEntries(els.map((e) => [e.dataset.pagePanel, e.dataset.pageKind || (e.dataset.pagePanel === 'open-practice' ? 'exam' : ['images', 'presentation', 'practice', 'games'].includes(e.dataset.pagePanel) ? e.dataset.pagePanel : 'content')])));
   for (const id of pages) {
     await page.click(`#pageNav button[data-page="${id}"]`);
     const panel = page.locator(`[data-page-panel="${id}"]`);
     const complete = { click: () => panel.locator('.complete-page').click({ force: true }) };
-    if (['images', 'presentation', 'practice'].includes(id)) {
+    const pageGames = games.filter((g) => g.page === id);
+    const kind = kinds[id];
+    if (kind === 'games') {
+      // דף סיכום: נחסם עד שכל המשחקים ביחידה הושלמו (הם מושלמים בדפים הקודמים)
+      expect((await panel.locator('#gamesSummary .practice-directory a').count()) > 0, `${id}: דף הסיכום ריק`);
+      const remaining = games.filter((g) => pages.indexOf(g.page) > pages.indexOf(id)).length;
+      await complete.click();
+      if (remaining) {
+        expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם כשנשארו משחקים`);
+        continue; // יושלם בסוף
+      }
+    } else if (kind === 'exam') {
+      const parts = await panel.locator('#examBank .exam-part').count();
+      expect(parts >= 3, `${id}: פחות מ-3 סעיפי בגרות`);
+      await complete.click();
+      expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני מענה על הסעיפים`);
+      // סעיף עם מחוון עובר גם בלי שרת (הבדיקה מקומית), והשליחה לשרת מדווחת כשל בכנות
+      const first = panel.locator('#examBank .exam-part').first();
+      await first.locator('textarea').fill('קצר מדי');
+      await first.locator('.check-exam').click({ force: true });
+      expect((await first.locator('.answer-feedback').textContent()).includes('לפחות'), `${id}: סעיף קצר לא נדחה`);
+      for (let qi = 0; qi < data.exam.length; qi++) {
+        for (let pi = 0; pi < data.exam[qi].parts.length; pi++) {
+          const part = data.exam[qi].parts[pi];
+          const terms = (part.c || []).map((c) => c[1][0]).join(' ');
+          const box = panel.locator(`textarea[data-exam="${qi}-${pi}"]`).locator('..');
+          await box.locator('textarea').fill(`${terms} ${LONG_ANSWER}`);
+          await box.locator('.check-exam').click({ force: true });
+        }
+      }
+      await page.waitForTimeout(300);
+      const fb = await first.locator('.answer-feedback').textContent();
+      expect(fb.includes('נמצאו') || fb.includes('נכשלה'), `${id}: אין משוב מקומי/כשל שרת בסעיף (${fb.slice(0, 60)})`);
+      const progress = await panel.locator('#examProgress').textContent();
+      expect(progress.startsWith(`${data.exam.length} מתוך ${data.exam.length}`), `${id}: מד המאגר לא הגיע לסוף (${progress})`);
+      await complete.click();
+    } else if (['images', 'presentation', 'practice'].includes(id)) {
       if (id === 'images') {
         const cards = panel.locator('[data-recognition]');
         const targets = panel.locator('[data-match-target]');
@@ -79,6 +211,11 @@ for (const file of unitFiles) {
           await targets.nth(i).dispatchEvent('click'); // המפה חסומה בבדיקה, היעדים חופפים
         }
         if (await targets.count()) expect((await panel.locator('#matchFeedback').textContent()).startsWith(`${await targets.count()} מתוך`), `${id}: המפה האילמת לא הושלמה`);
+        if (pageGames.length) {
+          await complete.click();
+          expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני המשחקים`);
+          for (const g of pageGames) await solveGame(page, panel, g, expect);
+        }
       }
       if (id === 'presentation' && data.slides.length) {
         await complete.click();
@@ -119,12 +256,23 @@ for (const file of unitFiles) {
       expect(fb.includes('השליחה נכשלה') && fb.includes('נשארה בתיבה'), `${id}: כשל שרת לא דווח בכנות (${fb.slice(0, 60)})`);
       await panel.locator('.check-open').click();
       await page.waitForTimeout(200);
-      await complete.click(); // אחרי שני כשלי שרת מותר להמשיך
+      if (pageGames.length) {
+        await complete.click();
+        expect(await panel.locator('.page-gate-note:not([hidden])').count() === 1, `${id}: לא נחסם לפני המשחקים`);
+        for (const g of pageGames) await solveGame(page, panel, g, expect);
+      }
+      await complete.click(); // אחרי שני כשלי שרת (ואחרי המשחקים) מותר להמשיך
     }
     const done = await page.$$eval('#pageNav button.done', (els) => els.map((e) => e.dataset.page));
-    if (!(id === 'practice' && !data.quiz.length)) expect(done.includes(id), `${id}: הדף לא סומן כהושלם`);
+    if (!(id === 'practice' && !data.quiz.length) && kind !== 'games') expect(done.includes(id), `${id}: הדף לא סומן כהושלם`);
   }
 
+  if (pages.includes('games')) {
+    await page.click('#pageNav button[data-page="games"]');
+    const summary = await page.textContent('#gamesSummary');
+    expect(summary.startsWith(`${games.length} מתוך ${games.length}`), `games: הסיכום לא מראה שכל המשחקים הושלמו (${summary.slice(0, 40)})`);
+    await page.locator('[data-page-panel="games"] .complete-page').click({ force: true });
+  }
   const pct = await page.textContent('#unitPercent');
   const expected = data.quiz.length ? '100%' : `${Math.round(((pages.length - 1) / pages.length) * 100)}%`;
   expect(pct === expected, `התקדמות סופית ${pct}, ציפיתי ${expected}`);
@@ -134,7 +282,7 @@ for (const file of unitFiles) {
   expect((await page.textContent('#unitPercent')) === expected, 'ההתקדמות לא שרדה רענון');
   if (errors.length) problems.push('שגיאות JS: ' + errors.join(' | '));
 
-  console.log(`${problems.length ? 'FAIL' : 'ok  '} ${file} (${pages.length} דפים, בוחן ${data.quiz.length})`);
+  console.log(`${problems.length ? 'FAIL' : 'ok  '} ${file} (${pages.length} דפים, בוחן ${data.quiz.length}, משחקים ${games.length})`);
   problems.forEach((p) => console.log('      - ' + p));
   if (problems.length) failures++;
   await context.close();
