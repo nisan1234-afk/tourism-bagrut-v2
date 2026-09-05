@@ -439,7 +439,12 @@ function bagrutSanitizeForPrompt_(text) {
 const BAGRUT_SCAN_TIME_BUDGET_MS = 4.5 * 60 * 1000;
 
 function refreshBagrutKnowledgeBase() {
-  return withLock(() => {
+  // הסריקה לא מחזיקה את הנעילה הגלובלית בזמן ההמרות (דקות): אחרת כל שמירה של תלמיד באותו זמן נכשלת
+  // ב-"Lock timeout". הנעילה נתפסת רק לכתיבה הקצרה לגיליון. סריקה כפולה נמנעת בדגל במטמון.
+  const cache = CacheService.getScriptCache();
+  if (cache.get('bagrut_scan_running')) throw new Error('סריקה כבר רצה ברקע. נסו שוב בעוד כמה דקות.');
+  cache.put('bagrut_scan_running', '1', 360);
+  try {
     const started = Date.now();
     const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
     const sheet = ensureBagrutKnowledgeSheet_(ss);
@@ -452,18 +457,22 @@ function refreshBagrutKnowledgeBase() {
     bagrutWalkFolder_(rootFolder, rootFolder.getName(), results, 0, skipped, state);
 
     const now = new Date().toISOString();
-    sheet.clearContents();
-    sheet.appendRow(['file_id', 'file_name', 'folder_path', 'text', 'char_count', 'last_scanned']);
-    if (results.length) {
-      sheet.getRange(2, 1, results.length, 6).setValues(results.map(r => [r.fileId, r.fileName, r.folderPath, r.text, r.text.length, r.scannedAt || now]));
-    }
+    withLock(() => {
+      sheet.clearContents();
+      sheet.appendRow(['file_id', 'file_name', 'folder_path', 'text', 'char_count', 'last_scanned']);
+      if (results.length) {
+        sheet.getRange(2, 1, results.length, 6).setValues(results.map(r => [r.fileId, r.fileName, r.folderPath, r.text, r.text.length, r.scannedAt || now]));
+      }
+    });
     return {
       scanned: results.length, converted: state.converted, reused: state.reused, deferred: state.deferred,
       chars: results.reduce((s, r) => s + r.text.length, 0), skipped: skipped,
       files: results.map(r => ({ name: r.fileName, folder: r.folderPath, chars: r.text.length })), scanned_at: now,
       seconds: Math.round((Date.now() - started) / 1000)
     };
-  });
+  } finally {
+    cache.remove('bagrut_scan_running');
+  }
 }
 
 /** סריקה מחדש מהדשבורד (מורה/אדמין), למשל אחרי שנוספו קבצים לדרייב. עלולה לקחת כמה דקות. */
