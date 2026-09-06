@@ -474,8 +474,9 @@
 
   // ---------- מצגת ----------
   let slide = 0;
+  // כתובת מלאה או נתיב מקומי (../assets/official/...) עוברים כמו שהם; שם קובץ חשוף = המאגר הישן ב-jerusalem-tour
   function slideImage(src) {
-    return /^https?:/.test(src) ? src : IMAGE_BASE + src;
+    return /^(https?:|\.{0,2}\/)/.test(src) ? src : IMAGE_BASE + src;
   }
   function renderSlide() {
     const stage = $('slideStage');

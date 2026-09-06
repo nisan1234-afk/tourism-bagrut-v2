@@ -1,0 +1,1072 @@
+[
+ {
+  "file": "jerusalem/image1.webp",
+  "site": "הקארדו",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image1.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 556
+ },
+ {
+  "file": "jerusalem/image2.webp",
+  "site": "בית כנסת החורבה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image2.jpg",
+  "w": 1200,
+  "h": 1824,
+  "kb": 268
+ },
+ {
+  "file": "jerusalem/image3.webp",
+  "site": "הכותל המערבי",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image3.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 231
+ },
+ {
+  "file": "jerusalem/image4.webp",
+  "site": "מערת המכפלה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image4.png",
+  "w": 1200,
+  "h": 900,
+  "kb": 226
+ },
+ {
+  "file": "jerusalem/image5.webp",
+  "site": "כיפת הסלע",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image5.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 211
+ },
+ {
+  "file": "jerusalem/image6.webp",
+  "site": "כנסיית המולד",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image6.png",
+  "w": 800,
+  "h": 552,
+  "kb": 63
+ },
+ {
+  "file": "jerusalem/image7.webp",
+  "site": "כנסיית הביקור",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image7.png",
+  "w": 800,
+  "h": 533,
+  "kb": 137
+ },
+ {
+  "file": "jerusalem/image8.webp",
+  "site": "היכל הספר במוזיאון ישראל",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image8.jpg",
+  "w": 1200,
+  "h": 900,
+  "kb": 53
+ },
+ {
+  "file": "jerusalem/image9.webp",
+  "site": "שוק מחנה יהודה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image9.png",
+  "w": 800,
+  "h": 600,
+  "kb": 121
+ },
+ {
+  "file": "jerusalem/image10.webp",
+  "site": "הר הצופים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image10.png",
+  "w": 800,
+  "h": 533,
+  "kb": 71
+ },
+ {
+  "file": "jerusalem/image11.webp",
+  "site": "כנסיית כל העמים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image11.png",
+  "w": 800,
+  "h": 530,
+  "kb": 100
+ },
+ {
+  "file": "jerusalem/image12.webp",
+  "site": "גבעת התחמושת",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image12.png",
+  "w": 800,
+  "h": 600,
+  "kb": 143
+ },
+ {
+  "file": "jerusalem/image13.webp",
+  "site": "עיר דוד",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image13.jpg",
+  "w": 1200,
+  "h": 1996,
+  "kb": 637
+ },
+ {
+  "file": "jerusalem/image14.webp",
+  "site": "אקווריום ישראל",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image14.png",
+  "w": 800,
+  "h": 600,
+  "kb": 72
+ },
+ {
+  "file": "jerusalem/image15.webp",
+  "site": "בית המשפט העליון",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image15.png",
+  "w": 800,
+  "h": 450,
+  "kb": 51
+ },
+ {
+  "file": "jerusalem/image16.webp",
+  "site": "מדרחוב בן יהודה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image16.png",
+  "w": 800,
+  "h": 1646,
+  "kb": 452
+ },
+ {
+  "file": "jerusalem/image17.webp",
+  "site": "טיילת החומות",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image17.png",
+  "w": 800,
+  "h": 1066,
+  "kb": 269
+ },
+ {
+  "file": "jerusalem/image18.webp",
+  "site": "נחלת שבעה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image18.png",
+  "w": 800,
+  "h": 450,
+  "kb": 91
+ },
+ {
+  "file": "jerusalem/image20.webp",
+  "site": "מוזיאון הכנסת",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image20.png",
+  "w": 960,
+  "h": 540,
+  "kb": 111
+ },
+ {
+  "file": "jerusalem/image22.webp",
+  "site": "הספרייה הלאומית",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image22.png",
+  "w": 960,
+  "h": 727,
+  "kb": 130
+ },
+ {
+  "file": "jerusalem/image23.webp",
+  "site": "כנסיית הדמעה",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image23.png",
+  "w": 800,
+  "h": 1067,
+  "kb": 118
+ },
+ {
+  "file": "jerusalem/image24.webp",
+  "site": "חדר הסעודה האחרונה (הסנקולום)",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image24.png",
+  "w": 800,
+  "h": 600,
+  "kb": 56
+ },
+ {
+  "file": "jerusalem/image25.webp",
+  "site": "מנזר לטרון",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image25.png",
+  "w": 800,
+  "h": 873,
+  "kb": 207
+ },
+ {
+  "file": "jerusalem/image26.webp",
+  "site": "כנסיית מריה מגדלנה (בצלים)",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image26.png",
+  "w": 800,
+  "h": 532,
+  "kb": 60
+ },
+ {
+  "file": "jerusalem/image27.webp",
+  "site": "הר הזיתים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image27.png",
+  "w": 800,
+  "h": 599,
+  "kb": 92
+ },
+ {
+  "file": "jerusalem/image28.webp",
+  "site": "כנסיית הדורמיציון",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image28.png",
+  "w": 800,
+  "h": 1067,
+  "kb": 130
+ },
+ {
+  "file": "jerusalem/image29.webp",
+  "site": "דרך הייסורים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image29.png",
+  "w": 800,
+  "h": 600,
+  "kb": 51
+ },
+ {
+  "file": "jerusalem/image30.webp",
+  "site": "הכנסת",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image30.png",
+  "w": 800,
+  "h": 480,
+  "kb": 56
+ },
+ {
+  "file": "jerusalem/image31.webp",
+  "site": "קבר רחל",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image31.png",
+  "w": 800,
+  "h": 545,
+  "kb": 155
+ },
+ {
+  "file": "jerusalem/image32.webp",
+  "site": "יד אבשלום",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image32.png",
+  "w": 800,
+  "h": 600,
+  "kb": 79
+ },
+ {
+  "file": "jerusalem/image33.webp",
+  "site": "הר הרצל",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image33.png",
+  "w": 800,
+  "h": 600,
+  "kb": 101
+ },
+ {
+  "file": "jerusalem/image35.webp",
+  "site": "קבר דוד",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image35.png",
+  "w": 800,
+  "h": 507,
+  "kb": 83
+ },
+ {
+  "file": "jerusalem/image36.webp",
+  "site": "כנסיית העלייה לשמיים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image36.png",
+  "w": 800,
+  "h": 1422,
+  "kb": 142
+ },
+ {
+  "file": "jerusalem/image37.webp",
+  "site": "גן הקבר",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image37.png",
+  "w": 800,
+  "h": 600,
+  "kb": 168
+ },
+ {
+  "file": "jerusalem/image38.webp",
+  "site": "מנהרות הכותל",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image38.png",
+  "w": 1200,
+  "h": 800,
+  "kb": 81
+ },
+ {
+  "file": "jerusalem/image39.webp",
+  "site": "ימין משה ומשכנות שאננים",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image39.png",
+  "w": 425,
+  "h": 600,
+  "kb": 50
+ },
+ {
+  "file": "jerusalem/image40.webp",
+  "site": "ארמון הנציב",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image40.png",
+  "w": 400,
+  "h": 600,
+  "kb": 28
+ },
+ {
+  "file": "jerusalem/image41.webp",
+  "site": "גן החיות התנ\"כי",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image41.png",
+  "w": 800,
+  "h": 533,
+  "kb": 118
+ },
+ {
+  "file": "jerusalem/image42.webp",
+  "site": "הרודיון",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image42.png",
+  "w": 800,
+  "h": 450,
+  "kb": 155
+ },
+ {
+  "file": "jerusalem/image43.webp",
+  "site": "יד לשיריון",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image43.png",
+  "w": 800,
+  "h": 451,
+  "kb": 55
+ },
+ {
+  "file": "jerusalem/image44.webp",
+  "site": "יד ושם",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image44.png",
+  "w": 960,
+  "h": 540,
+  "kb": 154
+ },
+ {
+  "file": "jerusalem/image45.webp",
+  "site": "מגדל דוד",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image45.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 332
+ },
+ {
+  "file": "jerusalem/image46.webp",
+  "site": "כנסיית הקבר",
+  "region": "jerusalem",
+  "unit": "yerushalayim",
+  "source": "images/image46.jpg",
+  "w": 1080,
+  "h": 1182,
+  "kb": 153
+ },
+ {
+  "file": "dead-sea/image48.webp",
+  "site": "נבי מוסא",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image48.png",
+  "w": 800,
+  "h": 533,
+  "kb": 125
+ },
+ {
+  "file": "dead-sea/image49.webp",
+  "site": "מנזר קרנטל",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image49.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 315
+ },
+ {
+  "file": "dead-sea/image50.webp",
+  "site": "מפעל אהבה",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image50.jpg",
+  "w": 1200,
+  "h": 553,
+  "kb": 116
+ },
+ {
+  "file": "dead-sea/image51.webp",
+  "site": "קאסר אל יהוד",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image51.png",
+  "w": 800,
+  "h": 600,
+  "kb": 108
+ },
+ {
+  "file": "dead-sea/image52.webp",
+  "site": "מצדה",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image52.png",
+  "w": 675,
+  "h": 899,
+  "kb": 150
+ },
+ {
+  "file": "dead-sea/image53.webp",
+  "site": "בית הכנסת העתיק בעין גדי",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image53.png",
+  "w": 800,
+  "h": 600,
+  "kb": 118
+ },
+ {
+  "file": "dead-sea/image54.webp",
+  "site": "מערות קומראן",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image54.png",
+  "w": 800,
+  "h": 600,
+  "kb": 125
+ },
+ {
+  "file": "dead-sea/image55.webp",
+  "site": "הר סדום",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image55.png",
+  "w": 800,
+  "h": 600,
+  "kb": 74
+ },
+ {
+  "file": "dead-sea/image56.webp",
+  "site": "ים המלח",
+  "region": "dead-sea",
+  "unit": "yam_hamelach",
+  "source": "images/image56.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 299
+ },
+ {
+  "file": "coastal/image57.webp",
+  "site": "גן לאומי קיסריה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image57.png",
+  "w": 800,
+  "h": 450,
+  "kb": 98
+ },
+ {
+  "file": "coastal/image58.webp",
+  "site": "קיסריה – האקוודוקט",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image58.png",
+  "w": 800,
+  "h": 494,
+  "kb": 64
+ },
+ {
+  "file": "coastal/image59.webp",
+  "site": "קיסריה – נמל",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image59.png",
+  "w": 800,
+  "h": 532,
+  "kb": 33
+ },
+ {
+  "file": "coastal/image60.webp",
+  "site": "קיסריה – התיאטרון הרומי",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image60.png",
+  "w": 800,
+  "h": 450,
+  "kb": 82
+ },
+ {
+  "file": "coastal/image61.webp",
+  "site": "קיסריה – השער הצלבני",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image61.png",
+  "w": 800,
+  "h": 450,
+  "kb": 94
+ },
+ {
+  "file": "coastal/image62.webp",
+  "site": "יפו העתיקה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image62.png",
+  "w": 800,
+  "h": 512,
+  "kb": 69
+ },
+ {
+  "file": "coastal/image63.webp",
+  "site": "כנסיית פטרוס הקדוש",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image63.png",
+  "w": 800,
+  "h": 450,
+  "kb": 43
+ },
+ {
+  "file": "coastal/image64.webp",
+  "site": "נמל יפו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image64.png",
+  "w": 960,
+  "h": 720,
+  "kb": 135
+ },
+ {
+  "file": "coastal/image65.webp",
+  "site": "מסגד חסן בק",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image65.png",
+  "w": 800,
+  "h": 600,
+  "kb": 57
+ },
+ {
+  "file": "coastal/image66.webp",
+  "site": "שוק הכרמל",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image66.png",
+  "w": 800,
+  "h": 864,
+  "kb": 132
+ },
+ {
+  "file": "coastal/image67.webp",
+  "site": "שוק הפשפשים",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image67.png",
+  "w": 800,
+  "h": 533,
+  "kb": 99
+ },
+ {
+  "file": "coastal/image68.webp",
+  "site": "מוזיאון הפלמ\"ח",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image68.png",
+  "w": 960,
+  "h": 720,
+  "kb": 189
+ },
+ {
+  "file": "coastal/image69.webp",
+  "site": "שרונה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image69.png",
+  "w": 800,
+  "h": 547,
+  "kb": 163
+ },
+ {
+  "file": "coastal/image70.webp",
+  "site": "שוק לוינסקי",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image70.png",
+  "w": 800,
+  "h": 600,
+  "kb": 120
+ },
+ {
+  "file": "coastal/image71.webp",
+  "site": "מדרחוב נחלת בנימין",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image71.png",
+  "w": 800,
+  "h": 600,
+  "kb": 124
+ },
+ {
+  "file": "coastal/image72.webp",
+  "site": "מתחם התחנה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image72.png",
+  "w": 800,
+  "h": 566,
+  "kb": 72
+ },
+ {
+  "file": "coastal/image73.webp",
+  "site": "פארק הירקון",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image73.png",
+  "w": 800,
+  "h": 491,
+  "kb": 104
+ },
+ {
+  "file": "coastal/image74.webp",
+  "site": "כיכר דיזינגוף",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image74.png",
+  "w": 800,
+  "h": 600,
+  "kb": 111
+ },
+ {
+  "file": "coastal/image75.webp",
+  "site": "נמל ת\"א",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image75.png",
+  "w": 800,
+  "h": 450,
+  "kb": 64
+ },
+ {
+  "file": "coastal/image77.webp",
+  "site": "מרכז רבין",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image77.png",
+  "w": 800,
+  "h": 600,
+  "kb": 76
+ },
+ {
+  "file": "coastal/image78.webp",
+  "site": "מרכז פרס לשלום",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image78.png",
+  "w": 800,
+  "h": 600,
+  "kb": 79
+ },
+ {
+  "file": "coastal/image79.webp",
+  "site": "כיכר קדומים (יפו)",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image79.png",
+  "w": 800,
+  "h": 600,
+  "kb": 102
+ },
+ {
+  "file": "coastal/image80.webp",
+  "site": "מרכז סוזן דלל, שכונת נווה צדק",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image80.png",
+  "w": 800,
+  "h": 600,
+  "kb": 71
+ },
+ {
+  "file": "coastal/image81.webp",
+  "site": "מוזיאון ארץ ישראל",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image81.png",
+  "w": 800,
+  "h": 450,
+  "kb": 172
+ },
+ {
+  "file": "coastal/image82.webp",
+  "site": "מגדל השעון ביפו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image82.png",
+  "w": 841,
+  "h": 1438,
+  "kb": 114
+ },
+ {
+  "file": "coastal/image83.webp",
+  "site": "מסגד מחמודיה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image83.png",
+  "w": 800,
+  "h": 600,
+  "kb": 74
+ },
+ {
+  "file": "coastal/image84.webp",
+  "site": "מוזיאון אנו (בית התפוצות לשעבר)",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image84.png",
+  "w": 800,
+  "h": 600,
+  "kb": 97
+ },
+ {
+  "file": "coastal/image85.webp",
+  "site": "מסגד אל ג'זאר עכו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image85.png",
+  "w": 1200,
+  "h": 1600,
+  "kb": 98
+ },
+ {
+  "file": "coastal/image86.webp",
+  "site": "חאן אל עומדן – עכו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image86.png",
+  "w": 800,
+  "h": 536,
+  "kb": 67
+ },
+ {
+  "file": "coastal/image87.webp",
+  "site": "אולמות האבירים בעכו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image87.png",
+  "w": 800,
+  "h": 450,
+  "kb": 71
+ },
+ {
+  "file": "coastal/image88.webp",
+  "site": "בית לוחמי הגטאות",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image88.png",
+  "w": 800,
+  "h": 600,
+  "kb": 52
+ },
+ {
+  "file": "coastal/image89.webp",
+  "site": "המונפורט",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image89.png",
+  "w": 800,
+  "h": 533,
+  "kb": 86
+ },
+ {
+  "file": "coastal/image90.webp",
+  "site": "מצודת יחיעם",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image90.png",
+  "w": 800,
+  "h": 449,
+  "kb": 134
+ },
+ {
+  "file": "coastal/image91.webp",
+  "site": "עכו העתיקה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image91.png",
+  "w": 800,
+  "h": 800,
+  "kb": 107
+ },
+ {
+  "file": "coastal/image92.webp",
+  "site": "בית אהרונסון",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image92.png",
+  "w": 640,
+  "h": 480,
+  "kb": 73
+ },
+ {
+  "file": "coastal/image93.webp",
+  "site": "יקבי זכרון יעקב",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image93.png",
+  "w": 800,
+  "h": 449,
+  "kb": 92
+ },
+ {
+  "file": "coastal/image94.webp",
+  "site": "רמת הנדיב",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image94.png",
+  "w": 800,
+  "h": 600,
+  "kb": 123
+ },
+ {
+  "file": "coastal/image95.webp",
+  "site": "מערת אליהו הנביא",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image95.png",
+  "w": 800,
+  "h": 534,
+  "kb": 102
+ },
+ {
+  "file": "coastal/image96.webp",
+  "site": "המוחרקה מנזר כרמליתי",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image96.png",
+  "w": 800,
+  "h": 451,
+  "kb": 68
+ },
+ {
+  "file": "coastal/image97.webp",
+  "site": "הבהג'י בעכו",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image97.png",
+  "w": 800,
+  "h": 600,
+  "kb": 125
+ },
+ {
+  "file": "coastal/image98.webp",
+  "site": "הגנים הבאהיים בחיפה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image98.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 322
+ },
+ {
+  "file": "coastal/image100.webp",
+  "site": "ראש הנקרה",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image100.jpg",
+  "w": 1200,
+  "h": 1600,
+  "kb": 481
+ },
+ {
+  "file": "coastal/image101.webp",
+  "site": "שמורת נחל בצת",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image101.png",
+  "w": 800,
+  "h": 600,
+  "kb": 197
+ },
+ {
+  "file": "coastal/image102.webp",
+  "site": "פארק אכזיב",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image102.png",
+  "w": 960,
+  "h": 720,
+  "kb": 223
+ },
+ {
+  "file": "coastal/image103.webp",
+  "site": "נחל אלכסנדר",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image103.png",
+  "w": 960,
+  "h": 654,
+  "kb": 132
+ },
+ {
+  "file": "coastal/image104.webp",
+  "site": "גן לאומי אשקלון",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image104.png",
+  "w": 800,
+  "h": 600,
+  "kb": 120
+ },
+ {
+  "file": "coastal/image105.webp",
+  "site": "מערות בית גוברין",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image105.png",
+  "w": 800,
+  "h": 533,
+  "kb": 51
+ },
+ {
+  "file": "coastal/image106.webp",
+  "site": "מערת הנטיפים",
+  "region": "coastal",
+  "unit": "mishor_hachof",
+  "source": "images/image106.png",
+  "w": 448,
+  "h": 600,
+  "kb": 55
+ },
+ {
+  "file": "valleys/image107.webp",
+  "site": "הר הגלבוע",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image107.jpg",
+  "w": 1200,
+  "h": 541,
+  "kb": 105
+ },
+ {
+  "file": "valleys/image108.webp",
+  "site": "בית הכנסת בית אלפא",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image108.jpg",
+  "w": 1200,
+  "h": 541,
+  "kb": 87
+ },
+ {
+  "file": "valleys/image109.webp",
+  "site": "גן לאומי בית שאן",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image109.png",
+  "w": 800,
+  "h": 449,
+  "kb": 167
+ },
+ {
+  "file": "valleys/image110.webp",
+  "site": "מעיין חרוד",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image110.png",
+  "w": 800,
+  "h": 600,
+  "kb": 224
+ },
+ {
+  "file": "valleys/image111.webp",
+  "site": "פארק המעיינות + גן השלושה (סחנה)",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image111.png",
+  "w": 800,
+  "h": 600,
+  "kb": 121
+ },
+ {
+  "file": "valleys/image113.webp",
+  "site": "בית שערים",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image113.png",
+  "w": 800,
+  "h": 536,
+  "kb": 75
+ },
+ {
+  "file": "valleys/image114.webp",
+  "site": "תל מגידו",
+  "region": "valleys",
+  "unit": "haamakim",
+  "source": "images/image114.png",
+  "w": 800,
+  "h": 451,
+  "kb": 147
+ }
+]

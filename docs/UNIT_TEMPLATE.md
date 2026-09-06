@@ -35,7 +35,7 @@
 | סוג | id | חובה בתוך הדף | מתי הדף נחשב "הושלם" |
 |---|---|---|---|
 | תוכן | כל id אחר | `h2[data-field-key]`, `.check-card` עם `label`, `textarea[data-open-question]`, `button.check-open`, `.answer-feedback`, ו-`button.complete-page` | שאלת הדף נשלחה לבדיקה בהצלחה (או שהשרת נכשל פעמיים, כדי לא לחסום למידה) |
-| תמונות | `images` | `button.visual-poster[data-recognition="<שם האתר>"]` לכל תמונה; אופציונלי מפה אילמת: `[data-match-label]` + `[data-match-target]` + `#matchFeedback`; `button.complete-page` | כל התמונות נחשפו וכל הפריטים שובצו |
+| תמונות | `images` | `div.visual-story-strip.recognition-strip` עם 9 `button.visual-poster[data-recognition="<שם האתר>"]` (הראשון `.poster-main`) + `#recognitionProgress`; `div.chapter-game-grid.single[data-games-slot]` שאליו נכנס משחק `recognition` מ-16 תמונות נוספות; אופציונלי מפה אילמת: `[data-match-label]` + `[data-match-target]` + `#matchFeedback`; `button.complete-page` | כל התמונות נחשפו, המשחק הושלם וכל הפריטים שובצו |
 | מצגת | `presentation` | `.slide-deck` עם `#slideStage`, `#prevSlide`, `#slideCount`, `#nextSlide`, `#fullscreenSlides`; `button.complete-page` | הגיעו לשקופית האחרונה |
 | תרגול | `practice` | `#unitQuiz`, `button.complete-page` (ו-`#examBank` אם אין דף exam נפרד) | בוחן: ציון 60 ומעלה. בלי בוחן: לפחות סעיף אחד נשלח |
 | מאגר בגרות | `open-practice` או `data-page-kind="exam"` | `#examProgress`, `#examBank`, `button.complete-page` | כל הסעיפים עברו את המחוון (רוב הרכיבים נמצאו, 8 מילים לפחות) |
@@ -47,7 +47,10 @@
 לזהות את האתרים (דף images), לענות כמו בבגרות (בוחן שעבר, או כל סעיפי המאגר אם אין בוחן).
 `#examBank` חייב להופיע באיזשהו דף (תרגול או מאגר). המנוע שומר טיוטות של כל תיבת תשובה מקומית.
 
-צילומי אתרים ונופים רק מ-`https://nisan1234-afk.github.io/jerusalem-tour/images/`. תמונות
+צילומי אתרים ונופים רק מהמאגר הרשמי בריפו: `../assets/official/<region>/imageN.webp` (רשימה עם שם
+אתר לכל קובץ ב-`assets/official/manifest.json`, גלריה ב-`assets/official/index.html`). במשחק `recognition`
+הפריט הוא `["שם האתר", "../assets/official/<region>/imageN.webp"]`; שם קובץ חשוף (`image3.jpg`) עדיין נתמך
+ומפנה למאגר הישן ב-github.io, אבל לא משתמשים בו ביחידות חדשות. תמונות
 עיצוב ואביזרים (מפה אילמת וכו') מכל מקור, מסומנות `data-decor`.
 
 ## 4. `#unitData`

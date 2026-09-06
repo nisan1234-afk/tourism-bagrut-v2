@@ -3569,27 +3569,32 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   border-top: 1px solid currentColor;
   font-weight: 700;
 }
+.recognition-strip .visual-poster,
 .jerusalem-recognition .visual-poster,
 .valleys-recognition .visual-poster {
   border: 0;
   cursor: pointer;
   text-align: right;
 }
+.recognition-strip .visual-poster span,
 .jerusalem-recognition .visual-poster span,
 .valleys-recognition .visual-poster span {
   filter: blur(7px);
   opacity: 0.45;
   transition: 0.2s;
 }
+.recognition-strip .visual-poster.revealed,
 .jerusalem-recognition .visual-poster.revealed,
 .valleys-recognition .visual-poster.revealed {
   outline: 3px solid #79aa8f;
 }
+.recognition-strip .visual-poster.revealed span,
 .jerusalem-recognition .visual-poster.revealed span,
 .valleys-recognition .visual-poster.revealed span {
   filter: none;
   opacity: 1;
 }
+.recognition-strip .visual-poster b,
 .jerusalem-recognition .visual-poster b,
 .valleys-recognition .visual-poster b {
   position: absolute;
@@ -4641,14 +4646,50 @@ html:not(.page-authorized) .protected-page > :not(.access-gate) {
 .jerusalem-unit .block-heading {
   margin-bottom: 14px;
 }
+/* בטלפון רצועת הזיהוי נשארת רשת של 2 עמודות (לא גלילה אופנית): 9 תמונות חייבות להיראות בבת אחת */
+@media (max-width: 560px) {
+  .visual-story-strip.recognition-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: visible;
+    gap: 10px;
+  }
+  .recognition-strip .visual-poster {
+    min-height: 150px;
+    flex: none;
+  }
+  .recognition-strip .visual-poster.poster-main {
+    grid-column: span 2;
+    min-height: 200px;
+  }
+  .recognition-strip .visual-poster.revealed span {
+    font-size: 17px;
+  }
+}
+/* רצועת זיהוי אחידה (ירושלים, מישור החוף, וכל יחידה חדשה): לפני החשיפה רואים "מהו האתר?", אחריה את השם */
+.recognition-strip .visual-poster span,
 .jerusalem-unit .visual-story-strip .visual-poster span {
   display: none;
 }
+.recognition-strip .visual-poster.revealed span,
 .jerusalem-unit .visual-story-strip .visual-poster.revealed span {
   display: block;
 }
+.recognition-strip .visual-poster.revealed b,
 .jerusalem-unit .visual-story-strip .visual-poster.revealed b {
   display: none;
+}
+.recognition-strip .visual-poster span {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  left: 18px;
+  bottom: 16px;
+  color: #fff;
+}
+.recognition-strip .visual-poster.revealed span {
+  font: 700 21px 'Frank Ruhl Libre';
+  opacity: 1;
 }
 
 /* ===== המשימה להיום ===== */

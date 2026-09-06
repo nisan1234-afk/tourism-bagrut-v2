@@ -1,10 +1,11 @@
 // בדיקת תקן: כל יחידה חייבת לעמוד באותו מבנה פדגוגי (docs/UNIT_STANDARD_SPEC_HE.md).
 // נכשל אם יחידה חסרה רכיב חובה; מזהיר על פערי תוכן שממתינים למורה (תמונות, בוחן).
 // הרצה: npm run standard
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const UNITS_DIR = new URL('../units/', import.meta.url).pathname;
+const ROOT = new URL('../', import.meta.url).pathname;
 // סוגי משחקים שהמנוע מכיר (unit-runtime.js, GAME_TYPES)
 const GAME_TYPES = new Set(['match', 'clues', 'order', 'memory', 'puzzle', 'map', 'streak', 'speed', 'silent-map', 'recognition']);
 
@@ -63,6 +64,10 @@ for (const file of readdirSync(UNITS_DIR).filter((f) => f.endsWith('.html')).sor
     const external = [...images[2].matchAll(/<img src="(https?:\/\/[^"]+)"([^>]*)>/g)].filter((m) => !/data-decor/.test(m[2])).map((m) => m[1]).filter((u) => !u.startsWith('https://nisan1234-afk.github.io/'));
     if (external.length) fail(file, `צילומי אתר ממקור לא מאושר: ${external.join(', ')}`);
     if (!cards && !/data-games-slot/.test(images[2])) warn(file, 'דף התמונות ריק — ממתין לתמונות מאושרות מהמאגר');
+  }
+  // תמונות מקומיות (המאגר הרשמי ב-assets/official ותמונות היחידה ב-assets/<unit>) חייבות להתקיים בריפו
+  for (const rel of new Set([...html.matchAll(/["'](\.\.\/assets\/[^"'\s]+)["']/g)].map((m) => m[1]))) {
+    if (!existsSync(join(ROOT, 'units', rel))) fail(file, `תמונה חסרה בריפו: ${rel}`);
   }
   const presentation = panels.find((p) => p[1] === 'presentation');
   if (presentation && !/id="slideStage"/.test(presentation[2])) fail(file, 'דף המצגת בלי #slideStage');

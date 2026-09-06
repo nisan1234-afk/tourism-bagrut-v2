@@ -33,6 +33,7 @@
 
 ### דף תוכן (`section.lesson-page`)
 - `.lesson-kicker`, `.block-heading` (`.number`, `.eyebrow`, h2), `.lesson-lead`, `.unit-contract` (div + aside עם ul, `.content-levels b/em`)
+- `figure.hero-media` (img + figcaption): תמונת פתיחה ברוחב מלא בראש דף תוכן (ים המלח, העמקים); זה גם המקום המיועד לסרטון: אותה figure עם `<iframe>`/`<video>` במקום img, יחס 16:9
 - בלוקי תוכן: `.content-grid.two > .content-panel`, `.site-grid > .site-card` (`.site-index`, h3, p, ul), `.fact-grid > article` (b, p), `.highlight-quote`, `.story-layout`, `.timeline`, `.compare-panel`, `.visual-story-strip > .visual-poster` (img, figcaption), `.expanded-material .detail-grid`, `.deep-read`, `.chapter-checkpoint`, `.media-source-note`
 - שאלת דף: `.check-card` (h3, label, textarea, `button.check-open`, `.answer-feedback` במצבים `.loading/.success/.needs-work`, `ul.exam-hints li.met/.missing`, `.relogin-inline`)
 - `.page-gate-note` (הודעת חסימה), `button.complete-page`
@@ -46,8 +47,10 @@
 - recognition: `.recognition-card` (img, `.recognition-count`, `.answer-list`, `.quiz-feedback`)
 - דף סיכום משחקים: `#gamesSummary .game-status`, `.practice-directory a (span,b,small)`
 
-### דף תמונות (ירושלים)
-- `.visual-story-strip.jerusalem-recognition > button.visual-poster.revealed`, `#recognitionProgress`
+### דף תמונות (ירושלים ומישור החוף, אותו מבנה)
+- `.visual-story-strip.recognition-strip > button.visual-poster` (הראשון `.poster-main`; `b` = תווית "מהו האתר?" לפני חשיפה, `span` = שם האתר אחרי `.revealed`), `#recognitionProgress`
+- אחריה משחק `recognition` (`.recognition-card`, ר' משחקים) מ-16 תמונות
+- **התמונות עצמן:** המאגר הרשמי `assets/official/` (107 תמונות, גלריה ב-`assets/official/index.html`); בדגמים להשתמש בהן, לא במקומות שמורים
 - מפה אילמת סטטית: `.jerusalem-silent-map`, `.silent-map-labels button.selected`, `.old-city-map [data-match-target].placed`, `#matchFeedback`
 
 ### מצגת
