@@ -286,7 +286,8 @@
         return SLIDES.length && state.slidesSeen < SLIDES.length ? 'עברו על כל השקופיות עד הסוף.' : '';
       case 'practice':
         if (QUIZ.length) return state.quiz && state.quiz.best / state.quiz.total >= PASS_RATIO ? '' : 'צריך לעבור את הבוחן (60 ומעלה). אפשר לנסות שוב.';
-        if (EXAM.length) return state.submitted.includes('exam') ? '' : 'שלחו לפחות סעיף אחד לבדיקה.';
+        // מאגר בתוך דף התרגול (מבנה ישן): צריך לשלוח סעיף. מאגר בדף נפרד (kind exam): לדף התרגול בלי בוחן אין מה לחסום
+        if (EXAM.length && panel.querySelector('#examBank')) return state.submitted.includes('exam') ? '' : 'שלחו לפחות סעיף אחד לבדיקה.';
         return '';
       case 'games': {
         const missing = GAMES.filter((g) => !state.games.includes(g.id)).length;

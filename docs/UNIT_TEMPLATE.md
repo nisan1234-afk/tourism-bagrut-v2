@@ -37,7 +37,7 @@
 | תוכן | כל id אחר | `h2[data-field-key]`, `.check-card` עם `label`, `textarea[data-open-question]`, `button.check-open`, `.answer-feedback`, ו-`button.complete-page` | שאלת הדף נשלחה לבדיקה בהצלחה (או שהשרת נכשל פעמיים, כדי לא לחסום למידה) |
 | תמונות | `images` | `div.visual-story-strip.recognition-strip` עם 9 `button.visual-poster[data-recognition="<שם האתר>"]` (הראשון `.poster-main`) + `#recognitionProgress`; `div.chapter-game-grid.single[data-games-slot]` שאליו נכנס משחק `recognition` מ-16 תמונות נוספות; אופציונלי מפה אילמת: `[data-match-label]` + `[data-match-target]` + `#matchFeedback`; `button.complete-page` | כל התמונות נחשפו, המשחק הושלם וכל הפריטים שובצו |
 | מצגת | `presentation` | `.slide-deck` עם `#slideStage`, `#prevSlide`, `#slideCount`, `#nextSlide`, `#fullscreenSlides`; `button.complete-page` | הגיעו לשקופית האחרונה |
-| תרגול | `practice` | `#unitQuiz`, `button.complete-page` (ו-`#examBank` אם אין דף exam נפרד) | בוחן: ציון 60 ומעלה. בלי בוחן: לפחות סעיף אחד נשלח |
+| תרגול | `practice` | `#unitQuiz`, `button.complete-page` (ו-`#examBank` אם אין דף exam נפרד) | בוחן: ציון 60 ומעלה. בלי בוחן ועם `#examBank` בדף: לפחות סעיף אחד נשלח. בלי בוחן ועם דף exam נפרד: אין חסימה (הדף הוא מקום שמור לבוחן) |
 | מאגר בגרות | `open-practice` או `data-page-kind="exam"` | `#examProgress`, `#examBank`, `button.complete-page` | כל הסעיפים עברו את המחוון (רוב הרכיבים נמצאו, 8 מילים לפחות) |
 | סיכום משחקים | `games` | `#gamesSummary`, `button.complete-page` | כל המשחקים ביחידה הושלמו |
 

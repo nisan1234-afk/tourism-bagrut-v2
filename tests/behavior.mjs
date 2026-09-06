@@ -237,6 +237,9 @@ for (const file of unitFiles) {
             await page.click('#nextQuestion');
           }
           expect((await page.textContent('#unitQuiz')).includes('הציון שלך: 100'), `${id}: ציון מלא לא הוצג`);
+        } else if (!(await panel.locator('#examBank').count())) {
+          // בלי בוחן ועם מאגר בדף נפרד (kind exam): דף התרגול הוא מקום שמור לבוחן ואינו נחסם; הלחיצה המשותפת למטה מסמנת אותו
+          expect(pages.some((p) => kinds[p] === 'exam'), `${id}: אין בוחן ואין מאגר בגרות באף דף`);
         } else {
           expect((await panel.locator('#examBank .exam-part').count()) >= 3, `${id}: פחות מ-3 סעיפי תרגול`);
           await complete.click();
@@ -278,12 +281,14 @@ for (const file of unitFiles) {
     await page.locator('[data-page-panel="games"] .complete-page').click({ force: true });
   }
   const pct = await page.textContent('#unitPercent');
-  const expected = data.quiz.length ? '100%' : `${Math.round(((pages.length - 1) / pages.length) * 100)}%`;
+  const fullyDone = data.quiz.length > 0 || kinds.practice !== 'practice' || pages.some((p) => kinds[p] === 'exam');
+  const expected = fullyDone ? '100%' : `${Math.round(((pages.length - 1) / pages.length) * 100)}%`;
   expect(pct === expected, `התקדמות סופית ${pct}, ציפיתי ${expected}`);
   await page.click(`#pageNav button[data-page="${pages[0]}"]`);
   expect((await page.locator('#unitHome .readiness-card strong').textContent()) === expected, 'כרטיס המוכנות לא מציג את ההתקדמות הסופית');
   const doneMarks = await page.locator('#unitHome li.done').count();
-  expect(doneMarks === (data.quiz.length ? 3 : 2), `סימני מוכנות: ${doneMarks} (ציפיתי ${data.quiz.length ? 3 : 2})`);
+  const expectedMarks = fullyDone ? 3 : 2; // הבנתי / זיהיתי / עניתי (בוחן שעבר, או כל סעיפי המאגר)
+  expect(doneMarks === expectedMarks, `סימני מוכנות: ${doneMarks} (ציפיתי ${expectedMarks})`);
   if (data.quiz.length) expect((await page.locator('#unitHome h2').textContent()).includes('סיימת'), 'אחרי 100% הכרטיס לא מברך על סיום');
   // רענון: המצב נשמר מקומית
   await page.reload({ waitUntil: 'load' });

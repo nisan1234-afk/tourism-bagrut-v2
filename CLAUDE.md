@@ -141,7 +141,7 @@ CAPABILITIES.md`):** לא להוסיף עד שהמדיניות הזו (קודק�
 | ירושלים | `yerushalayim` | `unit-runtime.js` | 10 | 20 (tourism11) | כן + מפה אילמת | 05.09: הורחבה ממצגות נסים, דף שערים, 5 משחקים, מאגר 7 שאלות בגרות × 28 סעיפים |
 | העמקים | `haamakim` | `unit-runtime.js` | 7 | 20 (tourism11) | כן | |
 | ים המלח | `yam_hamelach` | `unit-runtime.js` | 7 | 20 (tourism11) | כן | |
-| הגליל | `galil` | `unit-runtime.js` | 8 | **אין** (ממתין לאישור) | **אין** (ממתין למאגר) | טיוטת בוחן לאישור: `docs/drafts/galil-quiz-draft.json` |
+| הגליל | `galil` | `unit-runtime.js` | 9 | **אין** (ממתין לאישור) | **אין** (ממתין למאגר; יש 29 במאגר המעצב) | מאגר בגרות (06.09): 5 שאלות / 19 סעיפים עם מחוון מדגמי התשובות הרשמיים 2021-2025 בדף `open-practice`. טיוטת בוחן לאישור: `docs/drafts/galil-quiz-draft.json` |
 
 כל היחידות דורשות כניסה דרך כיתה פלוס. `npm test` אוכף את התקן (`docs/UNIT_TEMPLATE.md`).
 
