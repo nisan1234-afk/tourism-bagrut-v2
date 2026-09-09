@@ -3136,6 +3136,18 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
   text-align: right;
   text-decoration: none;
 }
+/* קוד כיתה להרשמה עצמית (דשבורד המורה, טאב תלמידים) */
+.class-code-card { margin: 0 0 18px; padding: 16px 18px; border-radius: 14px; background: var(--mint); border: 1px solid #c9ddd3; }
+.class-code-head h3 { margin: 2px 0 4px; font: 700 19px 'Frank Ruhl Libre'; }
+.class-code-head p { margin: 0; font-size: 13px; color: var(--muted); max-width: 640px; }
+.class-code-list { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.class-code-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 12px; background: #fff; border-radius: 10px; }
+.class-code-list code { font: 700 18px/1 ui-monospace, Consolas, monospace; letter-spacing: 0.06em; padding: 6px 12px; border-radius: 8px; background: var(--forest); color: #fff; direction: ltr; }
+.class-code-list small { flex-basis: 100%; color: var(--muted); }
+.class-code-empty { color: var(--muted); font-size: 13px; }
+.class-code-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.class-code-form input { flex: 1 1 200px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; font: inherit; }
+.class-code-form small { flex-basis: 100%; color: var(--muted); }
 .student-add-form {
   display: grid;
   grid-template-columns: 1fr 1.4fr 1fr auto;

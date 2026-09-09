@@ -101,6 +101,93 @@ function checkBagrutEnrollment_(email) {
   }
 }
 
+// ========== קוד כיתה והרשמה עצמית (09.09.2026) ==========
+// תלמיד/ה נכנס/ת עם גוגל בדף הראשי, מקליד/ה קוד כיתה שהמורה נתן בשיעור, ונרשם/ת לרשימת
+// students של אותו מורה בלי אישור ידני (הקוד הוא האישור). קוד ייחודי בכל המערכת.
+
+function ensureBagrutClassCodesSheet_(ss) {
+  return ensureSheetWithHeaders(ss, 'class_codes', ['code', 'class_name', 'teacher_email', 'status', 'created_date']);
+}
+
+function bagrutNormalizeCode_(code) {
+  return stripInvisible_(code).replace(/\s+/g, '');
+}
+
+function bagrutActiveClassCodes_(ss) {
+  return sheetToObjects(ensureBagrutClassCodesSheet_(ss)).filter(c => String(c.status || 'active') === 'active');
+}
+
+function getBagrutClassCodes({ verifiedEmail }) {
+  requireRole(verifiedEmail, ['teacher', 'homeroom', 'admin', 'school_admin']);
+  const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+  return { class_codes: bagrutClassCodesOf_(ss, verifiedEmail) };
+}
+
+function bagrutClassCodesOf_(ss, teacherEmail) {
+  return bagrutActiveClassCodes_(ss)
+    .filter(c => c.teacher_email == teacherEmail)
+    .map(c => ({ code: String(c.code), class_name: String(c.class_name || ''), created_date: c.created_date || '' }));
+}
+
+/**
+ * קובע (או מחליף) את קוד ההרשמה של כיתה אחת של המורה. קוד ישן של אותה כיתה מסומן inactive,
+ * כך שתלמידים עם הקוד הישן לא יוכלו להירשם יותר. הקוד: 4-20 תווים, אותיות/ספרות/מקף בלבד.
+ */
+function setBagrutClassCode({ verifiedEmail, class_name, code }) {
+  requireRole(verifiedEmail, ['teacher', 'homeroom', 'admin', 'school_admin']);
+  const className = String(class_name || '').trim();
+  const codeNorm = bagrutNormalizeCode_(code);
+  if (!className) throw new Error('נא להזין שם כיתה (לדוגמה י"א תיירות)');
+  if (!/^[a-z0-9א-ת\-]{4,20}$/.test(codeNorm)) throw new Error('הקוד צריך להיות 4-20 תווים: אותיות, ספרות או מקף, בלי רווחים');
+  return withLock(() => {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    const sheet = ensureBagrutClassCodesSheet_(ss);
+    const rows = sheetToObjects(sheet);
+    const taken = rows.find(r => String(r.status || 'active') === 'active' && bagrutNormalizeCode_(r.code) === codeNorm && r.teacher_email != verifiedEmail);
+    if (taken) throw new Error('הקוד הזה כבר בשימוש אצל מורה אחר. בחרו קוד אחר.');
+    // כיבוי הקוד הקודם של אותה כיתה (ושל אותו קוד אם הוקצה לכיתה אחרת שלי)
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const statusIdx = headers.indexOf('status');
+    rows.forEach((r, i) => {
+      if (r.teacher_email != verifiedEmail || String(r.status || 'active') !== 'active') return;
+      if (String(r.class_name || '').trim() === className || bagrutNormalizeCode_(r.code) === codeNorm) {
+        sheet.getRange(i + 2, statusIdx + 1).setValue('inactive');
+      }
+    });
+    appendRow(sheet, { code: codeNorm, class_name: className, teacher_email: verifiedEmail, status: 'active', created_date: new Date().toISOString() });
+    return { code: codeNorm, class_name: className, class_codes: bagrutClassCodesOf_(ss, verifiedEmail) };
+  });
+}
+
+/**
+ * הרשמה עצמית של תלמיד/ה. פעולה ציבורית: המשתמש עדיין לא רשום, ולכן הטוקן מאומת כאן ולא בנתב.
+ * המייל והשם נלקחים מהטוקן של גוגל (לא ממה שהוקלד), כדי שההתקדמות תישמר תחת המייל הנכון.
+ */
+function registerBagrutStudent({ token, class_code }) {
+  if (!token) throw new Error('נדרשת כניסה עם גוגל לפני ההרשמה');
+  const codeNorm = bagrutNormalizeCode_(class_code);
+  if (!codeNorm) throw new Error('נא להזין את קוד הכיתה שקיבלת מהמורה');
+  const user = verifyGoogleToken(token);
+  const email = String(user.email || '').trim();
+  const name = String(user.name || '').trim() || email.split('@')[0];
+  if (!email) throw new Error('לא התקבל מייל מחשבון גוגל');
+  return withLock(() => {
+    const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
+    const match = bagrutActiveClassCodes_(ss).find(c => bagrutNormalizeCode_(c.code) === codeNorm);
+    if (!match) throw new Error('קוד כיתה לא מוכר. בדקו את הקוד עם המורה ונסו שוב.');
+    const sheet = ensureBagrutStudentsSheet_(ss);
+    const existing = sheetToObjects(sheet);
+    const emailNorm = stripInvisible_(email);
+    const mine = existing.find(s => stripInvisible_(s.email) === emailNorm && s.teacher_email == match.teacher_email);
+    if (mine) return { registered: false, already: true, class_name: String(mine.class_name || match.class_name || ''), name: mine.name || name };
+    appendRow(sheet, {
+      email, name, class_name: String(match.class_name || '').trim(),
+      teacher_email: match.teacher_email, added_date: new Date().toISOString()
+    });
+    return { registered: true, class_name: String(match.class_name || ''), name };
+  });
+}
+
 // ========== מורה ==========
 
 function getBagrutTeacherDashboard({ verifiedEmail }) {
@@ -150,7 +237,8 @@ function getBagrutTeacherDashboard({ verifiedEmail }) {
       inProgress: students.filter(s => s.percent > 0 && s.percent < 100).length,
       notStarted: students.filter(s => s.percent === 0).length
     },
-    units: BAGRUT_UNITS
+    units: BAGRUT_UNITS,
+    class_codes: bagrutClassCodesOf_(ss, verifiedEmail)
   };
 }
 

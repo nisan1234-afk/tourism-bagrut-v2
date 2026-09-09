@@ -229,6 +229,51 @@ function renderRoster() {
     .forEach((b) => b.addEventListener('click', () => changeStudentEmail(b.dataset.changeEmail, b.dataset.studentName)));
 }
 // שינוי מייל: ההתקדמות, הבחנים והתשובות עוברות למייל החדש (הכול מזוהה לפי מייל בשרת).
+// ---------- קוד כיתה להרשמה עצמית ----------
+const HUB_URL = 'https://nisan1234-afk.github.io/';
+function renderClassCodes(codes) {
+  const list = document.getElementById('classCodeList');
+  if (!list) return;
+  if (!codes || !codes.length) {
+    list.innerHTML = '<li class="class-code-empty">עדיין אין קוד. קבעו קוד לכיתה למטה ותנו אותו לתלמידים בשיעור.</li>';
+    return;
+  }
+  list.innerHTML = codes
+    .map((c) => `<li><b>${safe(c.class_name || 'ללא שם')}</b><code>${safe(c.code)}</code><small>התלמידים נכנסים ב-<a href="${HUB_URL}" target="_blank" rel="noopener">${HUB_URL.replace('https://', '')}</a> ← "הרשמה עם קוד כיתה"</small></li>`)
+    .join('');
+}
+function suggestClassCode() {
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789'; // בלי תווים שמתבלבלים (0/o, 1/l/i)
+  let tail = '';
+  for (let i = 0; i < 4; i++) tail += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return 'tour-' + tail;
+}
+async function saveClassCode(event) {
+  event.preventDefault();
+  const classInput = document.getElementById('classCodeClass');
+  const codeInput = document.getElementById('classCodeValue');
+  const feedback = document.getElementById('classCodeFeedback');
+  const class_name = classInput.value.trim();
+  const code = codeInput.value.trim();
+  if (!class_name || !code) {
+    feedback.textContent = 'נא למלא שם כיתה וקוד.';
+    return;
+  }
+  feedback.textContent = 'שומר…';
+  try {
+    const data = await teacherAPI('setBagrutClassCode', { class_name, code });
+    renderClassCodes(data.class_codes || [{ class_name: data.class_name, code: data.code }]);
+    feedback.textContent = 'הקוד נשמר. מעכשיו תלמידים עם הקוד "' + data.code + '" נרשמים לכיתה ' + data.class_name + '.';
+    codeInput.value = '';
+  } catch (e) {
+    feedback.textContent = 'השמירה נכשלה: ' + e.message;
+  }
+}
+document.getElementById('classCodeForm')?.addEventListener('submit', saveClassCode);
+document.getElementById('classCodeSuggest')?.addEventListener('click', () => {
+  document.getElementById('classCodeValue').value = suggestClassCode();
+});
+
 async function changeStudentEmail(email, name) {
   const next = window.prompt(`מייל חדש עבור ${name}:\nההתקדמות, הבחנים והתשובות יעברו למייל החדש.`, email);
   if (next == null) return;
@@ -259,6 +304,7 @@ async function loadClassroom() {
     const data = await teacherAPI('getBagrutTeacherDashboard');
     roster = data.students || [];
     renderRoster();
+    renderClassCodes(data.class_codes || []);
     renderInsights(roster, window.__pendingCount);
     renderLessonReport(roster, currentReportDate());
     document.getElementById('teacherDataState').textContent = 'מחובר לכיתה פלוס';
@@ -271,6 +317,8 @@ async function loadClassroom() {
     renderLessonReport([], currentReportDate());
     document.getElementById('overviewMessage').textContent = 'לא הצלחנו לטעון את נתוני הכיתה: ' + e.message;
     document.getElementById('studentsBody').innerHTML = '<tr><td colspan="6">' + e.message + '</td></tr>';
+    const codeList = document.getElementById('classCodeList');
+    if (codeList) codeList.innerHTML = '<li class="class-code-empty">הקודים ייטענו אחרי שהחיבור לכיתה פלוס יחזור.</li>';
   }
 }
 document

@@ -70,7 +70,7 @@ function doPost(e) {
       'addClass', 'updateClass', 'deleteClass',
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
-      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'refreshBagrutKnowledge', 'getBagrutKnowledgeSummary', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
+      'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'getBagrutClassCodes', 'setBagrutClassCode', 'refreshBagrutKnowledge', 'getBagrutKnowledgeSummary', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
       'submitOpenAnswer', 'getBagrutStudentOpenAnswers', 'reviewOpenAnswer', 'getBagrutPendingReviewsForTeacher', 'getMyReviewNotices', 'ackReviewNotice', 'getAllContentOverrides', 'saveContentOverride', 'addBagrutStudentsBulk', 'getBagrutMistakesSummary', 'getBagrutMistakes', 'updateBagrutMistakes', 'getMySiteRecognition', 'saveSiteKnown', 'resetMySiteRecognition', 'getBagrutSiteRecognitionSummary'
     ];
 
@@ -138,6 +138,9 @@ function doPost(e) {
       addBagrutStudent:          () => addBagrutStudent(body),
       removeBagrutStudent:       () => removeBagrutStudent(body),
       updateBagrutStudentEmail:  () => updateBagrutStudentEmail(body),
+      getBagrutClassCodes:       () => getBagrutClassCodes(body),
+      setBagrutClassCode:        () => setBagrutClassCode(body),
+      registerBagrutStudent:     () => registerBagrutStudent(body), // ציבורי: מאמת את הטוקן בעצמו (המשתמש עדיין לא רשום)
       refreshBagrutKnowledge:    () => refreshBagrutKnowledge(body),
       getBagrutKnowledgeSummary: () => getBagrutKnowledgeSummary(body),
       getBagrutMyProgress:       () => getBagrutMyProgress(body),

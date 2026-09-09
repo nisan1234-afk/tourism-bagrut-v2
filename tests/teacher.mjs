@@ -33,7 +33,8 @@ const STUDENTS = [
   student('אלי שמש', 'eli@example.com', {}),
 ];
 const RESPONSES = {
-  getBagrutTeacherDashboard: { students: STUDENTS, stats: { total: 4 }, units: [] },
+  getBagrutTeacherDashboard: { students: STUDENTS, stats: { total: 4 }, units: [], class_codes: [{ class_name: 'י"א תיירות', code: 'tour-2027' }] },
+  setBagrutClassCode: { code: 'tour-x9k2', class_name: 'י"ב תיירות', class_codes: [{ class_name: 'י"א תיירות', code: 'tour-2027' }, { class_name: 'י"ב תיירות', code: 'tour-x9k2' }] },
   getBagrutPendingReviewsForTeacher: { pending: [{ id: 'r1', email: 'dana@example.com', student_name: 'דנה כהן', unit_id: 'yerushalayim', question: 'שאלה', answer: 'תשובה', bot_feedback: 'משוב', timestamp: todayAt(9) }] },
   getBagrutAssignment: { assignment: null },
   getAllContentOverrides: { overrides: {} },
@@ -125,6 +126,20 @@ await page.dispatchEvent('#reportDate', 'change');
 const rows3 = await page.$$eval('#reportBody tr', (trs) => trs.map((tr) => tr.textContent.replace(/\s+/g, ' ')));
 expect(rows3.length === 1 && rows3[0].includes('נועה בר') && rows3[0].includes('בוחן 9/20'), 'דוח שיעור לתאריך קודם: רק נועה עם הבוחן שלה');
 expect((await page.textContent('#reportAbsent')).includes('דנה כהן'), 'דוח שיעור לתאריך קודם: דנה ברשימת הנעדרים');
+
+// קוד כיתה: הקוד הקיים מוצג, ושמירת קוד חדש שולחת class_name+code ומרעננת את הרשימה
+expect((await page.textContent('#classCodeList')).includes('tour-2027'), 'קוד כיתה: הקוד הקיים לא מוצג');
+await page.$eval('#classCodeClass', (el) => { el.value = 'י"ב תיירות'; });
+await page.$eval('#classCodeSuggest', (b) => b.click());
+const suggested = await page.$eval('#classCodeValue', (el) => el.value);
+expect(/^tour-[a-z0-9]{4}$/.test(suggested), `קוד כיתה: ההצעה האוטומטית לא בפורמט (${suggested})`);
+await page.$eval('#classCodeValue', (el) => { el.value = 'tour-x9k2'; });
+await page.$eval('#classCodeForm', (f) => f.requestSubmit());
+await page.waitForFunction(() => document.getElementById('classCodeList')?.textContent.includes('tour-x9k2'), null, { timeout: 5000 }).catch(() => {});
+const codeCall = sentBodies.find((b) => b.action === 'setBagrutClassCode');
+expect(codeCall && codeCall.class_name === 'י"ב תיירות' && codeCall.code === 'tour-x9k2', 'קוד כיתה: הבקשה לשרת לא נשאה שם כיתה וקוד');
+expect((await page.textContent('#classCodeList')).includes('tour-x9k2') && (await page.textContent('#classCodeList')).includes('tour-2027'), 'קוד כיתה: הרשימה לא התרעננה עם שני הקודים');
+expect((await page.textContent('#classCodeFeedback')).includes('נשמר'), 'קוד כיתה: אין אישור על המסך');
 
 // שינוי מייל: prompt → קריאה לשרת עם המייל הישן והחדש → טעינה מחדש של הכיתה
 await page.evaluate(() => { window.prompt = () => ' Dana.New@example.com '; });
