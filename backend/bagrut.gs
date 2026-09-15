@@ -17,7 +17,9 @@ const BAGRUT_UNITS = [
   { unit_id: 'yerushalayim', name: 'ירושלים', total_questions: 20 },
   // נושא-על, קיים רק ב-tourism11; לא נספר באחוז ההתקדמות כדי שתלמיד/ה ב-v2 יוכל/תוכל להגיע ל-100%
   { unit_id: 'hashivut', name: 'חשיבותה של התיירות לישראל', total_questions: 20, counts_for_percent: false },
-  { unit_id: 'galil', name: 'הגליל', total_questions: 6 }
+  { unit_id: 'galil', name: 'הגליל', total_questions: 6 },
+  { unit_id: 'golan', name: 'רמת הגולן', total_questions: 20 },
+  { unit_id: 'negev', name: 'הנגב, הערבה ואילת', total_questions: 20 }
 ];
 const BAGRUT_PASS_RATIO = 0.6; // ציון עובר בבוחן (60), לפי UNIT_STANDARD_SPEC_HE.md
 
@@ -697,7 +699,9 @@ const BAGRUT_UNIT_FOLDER_KEYS = {
   yam_hamelach: ['ים המלח', 'מדבר יהודה'],
   yerushalayim: ['ירושלים'],
   hashivut: ['חשיבות'],
-  galil: ['גליל']
+  galil: ['גליל'],
+  golan: ['גולן', 'חרמון'],
+  negev: ['נגב', 'ערבה', 'אילת', 'אילות']
 };
 const BAGRUT_GENERAL_FOLDER_KEYS = ['מושגים', 'כללי'];
 const BAGRUT_CONTEXT_MAX_CHARS = 60000; // 143K לקח 27 שניות; 25K לקח 32 (עומס), אז הגודל הוא רק חלק מהסיפור, אבל כל תו עולה זמן

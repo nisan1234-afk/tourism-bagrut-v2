@@ -1,7 +1,7 @@
 // טאב "תובנות": נבנה מנתוני הכיתה שמגיעים מהשרת (getBagrutTeacherDashboard), לא מה-localStorage
 // של המורה. עד 04.09.2026 הטאב הציג את הניסיונות של הדפדפן המקומי בלבד (ממצא A2 בסקירה).
-const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', hashivut: 'חשיבות התיירות' };
-const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html' };
+const UNIT_LABELS = { mishor_hachof: 'מישור החוף', yerushalayim: 'ירושלים', haamakim: 'העמקים', yam_hamelach: 'ים המלח ומדבר יהודה', galil: 'הגליל', golan: 'רמת הגולן', negev: 'הנגב, הערבה ואילת', hashivut: 'חשיבות התיירות' };
+const UNIT_LINKS = { mishor_hachof: 'units/coastal-plain.html', yerushalayim: 'units/jerusalem.html', haamakim: 'units/valleys.html', yam_hamelach: 'units/dead-sea.html', galil: 'units/galilee.html', golan: 'units/golan.html', negev: 'units/negev.html' };
 const WEEK = 7 * 24 * 60 * 60 * 1000; // פעילות = כל שמירה לשרת: דף שהושלם, תשובה, בוחן, תמונה
 // היחידה הנוכחית = היחידה עם הפעילות האחרונה. ברשימת התלמידים מציגים אותה, כי ממוצע על 5 יחידות
 // (8% אחרי 40% ביחידה אחת) לא אומר למורה כלום בתחילת שנה (דוח B, 05.09).
@@ -520,6 +520,8 @@ const CONTENT_PAGES = [
   { unit_id: 'haamakim', url: 'units/valleys.html', label: 'העמקים' },
   { unit_id: 'yam_hamelach', url: 'units/dead-sea.html', label: 'ים המלח ומדבר יהודה' },
   { unit_id: 'galil', url: 'units/galilee.html', label: 'הגליל' },
+  { unit_id: 'golan', url: 'units/golan.html', label: 'רמת הגולן' },
+  { unit_id: 'negev', url: 'units/negev.html', label: 'הנגב, הערבה ואילת' },
 ];
 async function discoverEditableFields() {
   const results = [];

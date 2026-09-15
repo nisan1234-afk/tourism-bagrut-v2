@@ -3789,6 +3789,12 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
 .exam-bank-card .question-part + .question-part {
   margin-top: 16px;
 }
+.cover-golan {
+  background: linear-gradient(135deg, #2f3d4a, #6d8a5b);
+}
+.cover-negev {
+  background: linear-gradient(135deg, #a8642a, #d9a066);
+}
 .cover-galilee {
   background: linear-gradient(135deg, #315f45, #7ca57c);
 }

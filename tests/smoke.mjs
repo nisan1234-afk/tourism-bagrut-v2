@@ -21,6 +21,8 @@ const PAGES = [
   '/units/valleys.html',
   '/units/dead-sea.html',
   '/units/galilee.html',
+  '/units/golan.html',
+  '/units/negev.html',
 ];
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 

@@ -8,6 +8,8 @@
     haamakim: 'units/valleys.html',
     yam_hamelach: 'units/dead-sea.html',
     galil: 'units/galilee.html',
+    golan: 'units/golan.html',
+    negev: 'units/negev.html',
   };
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
