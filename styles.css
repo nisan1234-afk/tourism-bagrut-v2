@@ -3144,6 +3144,7 @@ html:not(.teacher-authorized) .protected-teacher-page > :not(.teacher-access-gat
 .class-code-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 12px; background: #fff; border-radius: 10px; }
 .class-code-list code { font: 700 18px/1 ui-monospace, Consolas, monospace; letter-spacing: 0.06em; padding: 6px 12px; border-radius: 8px; background: var(--forest); color: #fff; direction: ltr; }
 .class-code-list small { flex-basis: 100%; color: var(--muted); }
+.class-code-list .class-count { color: var(--muted); font-size: 13px; }
 .class-code-empty { color: var(--muted); font-size: 13px; }
 .class-code-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .class-code-form input { flex: 1 1 200px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; font: inherit; }

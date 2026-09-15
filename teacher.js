@@ -231,16 +231,36 @@ function renderRoster() {
 // שינוי מייל: ההתקדמות, הבחנים והתשובות עוברות למייל החדש (הכול מזוהה לפי מייל בשרת).
 // ---------- קוד כיתה להרשמה עצמית ----------
 const HUB_URL = 'https://nisan1234-afk.github.io/';
+let classCodes = [];
+// רשימת הכיתות: איחוד של הכיתות ברשימת התלמידים ושל הכיתות שיש להן קוד. לכל כיתה: כמה תלמידים, והקוד (או כפתור ליצירת קוד)
 function renderClassCodes(codes) {
+  if (Array.isArray(codes)) classCodes = codes;
   const list = document.getElementById('classCodeList');
   if (!list) return;
-  if (!codes || !codes.length) {
-    list.innerHTML = '<li class="class-code-empty">עדיין אין קוד. קבעו קוד לכיתה למטה ותנו אותו לתלמידים בשיעור.</li>';
+  const counts = {};
+  roster.forEach((s) => {
+    const name = (s.class_name || '').trim() || 'ללא כיתה';
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  const names = [...new Set([...classCodes.map((c) => (c.class_name || '').trim()).filter(Boolean), ...Object.keys(counts).filter((n) => n !== 'ללא כיתה')])].sort((a, b) => a.localeCompare(b, 'he'));
+  if (!names.length) {
+    list.innerHTML = '<li class="class-code-empty">עדיין אין כיתות. קבעו למטה שם כיתה וקוד, ותנו את הקוד לתלמידים בשיעור.</li>';
     return;
   }
-  list.innerHTML = codes
-    .map((c) => `<li><b>${safe(c.class_name || 'ללא שם')}</b><code>${safe(c.code)}</code><small>התלמידים נכנסים ב-<a href="${HUB_URL}" target="_blank" rel="noopener">${HUB_URL.replace('https://', '')}</a> ← "הרשמה עם קוד כיתה"</small></li>`)
-    .join('');
+  list.innerHTML = names
+    .map((name) => {
+      const code = classCodes.find((c) => (c.class_name || '').trim() === name);
+      const n = counts[name] || 0;
+      return `<li><b>${safe(name)}</b><span class="class-count">${n} תלמידים</span>${code ? `<code>${safe(code.code)}</code>` : `<button type="button" class="table-action" data-make-code="${safe(name)}">צור קוד לכיתה</button>`}<small>${code ? `התלמידים נכנסים ב-<a href="${HUB_URL}" target="_blank" rel="noopener">${HUB_URL.replace('https://', '')}</a> ← "הרשמה עם קוד כיתה" ← הקוד` : 'בלי קוד, תלמידים חדשים לכיתה הזו נוספים רק דרך "תלמיד חדש" או "ייבוא רשימה".'}</small></li>`;
+    })
+    .join('') + (counts['ללא כיתה'] ? `<li class="class-code-empty">${counts['ללא כיתה']} תלמידים בלי שם כיתה (אפשר לעדכן בייבוא הרשימה).</li>` : '');
+  list.querySelectorAll('[data-make-code]').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.getElementById('classCodeClass').value = b.dataset.makeCode;
+      document.getElementById('classCodeValue').value = suggestClassCode();
+      document.getElementById('classCodeValue').focus();
+    })
+  );
 }
 function suggestClassCode() {
   const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789'; // בלי תווים שמתבלבלים (0/o, 1/l/i)

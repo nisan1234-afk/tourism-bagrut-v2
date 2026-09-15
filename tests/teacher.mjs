@@ -129,6 +129,7 @@ expect((await page.textContent('#reportAbsent')).includes('דנה כהן'), 'ד�
 
 // קוד כיתה: הקוד הקיים מוצג, ושמירת קוד חדש שולחת class_name+code ומרעננת את הרשימה
 expect((await page.textContent('#classCodeList')).includes('tour-2027'), 'קוד כיתה: הקוד הקיים לא מוצג');
+expect(/תלמידים/.test(await page.textContent('#classCodeList')), 'רשימת הכיתות: אין ספירת תלמידים לכיתה');
 await page.$eval('#classCodeClass', (el) => { el.value = 'י"ב תיירות'; });
 await page.$eval('#classCodeSuggest', (b) => b.click());
 const suggested = await page.$eval('#classCodeValue', (el) => el.value);
