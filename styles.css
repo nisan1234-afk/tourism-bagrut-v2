@@ -4884,3 +4884,383 @@ html:not(.page-authorized) .protected-page > :not(.access-gate) {
   outline: 3px solid #f2a900;
   outline-offset: 2px;
 }
+
+/* ===== רענון עיצוב 16.09 — לפי המוקאפים של הדיזיין (docs/design-mockups) ===== */
+/* דף הבית: הירו עם תמונה רשמית */
+.hero-visual.hero-photo {
+  position: relative;
+  height: auto;
+  aspect-ratio: 4 / 4.6;
+  max-height: 460px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.hero-photo > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-photo .floating-card {
+  position: absolute;
+  inset: auto 18px 18px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  animation: none;
+  transform: none;
+}
+.hero-photo .floating-card .pct {
+  font: 700 36px 'Frank Ruhl Libre';
+  color: var(--forest);
+}
+.hero-photo .floating-card strong {
+  font: 700 18px 'Frank Ruhl Libre';
+}
+/* כרטיסי יחידה: תמונת כיסוי, מספר בעיגול זהב, שבבים */
+.unit-card {
+  grid-template-columns: 1fr;
+  border-radius: 20px;
+}
+.unit-cover {
+  position: relative;
+  min-height: 210px;
+  justify-content: flex-end;
+}
+.unit-cover .cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.unit-cover:has(.cover-img)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 28, 25, 0.06) 35%, rgba(9, 28, 25, 0.8));
+}
+.unit-cover span {
+  position: relative;
+  z-index: 2;
+  font: 700 28px 'Frank Ruhl Libre';
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+.unit-cover b {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  left: 14px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font: 700 15px 'Assistant';
+  opacity: 1;
+}
+.unit-meta {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.unit-meta span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--forest-2);
+  font-weight: 700;
+}
+.unit-meta span + span:before {
+  content: none;
+}
+.unit-body .card-link {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--forest);
+  color: #fff;
+}
+.unit-body .card-link:hover {
+  background: var(--forest-2);
+}
+/* המסילה: עיגולי מצב לכל דף */
+.unit-rail nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.unit-rail nav button::before {
+  content: '';
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  font-size: 11px;
+  color: #fff;
+}
+.unit-rail nav button.done::before {
+  content: '✓';
+  background: #4f936d;
+  border-color: #4f936d;
+}
+.unit-rail nav button.active {
+  background: #fff;
+  color: var(--forest);
+}
+.unit-rail nav button.active::before {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+/* כותרת דף ממוספרת (המספר נוסף על ידי unit-runtime.js) */
+.lesson-page > .page-number {
+  display: inline-block;
+  vertical-align: top;
+  margin: 6px 0 0;
+  margin-inline-end: 16px;
+  font: 700 clamp(44px, 5vw, 64px) 'Frank Ruhl Libre';
+  line-height: 1;
+  color: var(--gold);
+}
+.lesson-page > .page-number + h2 {
+  display: inline-block;
+  max-width: calc(100% - 120px);
+}
+/* מקום לסרטון / תמונת פתיחה: כיתוב על התמונה */
+.hero-media {
+  position: relative;
+  margin: 28px 0 32px;
+  border-radius: 22px;
+}
+.hero-media img {
+  height: clamp(260px, 46vw, 520px);
+}
+.hero-media figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 44px 22px 18px;
+  color: #fff;
+  font: 700 20px 'Frank Ruhl Libre';
+  background: linear-gradient(transparent, rgba(9, 28, 25, 0.85));
+}
+/* "בסיום היחידה תוכלו" */
+.unit-outcomes {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 24px;
+  margin: 26px 0;
+  padding: 26px 28px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #173d37, #285d54);
+  color: #fff;
+}
+.unit-outcomes > div small {
+  color: var(--sand);
+  font-size: 11px;
+  font-weight: 700;
+}
+.unit-outcomes > div h3 {
+  margin: 4px 0 8px;
+  font: 700 34px 'Frank Ruhl Libre';
+}
+.unit-outcomes > div p {
+  margin: 0 0 12px;
+  color: #ffffffc0;
+  line-height: 1.6;
+}
+.unit-outcomes .chips span {
+  display: inline-block;
+  margin-inline-end: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.unit-outcomes ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 18px 20px;
+  list-style: none;
+  background: #ffffff14;
+  border: 1px solid #ffffff22;
+  border-radius: 16px;
+}
+.unit-outcomes li {
+  position: relative;
+  padding-right: 18px;
+  line-height: 1.5;
+}
+.unit-outcomes li::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.unit-outcomes li.lead {
+  padding: 0;
+  font-weight: 700;
+}
+.unit-outcomes li.lead::before {
+  display: none;
+}
+/* דף התמונות: רשת 3×2, שבב "מהו האתר?" למעלה, "✓ זוהה" אחרי חשיפה, שורת קרדיט */
+.recognition-strip {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.recognition-strip .poster-main {
+  min-height: 230px;
+}
+.recognition-strip .visual-poster b {
+  top: 12px;
+  right: 12px;
+  bottom: auto;
+}
+.recognition-strip .visual-poster.revealed::before {
+  content: '✓ זוהה';
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #4f936d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.recognition-strip::after {
+  content: 'התמונות מתוך המאגר הרשמי של משרד החינוך למגמת תיירות';
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 700px) {
+  .recognition-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* בוחן: קווי התקדמות, תשובות עם ✓/✕ */
+.quiz-steps {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.quiz-steps i {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  background: #e3e8e4;
+}
+.quiz-steps i.ok {
+  background: #4f936d;
+}
+.quiz-steps i.bad {
+  background: #c9645a;
+}
+.quiz-steps i.now {
+  background: var(--gold);
+}
+.answer-list button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 12px;
+}
+.answer-list button::after {
+  content: '';
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  font-size: 10px;
+  color: #fff;
+}
+.answer-list button.correct::after {
+  content: '✓';
+  background: #4f936d;
+  border-color: #4f936d;
+}
+.answer-list button.wrong {
+  color: #a3453b;
+  text-decoration: line-through;
+}
+.answer-list button.wrong::after {
+  content: '✕';
+  background: #c9645a;
+  border-color: #c9645a;
+}
+/* מאגר בגרות: שבב נושא, כרטיס ירוק כשהשאלה הושלמה */
+.exam-question {
+  border-radius: 18px;
+}
+.exam-question .question-label em {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: #8a5a1a;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.exam-question.answer-complete {
+  background: #eef6f1;
+  border-color: #9fcbb2;
+}
+/* מצגת: תמונה בצד, טקסט על ירוק */
+.region-slide {
+  grid-template-columns: 1fr 1fr;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+}
+.region-slide > div {
+  padding: 34px;
+}
+.region-slide img {
+  height: 100%;
+  min-height: 315px;
+  border-radius: 0;
+}
+@media (max-width: 760px) {
+  .unit-outcomes,
+  .region-slide {
+    grid-template-columns: 1fr;
+  }
+  .lesson-page > .page-number {
+    font-size: 40px;
+    margin-inline-end: 10px;
+  }
+}
+.hero h1 {
+  font-size: clamp(38px, 3.7vw, 56px);
+}
+.block-heading .number {
+  color: var(--gold);
+}
+.slide-stage {
+  display: grid;
+}
+.region-slide {
+  min-height: 100%;
+}

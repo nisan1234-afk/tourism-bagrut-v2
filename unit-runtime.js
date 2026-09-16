@@ -233,7 +233,20 @@
       nav.appendChild(b);
     });
   }
-  $$('#pageNav button').forEach((b) => b.addEventListener('click', () => show(pages.indexOf(b.dataset.page))));
+  $$('#pageNav button').forEach((b) => {
+    b.textContent = b.textContent.replace(/^\d+\.\s*/, ''); // המספור עבר לעיגול המצב (עיצוב 16.09)
+    b.addEventListener('click', () => show(pages.indexOf(b.dataset.page)));
+  });
+  // מספר דף גדול לצד הכותרת (עיצוב 16.09); דף המאגר כבר ממוספר ב-.block-heading
+  panels.forEach((p, i) => {
+    const h2 = p.querySelector(':scope > h2');
+    if (!h2 || p.querySelector('.block-heading') || p.querySelector(':scope > .page-number')) return;
+    const n = document.createElement('span');
+    n.className = 'page-number';
+    n.setAttribute('aria-hidden', 'true');
+    n.textContent = String(i + 1).padStart(2, '0');
+    h2.before(n);
+  });
   function show(index) {
     current = Math.max(0, Math.min(pages.length - 1, index));
     const id = pages[current];
@@ -536,7 +549,8 @@
   function renderQuestion() {
     const x = QUIZ[qIndex];
     quizBox.innerHTML =
-      '<div class="quiz-card"><p class="quiz-kicker" id="quizKicker">שאלה ' + (qIndex + 1) + ' מתוך ' + QUIZ.length + '</p>' +
+      '<div class="quiz-card"><div class="quiz-steps">' + QUIZ.map((_, i) => '<i class="' + (i === qIndex ? 'now' : qResults[i] ? (qResults[i].correct ? 'ok' : 'bad') : '') + '"></i>').join('') + '</div>' +
+      '<p class="quiz-kicker" id="quizKicker">שאלה ' + (qIndex + 1) + ' מתוך ' + QUIZ.length + '</p>' +
       '<h3 id="questionText">' + escapeHtml(x.q) + '</h3><div class="answer-list" id="answerList"></div>' +
       '<p class="quiz-feedback" id="quizFeedback"></p><button class="button button-primary" id="nextQuestion" disabled>' +
       (qIndex === QUIZ.length - 1 ? 'סיום הבוחן' : 'לשאלה הבאה') + '</button></div>';
