@@ -147,6 +147,8 @@ function setBagrutClassCode({ verifiedEmail, class_name, code }) {
     const rows = sheetToObjects(sheet);
     const taken = rows.find(r => String(r.status || 'active') === 'active' && bagrutNormalizeCode_(r.code) === codeNorm && r.teacher_email != verifiedEmail);
     if (taken) throw new Error('הקוד הזה כבר בשימוש אצל מורה אחר. בחרו קוד אחר.');
+    const tourismTaken = tourismActiveClassCodes_(SpreadsheetApp.openById(SHEETS.TOURISM)).some(c => bagrutNormalizeCode_(c.code) === codeNorm);
+    if (tourismTaken) throw new Error('הקוד הזה כבר בשימוש בכיתה של תיירות דיגיטלית. בחרו קוד אחר.');
     // כיבוי הקוד הקודם של אותה כיתה (ושל אותו קוד אם הוקצה לכיתה אחרת שלי)
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const statusIdx = headers.indexOf('status');
@@ -176,7 +178,12 @@ function registerBagrutStudent({ token, class_code }) {
   return withLock(() => {
     const ss = SpreadsheetApp.openById(BAGRUT_SHEET_ID);
     const match = bagrutActiveClassCodes_(ss).find(c => bagrutNormalizeCode_(c.code) === codeNorm);
-    if (!match) throw new Error('קוד כיתה לא מוכר. בדקו את הקוד עם המורה ונסו שוב.');
+    if (!match) {
+      // אותו שדה קוד משמש גם לכיתות של תיירות דיגיטלית (tourism_class_codes.gs)
+      const tourism = registerTourismWaitingLocked_(codeNorm, email, name);
+      if (tourism) return tourism;
+      throw new Error('קוד כיתה לא מוכר. בדקו את הקוד עם המורה ונסו שוב.');
+    }
     const sheet = ensureBagrutStudentsSheet_(ss);
     const existing = sheetToObjects(sheet);
     const emailNorm = stripInvisible_(email);

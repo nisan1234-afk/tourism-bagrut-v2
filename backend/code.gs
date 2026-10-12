@@ -67,7 +67,7 @@ function doPost(e) {
       'saveLessonAnswer', 'addLessonBlock', 'updateLessonBlock', 'deleteLessonBlock', 'getGroupChatLog',
       'getGroupLessonAnswers', 'saveTeacherSectionEdit', 'sendBackupEmail', 'restoreBackup',
       'getFindingsForTeacher', 'updateFindingStatus',
-      'addClass', 'updateClass', 'deleteClass',
+      'addClass', 'updateClass', 'deleteClass', 'setTourismClassCode', 'dismissWaitingStudent',
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
       'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'getBagrutClassCodes', 'setBagrutClassCode', 'refreshBagrutKnowledge', 'getBagrutKnowledgeSummary', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
@@ -126,6 +126,8 @@ function doPost(e) {
       addClass:    () => addClass(body),
       updateClass: () => updateClass(body),
       deleteClass: () => deleteClass(body),
+      setTourismClassCode:   () => setTourismClassCode(body),
+      dismissWaitingStudent: () => dismissWaitingStudent(body),
 
       trackUnitPresented: () => trackUnitPresented(body),
       trackLessonView:    () => trackLessonView(body),
@@ -299,7 +301,8 @@ function getMyProfile({ verifiedEmail, verifiedName }) {
   });
   // תיירות לבגרות: תלמיד/ה שהמורה הוסיף/ה לרשימת students בגיליון הבגרות נכנס/ת
   // גם בלי להיות בקבוצה של תיירות דיגיטלית (עד 04.09.2026 זה לא נבדק כאן בכלל).
-  if (isGroupMember || checkBagrutEnrollment_(verifiedEmail)) {
+  // ממתין/ה לשיבוץ בתיירות דיגיטלית (נרשם/ה עם קוד כיתה) נכנס/ת גם לפני שיש קבוצה
+  if (isGroupMember || checkBagrutEnrollment_(verifiedEmail) || tourismWaitingClassName_(verifiedEmail) !== null) {
     return {
       name:  verifiedName,
       email: verifiedEmail,
@@ -508,7 +511,7 @@ function getTeacherDashboard({ verifiedEmail }) {
 
   const classes = sheetToObjects(ensureClassesSheet(ss)).filter(c => c.teacher_email == verifiedEmail);
 
-  return { groups, units, classes };
+  return { groups, units, classes, class_codes: tourismClassCodesOf_(ss, verifiedEmail), waiting: tourismWaitingOf_(ss, verifiedEmail) };
 }
 
 /** תקציר סטטיסטי של קבוצה (התקדמות/תרומה) — משותף בין getTeacherDashboard (למורה) ו-getMyStudentGroup (לתלמיד). */
@@ -555,7 +558,11 @@ function getMyStudentGroup({ verifiedEmail }) {
 
   const emailNorm = stripInvisible_(verifiedEmail);
   const rawGroup = allGroups.find(g => String(g.members || '').split(',').map(stripInvisible_).includes(emailNorm));
-  if (!rawGroup) throw new Error('לא שויכת לקבוצה');
+  if (!rawGroup) {
+    const waitingClass = tourismWaitingClassName_(verifiedEmail);
+    if (waitingClass !== null) throw new Error('נרשמת לכיתה ' + waitingClass + '. המורה עוד לא שיבץ/ה אותך לקבוצה, נסו שוב אחר כך.');
+    throw new Error('לא שויכת לקבוצה');
+  }
 
   const group = buildGroupSummary_(rawGroup, allProjects, allLogs);
 
@@ -620,7 +627,8 @@ function checkTourismEnrollment_(email) {
   const ss = SpreadsheetApp.openById(SHEETS.TOURISM);
   const groups = sheetToObjects(ss.getSheetByName('groups'));
   const emailNorm = stripInvisible_(email);
-  return groups.some(g => String(g.members || '').split(',').map(stripInvisible_).includes(emailNorm));
+  return groups.some(g => String(g.members || '').split(',').map(stripInvisible_).includes(emailNorm))
+    || tourismWaitingClassName_(email) !== null; // ממתין/ה לשיבוץ: רואה את המקצוע ומקבל/ת הסבר בדף
 }
 
 /**
@@ -1808,6 +1816,9 @@ function addGroup({ verifiedEmail, class_id, group_name, members }) {
     ? members.map(m => String(m).trim()).filter(Boolean)
     : String(members || '').split(',').map(m => m.trim()).filter(Boolean);
 
+  const badMembers = memberList.filter(m => !/^[^@\s,]+@[^@\s,]+\.[^@\s,]+$/.test(m));
+  if (badMembers.length) throw new Error('כתובת מייל לא שלמה (חסר למשל @gmail.com): ' + badMembers.join(', '));
+
   const group_id = 'group_' + Date.now();
 
   let folderId = '';
@@ -1830,6 +1841,7 @@ function addGroup({ verifiedEmail, class_id, group_name, members }) {
     last_active:     new Date().toISOString(),
     created_date:    new Date().toISOString()
   });
+  if (memberList.length) withLock(() => removeFromTourismWaiting_(ss, verifiedEmail, memberList));
 
   return { group_id, folderId, created: true };
 }
@@ -1955,6 +1967,9 @@ function addMember({ verifiedEmail, group_id, member_email }) {
     const idx    = groups.findIndex(g => g.group_id == group_id && g.teacher_email == verifiedEmail);
     if (idx === -1) throw new Error('קבוצה לא נמצאה');
 
+    if (!/^[^@\s,]+@[^@\s,]+\.[^@\s,]+$/.test(String(member_email || '').trim())) {
+      throw new Error('כתובת המייל לא שלמה (חסר למשל @gmail.com): ' + member_email);
+    }
     const members = String(groups[idx].members || '').split(',').map(m => m.trim()).filter(Boolean);
     const emailLower = stripInvisible_(member_email);
     if (members.some(m => stripInvisible_(m) === emailLower)) {
@@ -1966,6 +1981,7 @@ function addMember({ verifiedEmail, group_id, member_email }) {
     const rowNum  = idx + 2;
     const colIdx  = headers.indexOf('members') + 1;
     sheet.getRange(rowNum, colIdx).setValue(members.join(','));
+    removeFromTourismWaiting_(ss, verifiedEmail, [member_email]);
 
     return { group_id, members };
   });
