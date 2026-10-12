@@ -958,10 +958,12 @@ function saveLessonAnswer({ verifiedEmail, group_id, unit_id, block_id, answer_t
   }
 
   let score = '', scoreFeedback = '';
-  if (answer_text && answer_text.trim().length > 0) {
+  // בוחן (quiz) נשמר כ-JSON של הבחירות רק כדי לשחזר אותן ברענון; לא שולחים אותו לבדיקת Gemini
+  const blockMeta = getLessonBlocksCached_(ss).find(b => b.block_id === block_id);
+  const isQuiz = blockMeta && blockMeta.block_type === 'quiz';
+  if (!isQuiz && answer_text && answer_text.trim().length > 0) {
     try {
-      const blocks = getLessonBlocksCached_(ss);
-      const block  = blocks.find(b => b.block_id === block_id);
+      const block  = blockMeta;
       const prompt = block ? block.question_prompt : '';
       const systemPrompt = `אתה מעריך תשובה של תלמיד תיכון לשאלה אישית בפרויקט תיירות דיגיטלית.
 נוסח השאלה: "${prompt}"
