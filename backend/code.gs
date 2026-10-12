@@ -67,7 +67,7 @@ function doPost(e) {
       'saveLessonAnswer', 'addLessonBlock', 'updateLessonBlock', 'deleteLessonBlock', 'getGroupChatLog',
       'getGroupLessonAnswers', 'saveTeacherSectionEdit', 'sendBackupEmail', 'restoreBackup',
       'getFindingsForTeacher', 'updateFindingStatus',
-      'addClass', 'updateClass', 'deleteClass', 'setTourismClassCode', 'dismissWaitingStudent',
+      'addClass', 'updateClass', 'deleteClass', 'setTourismClassCode', 'dismissWaitingStudent', 'mergeGroups',
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
       'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'getBagrutClassCodes', 'setBagrutClassCode', 'refreshBagrutKnowledge', 'getBagrutKnowledgeSummary', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
@@ -128,6 +128,7 @@ function doPost(e) {
       deleteClass: () => deleteClass(body),
       setTourismClassCode:   () => setTourismClassCode(body),
       dismissWaitingStudent: () => dismissWaitingStudent(body),
+      mergeGroups:           () => mergeGroups(body),
 
       trackUnitPresented: () => trackUnitPresented(body),
       trackLessonView:    () => trackLessonView(body),
