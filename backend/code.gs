@@ -916,7 +916,8 @@ function getGroupLessons({ verifiedEmail, group_id }) {
           if ((b.block_type === 'game' || b.block_type === 'quiz' || b.block_type === 'question_structured') && b.game_data) {
             try { block.game_data = JSON.parse(b.game_data); } catch (e) { block.game_data = []; }
           }
-          if (b.block_type === 'question' || b.block_type === 'question_structured') {
+          // quiz: הבחירות נשמרות כ-JSON (מ-10.2026) וחוזרות לדף ברענון
+          if (b.block_type === 'question' || b.block_type === 'question_structured' || b.block_type === 'quiz') {
             const existing = allAnswers.find(a => a.block_id === b.block_id);
             block.saved_answer   = existing ? existing.answer_text : '';
             block.saved_score    = existing && existing.score !== '' ? existing.score : null;
