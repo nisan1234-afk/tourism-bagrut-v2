@@ -343,7 +343,8 @@ function updateBagrutStudentEmail({ verifiedEmail, email, new_email }) {
       ['mistakes', ensureBagrutMistakesSheet_(ss)],
       ['open_answers', ensureBagrutOpenAnswersSheet_(ss)],
       ['open_answer_reviews', ensureBagrutOpenAnswerReviewsSheet_(ss)],
-      ['site_recognition', ensureBagrutSiteRecognitionSheet_(ss)]
+      ['site_recognition', ensureBagrutSiteRecognitionSheet_(ss)],
+      ['tb_progress', ensureTbProgressSheet_(ss)]
     ];
     sheets.forEach(([name, sheet]) => {
       changed[name] = rewriteEmailColumn_(sheet, oldNorm, newNorm);

@@ -71,7 +71,8 @@ function doPost(e) {
       'trackUnitPresented', 'trackLessonView', 'saveFcmToken',
       'getSubjectsAdmin', 'addSubject', 'updateSubjectStatus',
       'getBagrutTeacherDashboard', 'addBagrutStudent', 'removeBagrutStudent', 'updateBagrutStudentEmail', 'getBagrutClassCodes', 'setBagrutClassCode', 'refreshBagrutKnowledge', 'getBagrutKnowledgeSummary', 'getBagrutMyProgress', 'saveBagrutQuizResult', 'saveBagrutUnitProgress', 'setBagrutAssignment', 'getBagrutAssignment',
-      'submitOpenAnswer', 'getBagrutStudentOpenAnswers', 'reviewOpenAnswer', 'getBagrutPendingReviewsForTeacher', 'getMyReviewNotices', 'ackReviewNotice', 'getAllContentOverrides', 'saveContentOverride', 'addBagrutStudentsBulk', 'getBagrutMistakesSummary', 'getBagrutMistakes', 'updateBagrutMistakes', 'getMySiteRecognition', 'saveSiteKnown', 'resetMySiteRecognition', 'getBagrutSiteRecognitionSummary'
+      'submitOpenAnswer', 'getBagrutStudentOpenAnswers', 'reviewOpenAnswer', 'getBagrutPendingReviewsForTeacher', 'getMyReviewNotices', 'ackReviewNotice', 'getAllContentOverrides', 'saveContentOverride', 'addBagrutStudentsBulk', 'getBagrutMistakesSummary', 'getBagrutMistakes', 'updateBagrutMistakes', 'getMySiteRecognition', 'saveSiteKnown', 'resetMySiteRecognition', 'getBagrutSiteRecognitionSummary',
+      'getMyTbProgress', 'saveTbStep', 'completeTbUnit', 'getBagrutTbSummary', 'reviewTbUnit'
     ];
 
     if (protectedActions.includes(action)) {
@@ -169,6 +170,12 @@ function doPost(e) {
       saveSiteKnown: () => saveSiteKnown(body),
       resetMySiteRecognition: () => resetMySiteRecognition(body),
       getBagrutSiteRecognitionSummary: () => getBagrutSiteRecognitionSummary(body),
+      // טרוול בוסטר — מדריך לטלפון + מעקב למורה (travel_booster.gs)
+      getMyTbProgress:    () => getMyTbProgress(body),
+      saveTbStep:         () => saveTbStep(body),
+      completeTbUnit:     () => completeTbUnit(body),
+      getBagrutTbSummary: () => getBagrutTbSummary(body),
+      reviewTbUnit:       () => reviewTbUnit(body),
       submitPageFeedback: () => submitPageFeedback(body),
       logClientError: () => logClientError(body),
     };
