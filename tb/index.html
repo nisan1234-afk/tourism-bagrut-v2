@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173d37">
+  <title>טרוול בוסטר צעד-צעד — כיתה פלוס</title>
+  <script>
+    (function () {
+      var hub = 'https://nisan1234-afk.github.io/';
+      try {
+        var user = JSON.parse(sessionStorage.getItem('kitahUser') || 'null');
+        if (!user || !user.token) { location.replace(hub + '?return=' + encodeURIComponent(location.href)); return; }
+        document.documentElement.classList.add('page-authorized');
+      } catch (_) { location.replace(hub); }
+    }());
+  </script>
+  <script src="../session-guard.js?v=2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tb.css?v=1">
+</head>
+<body class="protected-page">
+  <section class="access-gate">
+    <h1>המדריך דורש כניסה</h1>
+    <p>נכנסים דרך כיתה פלוס, ואז חוזרים לכאן.</p>
+    <a class="btn btn-primary" href="https://nisan1234-afk.github.io/">כניסה דרך כיתה פלוס</a>
+  </section>
+  <header class="tb-top">
+    <a class="tb-brand" href="#" data-home>
+      <span class="tb-mark">TB</span>
+      <span><strong>טרוול בוסטר צעד-צעד</strong><small id="tbUser">כיתה פלוס</small></span>
+    </a>
+    <span class="tb-sync" id="tbSync" hidden></span>
+  </header>
+  <div class="tb-preview" id="tbPreview" hidden>מצב תצוגה למורה. ההתקדמות לא נשמרת.</div>
+  <main id="tbApp" class="tb-app" aria-live="polite"><p class="tb-loading">טוען…</p></main>
+  <div class="tb-zoom" id="tbZoom" hidden><button type="button" class="tb-zoom-close" aria-label="סגירה">✕</button><div class="tb-zoom-scroll"><div class="tb-shot" id="tbZoomShot"></div></div></div>
+  <script src="units.js?v=1"></script>
+  <script src="tb.js?v=1"></script>
+</body>
+</html>

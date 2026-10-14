@@ -7,13 +7,14 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npm run check && npm run standard && npm run smoke && npm run behavior && npm run teacher",
+    "test": "npm run check && npm run standard && npm run smoke && npm run behavior && npm run teacher && npm run tb",
     "check": "node scripts/check.mjs",
     "smoke": "node tests/smoke.mjs",
     "format": "prettier --write '*.js' '*.css' 'backend/*.gs'",
     "standard": "node tests/standard.mjs",
     "behavior": "node tests/behavior.mjs",
-    "teacher": "node tests/teacher.mjs"
+    "teacher": "node tests/teacher.mjs",
+    "tb": "node tests/tb.mjs"
   },
   "repository": {
     "type": "git",

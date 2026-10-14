@@ -146,7 +146,7 @@ expect((await page.textContent('#classCodeFeedback')).includes('נשמר'), 'ק�
 await page.evaluate(() => { window.prompt = () => ' Dana.New@example.com '; });
 const dashboardCallsBefore = seen.filter((a) => a === 'getBagrutTeacherDashboard').length;
 await page.$eval('[data-change-email="dana@example.com"]', (b) => b.click()); // הטאב מוסתר, לכן לחיצה ישירה
-await page.waitForFunction((n) => document.getElementById('teacherDataState')?.textContent.includes('עודכן'), null, { timeout: 5000 }).catch(() => {});
+await page.waitForFunction((n) => document.getElementById('teacherDataState')?.textContent.includes('המייל של'), null, { timeout: 5000 }).catch(() => {});
 const emailCall = sentBodies.find((b) => b.action === 'updateBagrutStudentEmail');
 expect(emailCall && emailCall.email === 'dana@example.com' && emailCall.new_email === 'Dana.New@example.com', 'שינוי מייל: הבקשה לשרת לא נשאה את המייל הישן והחדש');
 expect(emailCall && emailCall.token === USER.token, 'שינוי מייל: הבקשה בלי טוקן');

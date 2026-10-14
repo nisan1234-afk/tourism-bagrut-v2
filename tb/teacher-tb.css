@@ -1,0 +1,16 @@
+/* לשונית טרוול בוסטר בדשבורד המורה — משלים את styles.css בלי לגעת בו */
+.tb-teacher-guide { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 14px; }
+.tb-teacher-guide a { direction: ltr; font-weight: 600; word-break: break-all; }
+#tbPulse article.tb-alert { background: #fde2df; }
+#tbPulse article.tb-alert b { color: #b3261e; }
+.tb-row-stuck td { background: #fff6f4; }
+.tb-stuck { color: #b3261e; font-weight: 700; }
+.tb-docket bdi { font-weight: 700; letter-spacing: 0.5px; }
+.tb-chip { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.tb-chip.wait { background: #f2eadc; color: #8a4b08; }
+.tb-chip.fix { background: #fde2df; color: #b3261e; }
+.tb-review { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 220px; }
+.tb-review input { flex: 1 1 160px; min-width: 0; padding: 6px 8px; border: 1px solid #d9dfda; border-radius: 8px; font: inherit; }
+.tb-review .table-action.on-ok { background: #1f7a4d; color: #fff; border-color: #1f7a4d; }
+.tb-review .table-action.on-fix { background: #b3261e; color: #fff; border-color: #b3261e; }
+#tbDetail { margin-top: 18px; }
